@@ -699,6 +699,14 @@
     "ARCHIVED_SEGMENT": "Choose an active segment.",
     "ARCHIVED_PIPELINE": "Archived pipelines cannot be selected."
   },
+  "errorPages": {
+    "title": "Something went wrong",
+    "description": "An unexpected error interrupted this page. Try again, or return to the dashboard.",
+    "retry": "Try again",
+    "notFoundTitle": "We could not find that page",
+    "notFoundDescription": "The record or page may have been archived, moved, or never existed.",
+    "backToDashboard": "Back to dashboard"
+  },
   "enums": {
     "role": {
       "admin": "Administrator",

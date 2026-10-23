@@ -10,7 +10,8 @@ export async function getLocaleCookie(): Promise<Locale | undefined> {
 export async function setLocaleCookie(locale: Locale) {
   const store = await cookies();
   store.set(LOCALE_COOKIE, locale, {
-    httpOnly: true,
+    // The locale is not sensitive; the root-layout error fallback reads it client-side.
+    httpOnly: false,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
