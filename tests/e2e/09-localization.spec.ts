@@ -175,6 +175,34 @@ test.describe("Greek localization journey", () => {
     ).toBeVisible();
   });
 
+  test("records a Greek lost deal and requires a lost reason", async ({ page }) => {
+    await login(page);
+
+    await page.goto("/deals/new");
+    await expect(page.getByRole("heading", { name: "Νέα συμφωνία" })).toBeVisible();
+    await page.fill("#name", "E2E Greek Lost Deal");
+    await page.selectOption("#companyId", { label: COMPANY });
+    await page.selectOption("#contactId", {
+      label: `${CONTACT.firstName} ${CONTACT.lastName}`,
+    });
+    await page.fill("#amount", "12000");
+    await page.getByRole("button", { name: "Δημιουργία συμφωνίας" }).click();
+    await page.waitForURL(/\/deals\/[0-9a-f-]+$/, { timeout: 30000 });
+
+    await page.selectOption("#deal-stage", { label: "Lost" });
+    await page.getByRole("button", { name: "Ενημέρωση σταδίου" }).click();
+    await expect(
+      page.getByText("Προσθέστε έναν λόγο απώλειας πριν μετακινήσετε τη συμφωνία.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+
+    await page.fill("#deal-lost-reason", "Χάθηκε λόγω τιμής");
+    await page.getByRole("button", { name: "Ενημέρωση σταδίου" }).click();
+    await expect(page.getByText("Χαμένη", { exact: true })).toBeVisible();
+    await expect(page.getByText("Χάθηκε λόγω τιμής")).toBeVisible();
+  });
+
   test("records a Greek ticket reply, internal note, status, and SLA state", async ({ page }) => {
     await login(page);
 
@@ -301,6 +329,17 @@ test.describe("Greek localization journey", () => {
 
     await expect(page.getByText(ACTIVITY, { exact: true })).toBeVisible();
     await expect(page.getByText(/Κλήση ·/)).toBeVisible();
+
+    const activityItem = page.locator("li", { hasText: ACTIVITY }).first();
+    await activityItem.getByRole("button", { name: "Επεξεργασία" }).click();
+    const editDialog = page.getByRole("dialog");
+    await expect(editDialog).toBeVisible();
+    await expect(
+      editDialog.getByRole("heading", { name: "Επεξεργασία δραστηριότητας" }),
+    ).toBeVisible();
+    await expect(editDialog.locator("#activity-subject")).toHaveValue(ACTIVITY);
+    await editDialog.getByRole("button", { name: "Ακύρωση" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
 
     await page.getByText("Προσθήκη εργασίας", { exact: true }).click();
     await page.fill("#task-title", TASK);
