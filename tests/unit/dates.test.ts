@@ -6,6 +6,7 @@ import {
   isDateBeforeToday,
   todayUtc,
 } from "@/lib/dates";
+import { formatCurrencyUsd, formatDate } from "@/i18n/format";
 
 const now = new Date("2026-10-21T12:00:00Z");
 
@@ -34,5 +35,19 @@ describe("date helpers", () => {
     expect(formatDurationHours(0.5)).toBe("30m");
     expect(formatDurationHours(4)).toBe("4.0h");
     expect(formatDurationHours(48)).toBe("2.0d");
+  });
+
+  it("formats Greek dates and currency", () => {
+    expect(formatDate("2026-10-21T23:30:00Z", "el")).toContain("21");
+    expect(formatDate("2026-10-21T23:30:00Z", "el")).toContain("Οκτ");
+    expect(formatDate("2026-10-21T23:30:00Z", "el")).toContain("2026");
+    expect(formatCurrencyUsd(1234.5, "el")).toContain("1.234,50");
+    expect(formatCurrencyUsd(1234.5, "el")).toContain("$");
+  });
+
+  it("formats Greek durations", () => {
+    expect(formatDurationHours(0.5, "el")).toBe("30λ");
+    expect(formatDurationHours(4, "el")).toBe("4,0ώ");
+    expect(formatDurationHours(48, "el")).toBe("2,0ημ");
   });
 });

@@ -49,6 +49,24 @@ test.describe("authentication and team onboarding", () => {
     await logout(page);
   });
 
+  test("profile language persists across sign-in", async ({ page }) => {
+    await login(page);
+    await page.goto("/settings/profile");
+    await page.getByRole("combobox", { name: "Language" }).click();
+    await page.getByRole("option", { name: "Greek" }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "el");
+    await logout(page);
+
+    await login(page);
+    await expect(page.locator("html")).toHaveAttribute("lang", "el");
+
+    await page.goto("/settings/profile");
+    await page.getByRole("combobox", { name: "Γλώσσα" }).click();
+    await page.getByRole("option", { name: "Αγγλικά" }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await logout(page);
+  });
+
   test("deactivated members cannot sign in", async ({ page }) => {
     await login(page);
     await page.goto("/settings/team");

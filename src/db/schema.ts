@@ -84,12 +84,14 @@ export const users = pgTable(
     passwordHash: text("password_hash").notNull(),
     role: userRoleEnum("role").notNull().default("member"),
     status: userStatusEnum("status").notNull().default("active"),
+    locale: text("locale").notNull().default("en"),
     sessionVersion: integer("session_version").notNull().default(0),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("users_email_lower_idx").on(sql`lower(${table.email})`),
     index("users_status_idx").on(table.status),
+    check("users_locale_check", sql`${table.locale} in ('en', 'el')`),
   ],
 );
 

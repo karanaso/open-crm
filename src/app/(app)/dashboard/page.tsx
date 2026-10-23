@@ -19,6 +19,7 @@ import { requireUser } from "@/lib/auth/guards";
 import { getDashboardData } from "@/lib/services/dashboard";
 import { formatDurationHours } from "@/lib/dates";
 import { formatCurrency, titleCase } from "@/lib/utils";
+import { getLocale } from "next-intl/server";
 
 function MetricCard({
   label,
@@ -47,7 +48,7 @@ function MetricCard({
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const data = await getDashboardData(user.id);
+  const [data, locale] = await Promise.all([getDashboardData(user.id), getLocale()]);
 
   return (
     <div className="space-y-8">
@@ -121,12 +122,12 @@ export default async function DashboardPage() {
           />
           <MetricCard
             label="Avg first response"
-            value={formatDurationHours(data.support.averageFirstResponseHours)}
+            value={formatDurationHours(data.support.averageFirstResponseHours, locale)}
             hint="Tickets resolved in the last 30 days"
           />
           <MetricCard
             label="Avg resolution"
-            value={formatDurationHours(data.support.averageResolutionHours)}
+            value={formatDurationHours(data.support.averageResolutionHours, locale)}
             hint="Tickets resolved in the last 30 days"
           />
         </div>

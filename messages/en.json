@@ -1,0 +1,170 @@
+{
+  "common": {
+    "appName": "OpenCRM",
+    "save": "Save",
+    "cancel": "Cancel",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "archive": "Archive",
+    "restore": "Restore",
+    "search": "Search",
+    "loading": "Loading…",
+    "actions": "Actions",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "language": "Language",
+    "english": "English",
+    "greek": "Greek"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "companies": "Companies",
+    "contacts": "Contacts",
+    "deals": "Deals",
+    "tickets": "Tickets",
+    "campaigns": "Campaigns",
+    "tasks": "Tasks",
+    "settings": "Settings",
+    "openNavigation": "Open navigation",
+    "navigation": "Navigation",
+    "tagline": "One shared workspace\nSales · Support · Marketing"
+  },
+  "metadata": {
+    "title": "OpenCRM — Customer relationships",
+    "description": "A self-hosted CRM for sales, support, and marketing teams."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "setupTitle": "Set up your workspace",
+    "inviteTitle": "Join the workspace",
+    "resetTitle": "Reset your password"
+  },
+  "settings": {
+    "profile": "Profile",
+    "team": "Team",
+    "pipelines": "Pipelines",
+    "language": "Language",
+    "languageDescription": "Choose the language used in the interface."
+  },
+  "directory": {
+    "companies": "Companies",
+    "contacts": "Contacts",
+    "import": "Import CSV"
+  },
+  "sales": {
+    "deals": "Deals",
+    "pipelines": "Pipelines",
+    "board": "Pipeline board"
+  },
+  "support": {
+    "tickets": "Tickets",
+    "sla": "SLA"
+  },
+  "marketing": {
+    "segments": "Segments",
+    "campaigns": "Campaigns"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "recentActivity": "Recent activity"
+  },
+  "timeline": {
+    "activity": "Activity",
+    "tasks": "Tasks"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "minLength": "This value is too short.",
+    "maxLength": "This value is too long.",
+    "uuid": "Select a valid record.",
+    "invalid": "Check this value."
+  },
+  "errors": {
+    "GENERIC": "Something went wrong. Please try again.",
+    "NOT_FOUND": "The requested record was not found.",
+    "UNAUTHORIZED": "You need to sign in to continue.",
+    "FORBIDDEN": "You do not have permission to do that.",
+    "INVALID_LOCALE": "Choose a supported language."
+  },
+  "enums": {
+    "role": {
+      "admin": "Administrator",
+      "member": "Member"
+    },
+    "ticketStatus": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "ticketPriority": {
+      "urgent": "Urgent",
+      "high": "High",
+      "normal": "Normal",
+      "low": "Low"
+    },
+    "dealStatus": {
+      "open": "Open",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "stageOutcome": {
+      "open": "Open",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "taskPriority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "taskStatus": {
+      "open": "Open",
+      "completed": "Completed"
+    },
+    "activityType": {
+      "note": "Note",
+      "call": "Call",
+      "email": "Email",
+      "meeting": "Meeting",
+      "stage_change": "Stage change"
+    },
+    "campaignChannel": {
+      "email": "Email",
+      "phone": "Phone",
+      "event": "Event",
+      "social": "Social",
+      "other": "Other"
+    },
+    "campaignStatus": {
+      "draft": "Draft",
+      "active": "Active",
+      "completed": "Completed",
+      "archived": "Archived"
+    },
+    "recipientStatus": {
+      "targeted": "Targeted",
+      "sent": "Sent",
+      "opened": "Opened",
+      "clicked": "Clicked",
+      "responded": "Responded",
+      "converted": "Converted"
+    },
+    "userStatus": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "commentVisibility": {
+      "reply": "Reply",
+      "internal": "Internal note"
+    }
+  }
+}

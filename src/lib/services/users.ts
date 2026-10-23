@@ -41,6 +41,16 @@ export async function updateUserName(userId: string, name: string) {
   return updated;
 }
 
+export async function updateUserLocale(userId: string, locale: "en" | "el") {
+  const [updated] = await db
+    .update(users)
+    .set({ locale, updatedAt: new Date() })
+    .where(eq(users.id, userId))
+    .returning();
+  if (!updated) throw new AppError("User not found", "NOT_FOUND");
+  return updated;
+}
+
 export async function changePassword(user: User, currentPassword: string, newPassword: string) {
   const valid = await verifyPassword(user.passwordHash, currentPassword);
   if (!valid) throw new AppError("Your current password is incorrect", "INVALID_PASSWORD");

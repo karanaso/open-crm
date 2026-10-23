@@ -27,10 +27,14 @@ import {
 import {
   changePassword,
   changeUserRole,
+  findUserByEmail,
   setUserStatus,
   updateUserName,
 } from "@/lib/services/users";
 import { appUrl } from "@/lib/env";
+import { hasSignInError } from "@/lib/auth/sign-in";
+import { defaultLocale, isLocale } from "@/i18n/config";
+import { getLocaleCookie, setLocaleCookie } from "@/i18n/cookie";
 
 function genericSignInError() {
   return "Unable to sign in. Check your credentials or contact an administrator.";
@@ -48,10 +52,12 @@ export async function signInAction(_prevState: ActionState, formData: FormData):
 
   const callbackUrl = sanitizeCallbackUrl(formData.get("callbackUrl")?.toString());
 
+  let redirectUrl: string | undefined;
   try {
-    await signIn("credentials", {
+    redirectUrl = await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
+      redirect: false,
       redirectTo: callbackUrl,
     });
   } catch (error) {
@@ -59,7 +65,16 @@ export async function signInAction(_prevState: ActionState, formData: FormData):
     throw error;
   }
 
-  return null;
+  if (hasSignInError(redirectUrl)) {
+    return { error: genericSignInError() };
+  }
+
+  const user = await findUserByEmail(parsed.data.email);
+  if (user && isLocale(user.locale)) {
+    await setLocaleCookie(user.locale);
+  }
+
+  redirect(callbackUrl);
 }
 
 export async function signOutAction() {
@@ -77,11 +92,15 @@ export async function setupAction(_prevState: ActionState, formData: FormData): 
     return { fieldErrors: fieldErrorsFromZod(parsed.error) };
   }
 
+  const locale = (await getLocaleCookie()) ?? defaultLocale;
+
   try {
-    await setupFirstAdmin(parsed.data);
+    await setupFirstAdmin({ ...parsed.data, locale });
   } catch (error) {
     return { error: errorMessage(error) };
   }
+
+  await setLocaleCookie(locale);
 
   try {
     await signIn("credentials", {
@@ -110,17 +129,22 @@ export async function acceptInviteAction(
   });
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error) };
 
+  const locale = (await getLocaleCookie()) ?? defaultLocale;
+
   let email = "";
   try {
     const user = await acceptInvite({
       token,
       name: parsed.data.name,
       password: parsed.data.password,
+      locale,
     });
     email = user.email;
   } catch (error) {
     return { error: errorMessage(error) };
   }
+
+  await setLocaleCookie(locale);
 
   try {
     await signIn("credentials", {

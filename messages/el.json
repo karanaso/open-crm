@@ -1,0 +1,170 @@
+{
+  "common": {
+    "appName": "OpenCRM",
+    "save": "Αποθήκευση",
+    "cancel": "Ακύρωση",
+    "create": "Δημιουργία",
+    "edit": "Επεξεργασία",
+    "delete": "Διαγραφή",
+    "archive": "Αρχειοθέτηση",
+    "restore": "Επαναφορά",
+    "search": "Αναζήτηση",
+    "loading": "Φόρτωση…",
+    "actions": "Ενέργειες",
+    "back": "Πίσω",
+    "next": "Επόμενο",
+    "previous": "Προηγούμενο",
+    "confirm": "Επιβεβαίωση",
+    "language": "Γλώσσα",
+    "english": "Αγγλικά",
+    "greek": "Ελληνικά"
+  },
+  "nav": {
+    "dashboard": "Πίνακας ελέγχου",
+    "companies": "Εταιρείες",
+    "contacts": "Επαφές",
+    "deals": "Συμφωνίες",
+    "tickets": "Δελτία υποστήριξης",
+    "campaigns": "Καμπάνιες",
+    "tasks": "Εργασίες",
+    "settings": "Ρυθμίσεις",
+    "openNavigation": "Άνοιγμα πλοήγησης",
+    "navigation": "Πλοήγηση",
+    "tagline": "Ένας κοινός χώρος εργασίας\nΠωλήσεις · Υποστήριξη · Μάρκετινγκ"
+  },
+  "metadata": {
+    "title": "OpenCRM — Σχέσεις με πελάτες",
+    "description": "Αυτο-φιλοξενούμενο CRM για ομάδες πωλήσεων, υποστήριξης και μάρκετινγκ."
+  },
+  "auth": {
+    "signIn": "Σύνδεση",
+    "signOut": "Αποσύνδεση",
+    "email": "Email",
+    "password": "Κωδικός πρόσβασης",
+    "setupTitle": "Ρύθμιση του χώρου εργασίας σας",
+    "inviteTitle": "Γίνετε μέλος του χώρου εργασίας",
+    "resetTitle": "Επαναφορά κωδικού πρόσβασης"
+  },
+  "settings": {
+    "profile": "Προφίλ",
+    "team": "Ομάδα",
+    "pipelines": "Ροές πωλήσεων",
+    "language": "Γλώσσα",
+    "languageDescription": "Επιλέξτε τη γλώσσα της διεπαφής."
+  },
+  "directory": {
+    "companies": "Εταιρείες",
+    "contacts": "Επαφές",
+    "import": "Εισαγωγή CSV"
+  },
+  "sales": {
+    "deals": "Συμφωνίες",
+    "pipelines": "Ροές πωλήσεων",
+    "board": "Πίνακας ροής"
+  },
+  "support": {
+    "tickets": "Δελτία υποστήριξης",
+    "sla": "SLA"
+  },
+  "marketing": {
+    "segments": "Τμήματα",
+    "campaigns": "Καμπάνιες"
+  },
+  "dashboard": {
+    "title": "Πίνακας ελέγχου",
+    "recentActivity": "Πρόσφατη δραστηριότητα"
+  },
+  "timeline": {
+    "activity": "Δραστηριότητα",
+    "tasks": "Εργασίες"
+  },
+  "validation": {
+    "required": "Αυτό το πεδίο είναι υποχρεωτικό.",
+    "email": "Εισαγάγετε έγκυρη διεύθυνση email.",
+    "minLength": "Η τιμή είναι πολύ σύντομη.",
+    "maxLength": "Η τιμή είναι πολύ μεγάλη.",
+    "uuid": "Επιλέξτε έγκυρη εγγραφή.",
+    "invalid": "Ελέγξτε αυτή την τιμή."
+  },
+  "errors": {
+    "GENERIC": "Κάτι πήγε στραβά. Δοκιμάστε ξανά.",
+    "NOT_FOUND": "Η εγγραφή δεν βρέθηκε.",
+    "UNAUTHORIZED": "Πρέπει να συνδεθείτε για να συνεχίσετε.",
+    "FORBIDDEN": "Δεν έχετε δικαίωμα για αυτή την ενέργεια.",
+    "INVALID_LOCALE": "Επιλέξτε υποστηριζόμενη γλώσσα."
+  },
+  "enums": {
+    "role": {
+      "admin": "Διαχειριστής",
+      "member": "Μέλος"
+    },
+    "ticketStatus": {
+      "open": "Ανοιχτό",
+      "in_progress": "Σε εξέλιξη",
+      "pending": "Σε αναμονή",
+      "resolved": "Επιλύθηκε",
+      "closed": "Κλειστό"
+    },
+    "ticketPriority": {
+      "urgent": "Επείγον",
+      "high": "Υψηλή",
+      "normal": "Κανονική",
+      "low": "Χαμηλή"
+    },
+    "dealStatus": {
+      "open": "Ανοιχτή",
+      "won": "Κερδισμένη",
+      "lost": "Χαμένη"
+    },
+    "stageOutcome": {
+      "open": "Ανοιχτό",
+      "won": "Κερδισμένο",
+      "lost": "Χαμένο"
+    },
+    "taskPriority": {
+      "low": "Χαμηλή",
+      "normal": "Κανονική",
+      "high": "Υψηλή"
+    },
+    "taskStatus": {
+      "open": "Ανοιχτή",
+      "completed": "Ολοκληρωμένη"
+    },
+    "activityType": {
+      "note": "Σημείωση",
+      "call": "Κλήση",
+      "email": "Email",
+      "meeting": "Συνάντηση",
+      "stage_change": "Αλλαγή σταδίου"
+    },
+    "campaignChannel": {
+      "email": "Email",
+      "phone": "Τηλέφωνο",
+      "event": "Εκδήλωση",
+      "social": "Κοινωνικά δίκτυα",
+      "other": "Άλλο"
+    },
+    "campaignStatus": {
+      "draft": "Πρόχειρη",
+      "active": "Ενεργή",
+      "completed": "Ολοκληρωμένη",
+      "archived": "Αρχειοθετημένη"
+    },
+    "recipientStatus": {
+      "targeted": "Στοχευμένος",
+      "sent": "Στάλθηκε",
+      "opened": "Ανοίχθηκε",
+      "clicked": "Κλικ",
+      "responded": "Απάντησε",
+      "converted": "Μετατράπηκε"
+    },
+    "userStatus": {
+      "active": "Ενεργός",
+      "inactive": "Ανενεργός"
+    },
+    "commentVisibility": {
+      "reply": "Απάντηση",
+      "internal": "Εσωτερική σημείωση"
+    }
+  }
+}

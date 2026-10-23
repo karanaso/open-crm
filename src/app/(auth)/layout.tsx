@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BarChart3, Building2, LifeBuoy, Megaphone } from "lucide-react";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { APP_NAME } from "@/lib/constants";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -40,6 +41,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </aside>
       <main className="flex items-center justify-center p-6">
         <div className="w-full max-w-md">
+          <div className="mb-4 flex justify-end">
+            <LanguageSwitcher className="w-auto" />
+          </div>
           <Link href="/" className="mb-8 block text-lg font-semibold tracking-tight lg:hidden">
             {APP_NAME}
           </Link>

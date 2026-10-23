@@ -2,19 +2,19 @@
 
 ## 1. Foundation
 
-- [ ] 1.1 Add `next-intl` to `package.json`, configure `createNextIntlPlugin` in `next.config.ts`, and verify `pnpm install` and `pnpm build` succeed.
-- [ ] 1.2 Add `users.locale` (`text`, not null, default `en`, check `en`/`el`) to `src/db/schema.ts`, generate and apply the migration, and verify existing users read `en` in an integration test.
-- [ ] 1.3 Add `src/i18n/config.ts` (locales, default, `Locale`, `isLocale`) and `src/i18n/request.ts` (cookie, `Accept-Language`, fallback); verify unit tests for the resolution order and `pnpm typecheck`.
-- [ ] 1.4 Wire `NextIntlClientProvider`, `<html lang>`, and `generateMetadata` in `src/app/layout.tsx`; verify `pnpm typecheck` and a component test that Greek renders `lang="el"`.
-- [ ] 1.5 Create `messages/en.json` and `messages/el.json` with the agreed namespaces and add `src/types/next-intl.d.ts`; verify `pnpm typecheck` rejects an unknown message key.
-- [ ] 1.6 Add `pnpm i18n:check` for key parity, empty values, and placeholder parity, plus unit tests; verify the command fails for a missing key and a changed placeholder, then passes.
-- [ ] 1.7 Add `src/i18n/format.ts` and update `src/lib/dates.ts`, `LocalTime`, and `DateDisplay` for locale-aware dates, USD, numbers, and durations; verify unit tests for Greek formatting and unchanged UTC values.
-- [ ] 1.8 Add `src/i18n/labels.ts` for enum labels and replace navigation `label` with `labelKey`; verify unit tests for every enum group and `pnpm typecheck`.
-- [ ] 1.9 Add the `opencrm_locale` cookie helpers and a `LanguageSwitcher` usable on auth pages; verify selecting Greek updates the cookie and re-renders the page in Greek.
-- [ ] 1.10 Add the profile language control and update `users.locale`; verify an integration test for profile persistence and immediate re-rendering.
-- [ ] 1.11 Sync the cookie from the profile on sign-in with `signIn(..., { redirect: false })`; verify an integration test that a Greek-preferring user opens a new session in Greek.
-- [ ] 1.12 Update setup and invite acceptance to store the cookie locale on new accounts; verify integration tests for both paths and the Greek auth E2E path.
-- [ ] 1.13 Document the localization architecture and catalog workflow in `docs/i18n/README.md`; verify the documented commands run as written.
+- [x] 1.1 Add `next-intl` to `package.json`, configure `createNextIntlPlugin` in `next.config.ts`, and verify `pnpm install` and `pnpm build` succeed.
+- [x] 1.2 Add `users.locale` (`text`, not null, default `en`, check `en`/`el`) to `src/db/schema.ts`, generate and apply the migration, and verify existing users read `en` in an integration test.
+- [x] 1.3 Add `src/i18n/config.ts` (locales, default, `Locale`, `isLocale`) and `src/i18n/request.ts` (cookie, `Accept-Language`, fallback); verify unit tests for the resolution order and `pnpm typecheck`.
+- [x] 1.4 Wire `NextIntlClientProvider`, `<html lang>`, and `generateMetadata` in `src/app/layout.tsx`; verify `pnpm typecheck` and a component test that Greek renders `lang="el"`.
+- [x] 1.5 Create `messages/en.json` and `messages/el.json` with the agreed namespaces and add `src/types/next-intl.d.ts`; verify `pnpm typecheck` rejects an unknown message key.
+- [x] 1.6 Add `pnpm i18n:check` for key parity, empty values, and placeholder parity, plus unit tests; verify the command fails for a missing key and a changed placeholder, then passes.
+- [x] 1.7 Add `src/i18n/format.ts` and update `src/lib/dates.ts`, `LocalTime`, and `DateDisplay` for locale-aware dates, USD, numbers, and durations; verify unit tests for Greek formatting and unchanged UTC values.
+- [x] 1.8 Add `src/i18n/labels.ts` for enum labels and replace navigation `label` with `labelKey`; verify unit tests for every enum group and `pnpm typecheck`.
+- [x] 1.9 Add the `opencrm_locale` cookie helpers and a `LanguageSwitcher` usable on auth pages; verify selecting Greek updates the cookie and re-renders the page in Greek.
+- [x] 1.10 Add the profile language control and update `users.locale`; verify an integration test for profile persistence and immediate re-rendering.
+- [x] 1.11 Sync the cookie from the profile on sign-in with `signIn(..., { redirect: false })`; verify an integration test that a Greek-preferring user opens a new session in Greek.
+- [x] 1.12 Update setup and invite acceptance to store the cookie locale on new accounts; verify integration tests for both paths and the Greek auth E2E path.
+- [x] 1.13 Document the localization architecture and catalog workflow in `docs/i18n/README.md`; verify the documented commands run as written.
 
 ## 2. Shared surfaces and contracts
 

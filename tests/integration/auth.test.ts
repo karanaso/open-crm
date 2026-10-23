@@ -13,7 +13,9 @@ import {
   changePassword,
   changeUserRole,
   findUserByEmail,
+  findUserById,
   setUserStatus,
+  updateUserLocale,
 } from "@/lib/services/users";
 import { verifyPassword } from "@/lib/auth/password";
 import {
@@ -47,6 +49,16 @@ describe("workspace access", () => {
     ).rejects.toThrow("Setup is already complete");
   });
 
+  it("stores the locale selected during setup", async () => {
+    const admin = await setupFirstAdmin({
+      name: "Greek Admin",
+      email: "greek-admin@example.com",
+      password: "AdminPassword123!",
+      locale: "el",
+    });
+    expect(admin.locale).toBe("el");
+  });
+
   it("serializes concurrent setup attempts", async () => {
     const results = await Promise.allSettled([
       setupFirstAdmin({
@@ -78,9 +90,11 @@ describe("workspace access", () => {
       token,
       name: "New Member",
       password: "MemberPassword123!",
+      locale: "el",
     });
     expect(user.email).toBe("new@example.com");
     expect(user.role).toBe("member");
+    expect(user.locale).toBe("el");
     expect(await verifyPassword(user.passwordHash, "MemberPassword123!")).toBe(true);
 
     await expect(
@@ -164,5 +178,22 @@ describe("workspace access", () => {
     expect((await findUserByEmail("MIXED.CASE@EXAMPLE.COM"))?.id).toBe(user.id);
     const [row] = await db.select().from(users).where(eq(users.id, user.id));
     expect(row.email).toBe("mixed.case@example.com");
+  });
+
+  it("defaults new accounts to English", async () => {
+    const user = await createUser();
+    expect(user.locale).toBe("en");
+  });
+
+  it("stores a Greek locale preference", async () => {
+    const user = await createUser({ locale: "el" });
+    expect(user.locale).toBe("el");
+  });
+
+  it("persists a locale preference change", async () => {
+    const user = await createUser();
+    const updated = await updateUserLocale(user.id, "el");
+    expect(updated.locale).toBe("el");
+    expect((await findUserById(user.id))?.locale).toBe("el");
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 
 export function LocalTime({
   value,
@@ -11,6 +12,7 @@ export function LocalTime({
   options?: Intl.DateTimeFormatOptions;
   fallback?: string;
 }) {
+  const locale = useLocale();
   const [formatted, setFormatted] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,13 +26,13 @@ export function LocalTime({
       return;
     }
     setFormatted(
-      new Intl.DateTimeFormat(undefined, {
+      new Intl.DateTimeFormat(locale, {
         dateStyle: "medium",
         timeStyle: "short",
         ...options,
       }).format(date),
     );
-  }, [fallback, options, value]);
+  }, [fallback, locale, options, value]);
 
   if (!formatted) {
     const date = value ? (value instanceof Date ? value : new Date(value)) : null;
@@ -50,12 +52,13 @@ export function LocalTime({
 }
 
 export function DateDisplay({ value, fallback = "—" }: { value: string | Date | null | undefined; fallback?: string }) {
+  const locale = useLocale();
   if (!value) return <span>{fallback}</span>;
   const date = value instanceof Date ? value : new Date(`${value}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) return <span>{fallback}</span>;
   return (
     <span>
-      {new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeZone: "UTC" }).format(date)}
+      {new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(date)}
     </span>
   );
 }

@@ -63,7 +63,12 @@ export async function getInviteByToken(token: string) {
   return invite ?? null;
 }
 
-export async function acceptInvite(input: { token: string; name: string; password: string }) {
+export async function acceptInvite(input: {
+  token: string;
+  name: string;
+  password: string;
+  locale?: "en" | "el";
+}) {
   return db.transaction(async (tx) => {
     const [invite] = await tx
       .select()
@@ -94,6 +99,7 @@ export async function acceptInvite(input: { token: string; name: string; passwor
         passwordHash: await hashPassword(input.password),
         role: invite.role,
         status: "active",
+        locale: input.locale ?? "en",
       })
       .returning();
 

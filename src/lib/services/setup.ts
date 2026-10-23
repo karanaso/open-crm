@@ -6,7 +6,12 @@ import { normalizeEmail, normalizeName } from "@/lib/auth/normalize";
 import { ensureDefaultPipeline } from "@/db/ensure-default-pipeline";
 import { AppError } from "@/lib/errors";
 
-export async function setupFirstAdmin(input: { name: string; email: string; password: string }) {
+export async function setupFirstAdmin(input: {
+  name: string;
+  email: string;
+  password: string;
+  locale?: "en" | "el";
+}) {
   const created = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(918273645)`);
 
@@ -23,6 +28,7 @@ export async function setupFirstAdmin(input: { name: string; email: string; pass
         passwordHash: await hashPassword(input.password),
         role: "admin",
         status: "active",
+        locale: input.locale ?? "en",
       })
       .returning();
 

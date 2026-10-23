@@ -4,3 +4,5 @@ allowBuilds:
   sharp: true
   "@tailwindcss/oxide": true
   "@node-rs/argon2": true
+  "@parcel/watcher": true
+  "@swc/core": true

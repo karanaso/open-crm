@@ -1,17 +1,8 @@
-export function formatDate(value: Date | string | null | undefined, options?: Intl.DateTimeFormatOptions) {
-  if (!value) return "—";
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeZone: "UTC",
-    ...options,
-  }).format(date);
-}
-
-export function formatDateTime(value: Date | string | null | undefined) {
-  return formatDate(value, { dateStyle: "medium", timeStyle: "short" });
-}
+export {
+  formatDate,
+  formatDateTime,
+  formatDurationHours,
+} from "@/i18n/format";
 
 export function todayUtc(now = new Date()) {
   return now.toISOString().slice(0, 10);
@@ -35,13 +26,6 @@ export function addDays(date: Date, days: number) {
   const result = new Date(date);
   result.setUTCDate(result.getUTCDate() + days);
   return result;
-}
-
-export function formatDurationHours(hours: number | null | undefined) {
-  if (hours === null || hours === undefined || !Number.isFinite(hours)) return "—";
-  if (hours < 1) return `${Math.round(hours * 60)}m`;
-  if (hours < 24) return `${hours.toFixed(1)}h`;
-  return `${(hours / 24).toFixed(1)}d`;
 }
 
 export function daysBetween(start: Date | string, end: Date | string) {

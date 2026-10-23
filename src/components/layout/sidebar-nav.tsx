@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   BarChart3,
   Building2,
@@ -13,23 +14,25 @@ import {
   Megaphone,
   Settings,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, NAV_ITEMS } from "@/lib/constants";
 
-const items = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/companies", label: "Companies", icon: Building2 },
-  { href: "/contacts", label: "Contacts", icon: Users },
-  { href: "/deals", label: "Deals", icon: Handshake },
-  { href: "/tickets", label: "Tickets", icon: LifeBuoy },
-  { href: "/campaigns", label: "Campaigns", icon: Megaphone },
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+const icons: Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon> = {
+  "/dashboard": LayoutDashboard,
+  "/companies": Building2,
+  "/contacts": Users,
+  "/deals": Handshake,
+  "/tickets": LifeBuoy,
+  "/campaigns": Megaphone,
+  "/tasks": CheckSquare,
+  "/settings": Settings,
+};
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <div className="flex h-full flex-col gap-6">
@@ -41,9 +44,9 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       </Link>
 
       <nav className="flex flex-1 flex-col gap-1">
-        {items.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
+          const Icon = icons[item.href];
           return (
             <Link
               key={item.href}
@@ -58,17 +61,13 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               )}
             >
               <Icon className="size-4" />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
       </nav>
 
-      <p className="px-2 text-xs text-muted-foreground">
-        One shared workspace
-        <br />
-        Sales · Support · Marketing
-      </p>
+      <p className="px-2 text-xs whitespace-pre-line text-muted-foreground">{t("tagline")}</p>
     </div>
   );
 }
