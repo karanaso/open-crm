@@ -28,47 +28,47 @@
 
 ## 3. Directory
 
-- [ ] 3.1 Backend: convert company, contact, tag, and CSV import errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/directory.test.ts tests/integration/csv-import.test.ts`.
-- [ ] 3.2 Frontend: extract companies, contacts, tags, and import strings into the catalogs and use them in the module; verify `pnpm i18n:check`, `pnpm typecheck`, and the English directory E2E spec.
-- [ ] 3.3 QA: add Greek directory coverage (list, create, import error, archive) and verify the new tests plus `pnpm test:e2e tests/e2e/02-directory.spec.ts`.
+- [x] 3.1 Backend: convert company, contact, tag, and CSV import errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/directory.test.ts tests/integration/csv-import.test.ts`.
+- [x] 3.2 Frontend: extract companies, contacts, tags, and import strings into the catalogs and use them in the module; verify `pnpm i18n:check`, `pnpm typecheck`, and the English directory E2E spec.
+- [x] 3.3 QA: add Greek directory coverage (list, create, import error, archive) and verify the new tests plus `pnpm test:e2e tests/e2e/02-directory.spec.ts`.
 
 ## 4. Sales
 
-- [ ] 4.1 Backend: convert deal and pipeline errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/deals.test.ts`.
-- [ ] 4.2 Frontend: extract deals, pipelines, Kanban, and metrics strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English deals E2E spec.
-- [ ] 4.3 QA: add Greek sales coverage (create, move, win/lose, occupied stage) and verify the new tests plus `pnpm test:e2e tests/e2e/03-deals.spec.ts`.
+- [x] 4.1 Backend: convert deal and pipeline errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/deals.test.ts`.
+- [x] 4.2 Frontend: extract deals, pipelines, Kanban, and metrics strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English deals E2E spec.
+- [x] 4.3 QA: add Greek sales coverage (create, move, win/lose, occupied stage) and verify the new tests plus `pnpm test:e2e tests/e2e/03-deals.spec.ts`.
 
 ## 5. Support
 
-- [ ] 5.1 Backend: convert ticket, comment, and SLA errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/tickets.test.ts`.
-- [ ] 5.2 Frontend: extract ticket list, detail, form, comment, and SLA strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English tickets E2E spec.
-- [ ] 5.3 QA: add Greek support coverage (status transition, internal note, SLA state) and verify the new tests plus `pnpm test:e2e tests/e2e/04-tickets.spec.ts`.
+- [x] 5.1 Backend: convert ticket, comment, and SLA errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/tickets.test.ts`.
+- [x] 5.2 Frontend: extract ticket list, detail, form, comment, and SLA strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English tickets E2E spec.
+- [x] 5.3 QA: add Greek support coverage (status transition, internal note, SLA state) and verify the new tests plus `pnpm test:e2e tests/e2e/04-tickets.spec.ts`.
 
 ## 6. Marketing
 
-- [ ] 6.1 Backend: convert segment and campaign errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/marketing.test.ts`.
-- [ ] 6.2 Frontend: extract segments, campaigns, audience, and metrics strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English marketing E2E spec.
-- [ ] 6.3 QA: add Greek marketing coverage (segment count, activation, snapshot, engagement) and verify the new tests plus `pnpm test:e2e tests/e2e/05-marketing.spec.ts`.
+- [x] 6.1 Backend: convert segment and campaign errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/marketing.test.ts`.
+- [x] 6.2 Frontend: extract segments, campaigns, audience, and metrics strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English marketing E2E spec.
+- [x] 6.3 QA: add Greek marketing coverage (segment count, activation, snapshot, engagement) and verify the new tests plus `pnpm test:e2e tests/e2e/05-marketing.spec.ts`.
 
 ## 7. Engagement timeline
 
-- [ ] 7.1 Backend: convert activity and task errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/engagement.test.ts`.
-- [ ] 7.2 Frontend: extract timeline, activity form, task form/section, and task list strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the relevant English E2E specs.
-- [ ] 7.3 QA: add Greek timeline/task coverage (log activity, edit permission, complete/reopen task) and verify the new tests plus the directory/deals E2E specs.
+- [x] 7.1 Backend: convert activity and task errors to descriptors and validation keys; verify `pnpm test:integration tests/integration/engagement.test.ts`.
+- [x] 7.2 Frontend: extract timeline, activity form, task form/section, and task list strings into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the relevant English E2E specs.
+- [x] 7.3 QA: add Greek timeline/task coverage (log activity, edit permission, complete/reopen task) and verify the new tests plus the directory/deals E2E specs.
 
 ## 8. Dashboard, search, and shell
 
-- [ ] 8.1 Frontend: extract dashboard metric labels, charts, recent activity, empty states, and search groups/empty states into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English dashboard/search E2E spec.
-- [ ] 8.2 QA: add Greek dashboard/search coverage (metrics, grouped search, short query) and verify the new tests plus `pnpm test:e2e tests/e2e/06-dashboard-search.spec.ts`.
-- [ ] 8.3 Accessibility: verify `lang`, localized aria labels, focus order, and the mobile menu in Greek; run `pnpm test:e2e tests/e2e/08-a11y.spec.ts` and document the result.
+- [x] 8.1 Frontend: extract dashboard metric labels, charts, recent activity, empty states, and search groups/empty states into the catalogs; verify `pnpm i18n:check`, `pnpm typecheck`, and the English dashboard/search E2E spec.
+- [x] 8.2 QA: add Greek dashboard/search coverage (metrics, grouped search, short query) and verify the new tests plus `pnpm test:e2e tests/e2e/06-dashboard-search.spec.ts`.
+- [x] 8.3 Accessibility: verify `lang`, localized aria labels, focus order, and the mobile menu in Greek; run `pnpm test:e2e tests/e2e/08-a11y.spec.ts` and document the result.
 
 ## 9. Translator and release
 
-- [ ] 9.1 Create `docs/i18n/glossary.md` and `docs/i18n/style-guide.md`; verify terms and formal Greek rules are documented.
-- [ ] 9.2 Complete `messages/el.json` with the translator, preserving keys and placeholders and leaving user data untranslated; verify `pnpm i18n:check` and review the diff.
-- [ ] 9.3 Review every Greek surface for grammar, pluralization, and text expansion; fix layout issues and verify the Greek E2E journey at desktop and mobile widths.
-- [ ] 9.4 Update `README.md` and `AGENTS.md` with supported locales, the switcher, catalog commands, and the rule that UI strings come from catalogs; verify the documented commands run as written.
-- [ ] 9.5 Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, `pnpm build`, and `pnpm i18n:check`; verify all pass from a clean tree.
+- [x] 9.1 Create `docs/i18n/glossary.md` and `docs/i18n/style-guide.md`; verify terms and formal Greek rules are documented.
+- [x] 9.2 Complete `messages/el.json` with the translator, preserving keys and placeholders and leaving user data untranslated; verify `pnpm i18n:check` and review the diff.
+- [x] 9.3 Review every Greek surface for grammar, pluralization, and text expansion; fix layout issues and verify the Greek E2E journey at desktop and mobile widths.
+- [x] 9.4 Update `README.md` and `AGENTS.md` with supported locales, the switcher, catalog commands, and the rule that UI strings come from catalogs; verify the documented commands run as written.
+- [x] 9.5 Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, `pnpm test:e2e`, `pnpm build`, and `pnpm i18n:check`; verify all pass from a clean tree.
 
 ## Workflow follow-up
 
