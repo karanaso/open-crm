@@ -222,20 +222,8 @@ export async function changePasswordAction(
     return { error: errorDescriptor(error) };
   }
 
-  try {
-    await signIn("credentials", {
-      email: user.email,
-      password: parsed.data.newPassword,
-      redirectTo: "/settings/profile?changed=1",
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: { key: "auth.passwordChangedSignIn" } };
-    }
-    throw error;
-  }
-
-  return null;
+  await signOut({ redirect: false });
+  redirect("/login?changed=1");
 }
 
 export async function createInviteAction(

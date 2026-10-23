@@ -4,27 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { PasswordForm, ProfileForm } from "@/components/settings/profile-forms";
 import { requireUser } from "@/lib/auth/guards";
-import { getParam } from "@/lib/search-params";
 
-export default async function ProfileSettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function ProfileSettingsPage() {
   const user = await requireUser();
-  const raw = await searchParams;
-  const changed = getParam(raw, "changed");
   const t = await getTranslations("settings");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader title={t("profile")} description={t("profileDescription")} />
-
-      {changed ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          {t("passwordUpdated")}
-        </p>
-      ) : null}
 
       <Card>
         <CardHeader>

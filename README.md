@@ -137,6 +137,7 @@ The E2E tests are ordered: the auth spec performs first-run setup and creates th
 ## Team operations
 
 - **Invitations** are single-use links valid for 7 days. The link is shown once; there is no email delivery, so copy and share it securely.
+- **Password changes** sign out the current session and all other sessions; sign in again with the new password.
 - **Password resets** are admin-issued links valid for 24 hours. Redeeming a link signs out other sessions.
 - **Deactivation** blocks access immediately. The last active administrator cannot be deactivated or demoted.
 - **Roles**: administrators manage the team, invitations, resets, and pipeline configuration. Members can manage all CRM records.
