@@ -1,21 +1,22 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { Locale } from "@/i18n/config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(value: number | string | null | undefined) {
+export function formatCurrency(value: number | string | null | undefined, locale: Locale = "en") {
   const amount = Number(value ?? 0);
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 2,
   }).format(Number.isFinite(amount) ? amount : 0);
 }
 
-export function formatNumber(value: number | string | null | undefined) {
-  return new Intl.NumberFormat("en-US").format(Number(value ?? 0));
+export function formatNumber(value: number | string | null | undefined, locale: Locale = "en") {
+  return new Intl.NumberFormat(locale).format(Number(value ?? 0));
 }
 
 export function initials(name: string) {

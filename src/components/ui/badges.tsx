@@ -1,5 +1,9 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
-import { cn, titleCase } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { enumLabelKey } from "@/i18n/labels";
 import type { CampaignRecipient, Campaign, Deal, Task, Ticket, TicketComment } from "@/db/schema";
 
 const dealStatusVariant = {
@@ -31,22 +35,35 @@ const campaignStatusVariant = {
 } as const;
 
 export function DealStatusBadge({ status }: { status: Deal["status"] }) {
-  return <Badge variant={dealStatusVariant[status]}>{titleCase(status)}</Badge>;
+  const t = useTranslations();
+  return <Badge variant={dealStatusVariant[status]}>{t(enumLabelKey("dealStatus", status))}</Badge>;
 }
 
 export function TicketStatusBadge({ status }: { status: Ticket["status"] }) {
-  return <Badge variant={ticketStatusVariant[status]}>{titleCase(status)}</Badge>;
+  const t = useTranslations();
+  return (
+    <Badge variant={ticketStatusVariant[status]}>{t(enumLabelKey("ticketStatus", status))}</Badge>
+  );
 }
 
 export function PriorityBadge({ priority }: { priority: Ticket["priority"] | Task["priority"] }) {
-  return <Badge variant={priorityVariant[priority as keyof typeof priorityVariant]}>{titleCase(priority)}</Badge>;
+  const t = useTranslations();
+  return (
+    <Badge variant={priorityVariant[priority as keyof typeof priorityVariant]}>
+      {t(enumLabelKey("ticketPriority", priority))}
+    </Badge>
+  );
 }
 
 export function CampaignStatusBadge({ status }: { status: Campaign["status"] }) {
-  return <Badge variant={campaignStatusVariant[status]}>{titleCase(status)}</Badge>;
+  const t = useTranslations();
+  return (
+    <Badge variant={campaignStatusVariant[status]}>{t(enumLabelKey("campaignStatus", status))}</Badge>
+  );
 }
 
 export function RecipientStatusBadge({ status }: { status: CampaignRecipient["status"] }) {
+  const t = useTranslations();
   const variant =
     status === "converted"
       ? "success"
@@ -57,13 +74,14 @@ export function RecipientStatusBadge({ status }: { status: CampaignRecipient["st
           : status === "sent"
             ? "default"
             : "secondary";
-  return <Badge variant={variant}>{titleCase(status)}</Badge>;
+  return <Badge variant={variant}>{t(enumLabelKey("recipientStatus", status))}</Badge>;
 }
 
 export function CommentVisibilityBadge({ visibility }: { visibility: TicketComment["visibility"] }) {
+  const t = useTranslations();
   return (
     <Badge variant={visibility === "internal" ? "warning" : "outline"}>
-      {visibility === "internal" ? "Internal note" : "Reply"}
+      {t(enumLabelKey("commentVisibility", visibility))}
     </Badge>
   );
 }

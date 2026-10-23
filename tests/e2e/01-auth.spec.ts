@@ -77,7 +77,7 @@ test.describe("authentication and team onboarding", () => {
     const memberRow = page.locator("tr", { hasText: MEMBER.email });
     await memberRow.getByRole("button", { name: "Deactivate" }).click();
     await expect(
-      page.locator("tr", { hasText: MEMBER.email }).getByText("inactive", { exact: true }),
+      page.locator("tr", { hasText: MEMBER.email }).getByText("Inactive", { exact: true }),
     ).toBeVisible();
     await logout(page);
 

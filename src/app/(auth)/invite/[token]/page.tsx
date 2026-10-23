@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getInviteByToken } from "@/lib/services/invites";
 import { AcceptInviteForm } from "@/components/auth/accept-invite-form";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,16 +11,18 @@ export const dynamic = "force-dynamic";
 export default async function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const invite = await getInviteByToken(token);
+  const t = await getTranslations("auth");
+  const tEnums = await getTranslations("enums");
 
   if (!invite) {
     return (
       <EmptyState
         icon={UserX}
-        title="This invitation is not available"
-        description="The link may have expired, been used already, or been revoked. Ask an administrator for a new invitation."
+        title={t("inviteUnavailableTitle")}
+        description={t("inviteUnavailableDescription")}
         action={
           <Button asChild variant="outline">
-            <Link href="/login">Go to sign in</Link>
+            <Link href="/login">{t("goToSignIn")}</Link>
           </Button>
         }
       />
@@ -29,10 +32,10 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <p className="text-xs font-medium tracking-wide text-primary uppercase">Team invitation</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Join the workspace</h1>
+        <p className="text-xs font-medium tracking-wide text-primary uppercase">{t("teamInvitation")}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("inviteTitle")}</h1>
         <p className="text-sm text-muted-foreground">
-          Set your name and password to activate your {invite.role} account.
+          {t("inviteDescription", { role: tEnums(`role.${invite.role}`) })}
         </p>
       </div>
       <AcceptInviteForm token={token} email={invite.email} />

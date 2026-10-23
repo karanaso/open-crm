@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { redirect } from "@/lib/redirect";
 import { auth } from "@/auth";
 import { countUsers } from "@/db/ensure-default-pipeline";
@@ -12,14 +13,14 @@ export default async function SetupPage() {
   const session = await auth();
   if (session?.user?.id) redirect("/dashboard");
 
+  const t = await getTranslations("auth");
+
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <p className="text-xs font-medium tracking-wide text-primary uppercase">First-run setup</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Create your workspace</h1>
-        <p className="text-sm text-muted-foreground">
-          The first account becomes the workspace administrator. You can invite the rest of the team next.
-        </p>
+        <p className="text-xs font-medium tracking-wide text-primary uppercase">{t("setupEyebrow")}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("setupTitle")}</h1>
+        <p className="text-sm text-muted-foreground">{t("setupDescription")}</p>
       </div>
       <SetupForm />
     </div>

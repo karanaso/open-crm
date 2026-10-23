@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ArrowRight, Settings2, Shield, SlidersHorizontal, UserRound, Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -7,17 +8,20 @@ import { requireUser } from "@/lib/auth/guards";
 
 export default async function SettingsPage() {
   const user = await requireUser();
+  const t = await getTranslations("settings");
+  const tNav = await getTranslations("nav");
+  const tEnums = await getTranslations("enums");
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" description="Manage your profile, team access, and sales pipeline configuration." />
+      <PageHeader title={tNav("settings")} description={t("description")} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Link href="/settings/profile" className="group">
           <Card className="h-full transition-colors group-hover:border-primary/40">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserRound className="size-4" /> Profile and password
+                <UserRound className="size-4" /> {t("profileAndPassword")}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center justify-between text-sm text-muted-foreground">
@@ -33,11 +37,11 @@ export default async function SettingsPage() {
               <Card className="h-full transition-colors group-hover:border-primary/40">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="size-4" /> Team administration
+                    <Users className="size-4" /> {t("teamAdministration")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Invite members, roles, access, and password resets</span>
+                  <span>{t("teamDescription")}</span>
                   <ArrowRight className="size-4" />
                 </CardContent>
               </Card>
@@ -47,11 +51,11 @@ export default async function SettingsPage() {
               <Card className="h-full transition-colors group-hover:border-primary/40">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <SlidersHorizontal className="size-4" /> Pipelines
+                    <SlidersHorizontal className="size-4" /> {t("pipelines")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Stages, probabilities, and the default pipeline</span>
+                  <span>{t("pipelinesDescription")}</span>
                   <ArrowRight className="size-4" />
                 </CardContent>
               </Card>
@@ -63,19 +67,16 @@ export default async function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="size-4" /> Workspace access
+            <Shield className="size-4" /> {t("workspaceAccess")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p className="flex items-center gap-2">
-            <Badge variant={user.role === "admin" ? "default" : "outline"}>{user.role}</Badge>
-            {user.role === "admin"
-              ? "You can manage the team and pipeline configuration."
-              : "Ask an administrator for team or pipeline changes."}
+            <Badge variant={user.role === "admin" ? "default" : "outline"}>{tEnums(`role.${user.role}`)}</Badge>
+            {user.role === "admin" ? t("workspaceAccessAdmin") : t("workspaceAccessMember")}
           </p>
           <p className="flex items-center gap-2 text-muted-foreground">
-            <Settings2 className="size-4" /> This deployment uses one shared workspace. All active members can
-            view and edit CRM records.
+            <Settings2 className="size-4" /> {t("sharedWorkspace")}
           </p>
         </CardContent>
       </Card>

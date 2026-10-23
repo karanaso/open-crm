@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { Copy, MailPlus } from "lucide-react";
 import { toast } from "sonner";
 import { createInviteAction } from "@/actions/auth";
@@ -13,27 +14,37 @@ import { useMessageTranslator } from "@/i18n/messages";
 export function InviteMemberForm() {
   const [state, action, pending] = useActionState<ActionState, FormData>(createInviteAction, null);
   const translate = useMessageTranslator();
+  const t = useTranslations("settings");
+  const tAuth = useTranslations("auth");
+  const tEnums = useTranslations("enums");
+  const tCommon = useTranslations("common");
 
   return (
     <form action={action} className="space-y-4">
       <FormError message={state?.error} />
       <div className="grid gap-4 sm:grid-cols-[1fr_160px_auto] sm:items-end">
-        <FormField label="Email" htmlFor="invite-email" error={state?.fieldErrors?.email?.[0]} required>
-          <Input id="invite-email" name="email" type="email" placeholder="teammate@company.com" required />
+        <FormField label={tAuth("email")} htmlFor="invite-email" error={state?.fieldErrors?.email?.[0]} required>
+          <Input
+            id="invite-email"
+            name="email"
+            type="email"
+            placeholder={t("teammateEmailPlaceholder")}
+            required
+          />
         </FormField>
-        <FormField label="Role" htmlFor="invite-role" error={state?.fieldErrors?.role?.[0]} required>
+        <FormField label={t("role")} htmlFor="invite-role" error={state?.fieldErrors?.role?.[0]} required>
           <select
             id="invite-role"
             name="role"
             defaultValue="member"
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="member">Member</option>
-            <option value="admin">Administrator</option>
+            <option value="member">{tEnums("role.member")}</option>
+            <option value="admin">{tEnums("role.admin")}</option>
           </select>
         </FormField>
         <Button type="submit" disabled={pending}>
-          <MailPlus className="size-4" /> {pending ? "Creating…" : "Create invitation"}
+          <MailPlus className="size-4" /> {pending ? t("creatingInvitation") : t("createInvitation")}
         </Button>
       </div>
 
@@ -53,10 +64,10 @@ export function InviteMemberForm() {
                 toast.success(translate("settings.inviteLinkCopied"));
               }}
             >
-              <Copy className="size-3.5" /> Copy
+              <Copy className="size-3.5" /> {tCommon("copy")}
             </Button>
           </div>
-          <p className="mt-1 text-xs">This link is shown once. Share it securely.</p>
+          <p className="mt-1 text-xs">{t("inviteLinkOnce")}</p>
         </div>
       ) : null}
     </form>

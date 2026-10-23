@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { RotateCcw, ShieldOff, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageError } from "@/components/ui/page-error";
@@ -29,19 +30,20 @@ export default async function TeamSettingsPage({
   const raw = await searchParams;
   const error = getParam(raw, "error");
   const [members, invites] = await Promise.all([listTeamMembers(), listPendingInvites()]);
+  const t = await getTranslations("settings");
+  const tCommon = await getTranslations("common");
+  const tAuth = await getTranslations("auth");
+  const tEnums = await getTranslations("enums");
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Team"
-        description="Invite teammates, manage roles, deactivate access, and issue password reset links."
-      />
+      <PageHeader title={t("team")} description={t("teamPageDescription")} />
 
       <PageError code={error} />
 
       <Card>
         <CardHeader>
-          <CardTitle>Invite a teammate</CardTitle>
+          <CardTitle>{t("inviteTeammate")}</CardTitle>
         </CardHeader>
         <CardContent>
           <InviteMemberForm />
@@ -50,17 +52,17 @@ export default async function TeamSettingsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Members ({members.length})</CardTitle>
+          <CardTitle>{t("membersCount", { count: members.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Member</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t("member")}</TableHead>
+                <TableHead>{t("role")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("joined")}</TableHead>
+                <TableHead>{tCommon("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -70,7 +72,7 @@ export default async function TeamSettingsPage({
                     <p className="font-medium">{member.name}</p>
                     <p className="text-xs text-muted-foreground">{member.email}</p>
                     {member.id === currentUser.id ? (
-                      <Badge variant="outline" className="mt-1">You</Badge>
+                      <Badge variant="outline" className="mt-1">{t("you")}</Badge>
                     ) : null}
                   </TableCell>
                   <TableCell>
@@ -78,20 +80,20 @@ export default async function TeamSettingsPage({
                       <select
                         name="role"
                         defaultValue={member.role}
-                        aria-label={`Role for ${member.name}`}
+                        aria-label={t("roleFor", { name: member.name })}
                         className="h-8 rounded-md border border-input bg-background px-2 text-xs"
                       >
-                        <option value="member">Member</option>
-                        <option value="admin">Administrator</option>
+                        <option value="member">{tEnums("role.member")}</option>
+                        <option value="admin">{tEnums("role.admin")}</option>
                       </select>
                       <Button type="submit" variant="secondary" size="sm">
-                        Save
+                        {tCommon("save")}
                       </Button>
                     </form>
                   </TableCell>
                   <TableCell>
                     <Badge variant={member.status === "active" ? "success" : "secondary"}>
-                      {member.status}
+                      {tEnums(`userStatus.${member.status}`)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -104,16 +106,16 @@ export default async function TeamSettingsPage({
                         member.status === "active" ? (
                           <form action={setUserStatusFormAction.bind(null, member.id, "inactive")}>
                             <ConfirmSubmit
-                              message={`Deactivate ${member.name}? They will lose access immediately.`}
+                              message={t("deactivateConfirm", { name: member.name })}
                               className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-destructive")}
                             >
-                              <ShieldOff className="size-3.5" /> Deactivate
+                              <ShieldOff className="size-3.5" /> {t("deactivate")}
                             </ConfirmSubmit>
                           </form>
                         ) : (
                           <form action={setUserStatusFormAction.bind(null, member.id, "active")}>
                             <Button type="submit" variant="ghost" size="sm">
-                              <RotateCcw className="size-3.5" /> Reactivate
+                              <RotateCcw className="size-3.5" /> {t("reactivate")}
                             </Button>
                           </form>
                         )
@@ -129,36 +131,36 @@ export default async function TeamSettingsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Pending invitations ({invites.length})</CardTitle>
+          <CardTitle>{t("pendingInvitesCount", { count: invites.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {invites.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No pending invitations.</p>
+            <p className="text-sm text-muted-foreground">{t("noPendingInvites")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{tAuth("email")}</TableHead>
+                  <TableHead>{t("role")}</TableHead>
+                  <TableHead>{t("expires")}</TableHead>
+                  <TableHead>{tCommon("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {invites.map((invite) => (
                   <TableRow key={invite.id}>
                     <TableCell>{invite.email}</TableCell>
-                    <TableCell className="capitalize">{invite.role}</TableCell>
+                    <TableCell className="capitalize">{tEnums(`role.${invite.role}`)}</TableCell>
                     <TableCell>
                       <LocalTime value={invite.expiresAt} />
                     </TableCell>
                     <TableCell>
                       <form action={revokeInviteFormAction.bind(null, invite.id)}>
                         <ConfirmSubmit
-                          message="Revoke this invitation?"
+                          message={t("revokeInviteConfirm")}
                           className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-destructive")}
                         >
-                          <Trash2 className="size-3.5" /> Revoke
+                          <Trash2 className="size-3.5" /> {t("revoke")}
                         </ConfirmSubmit>
                       </form>
                     </TableCell>

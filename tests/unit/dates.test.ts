@@ -7,6 +7,7 @@ import {
   todayUtc,
 } from "@/lib/dates";
 import { formatCurrencyUsd, formatDate } from "@/i18n/format";
+import { formatCurrency, formatNumber } from "@/lib/utils";
 
 const now = new Date("2026-10-21T12:00:00Z");
 
@@ -49,5 +50,10 @@ describe("date helpers", () => {
     expect(formatDurationHours(0.5, "el")).toBe("30λ");
     expect(formatDurationHours(4, "el")).toBe("4,0ώ");
     expect(formatDurationHours(48, "el")).toBe("2,0ημ");
+  });
+
+  it("formats shared currency and numbers by locale", () => {
+    expect(formatCurrency(1234.5, "el")).toContain("1.234,50");
+    expect(formatNumber(1234.5, "el")).toBe("1.234,5");
   });
 });

@@ -1,18 +1,22 @@
 "use client";
 
 import type { ButtonHTMLAttributes } from "react";
+import { useTranslations } from "next-intl";
 
 export function ConfirmSubmit({
-  message = "Are you sure?",
+  message,
   children,
   onClick,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { message?: string }) {
+  const t = useTranslations("common");
+  const prompt = message ?? t("confirmPrompt");
+
   return (
     <button
       {...props}
       onClick={(event) => {
-        if (!window.confirm(message)) {
+        if (!window.confirm(prompt)) {
           event.preventDefault();
           return;
         }

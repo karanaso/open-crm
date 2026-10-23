@@ -18,17 +18,17 @@ export default async function ProfileSettingsPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="Profile" description="Update your display name or change your password." />
+      <PageHeader title={t("profile")} description={t("profileDescription")} />
 
       {changed ? (
         <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Password updated. Other sessions have been signed out.
+          {t("passwordUpdated")}
         </p>
       ) : null}
 
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
+          <CardTitle>{t("profile")}</CardTitle>
         </CardHeader>
         <CardContent>
           <ProfileForm name={user.name} email={user.email} />
@@ -47,7 +47,7 @@ export default async function ProfileSettingsPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Change password</CardTitle>
+          <CardTitle>{t("changePassword")}</CardTitle>
         </CardHeader>
         <CardContent>
           <PasswordForm />

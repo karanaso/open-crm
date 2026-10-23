@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getPasswordResetByToken } from "@/lib/services/invites";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,16 +11,17 @@ export const dynamic = "force-dynamic";
 export default async function ResetPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const row = await getPasswordResetByToken(token);
+  const t = await getTranslations("auth");
 
   if (!row) {
     return (
       <EmptyState
         icon={KeyRound}
-        title="This reset link is not available"
-        description="The link may have expired or already been used. Ask an administrator to generate a new one."
+        title={t("resetUnavailableTitle")}
+        description={t("resetUnavailableDescription")}
         action={
           <Button asChild variant="outline">
-            <Link href="/login">Go to sign in</Link>
+            <Link href="/login">{t("goToSignIn")}</Link>
           </Button>
         }
       />
@@ -29,11 +31,13 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <p className="text-xs font-medium tracking-wide text-primary uppercase">Password reset</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Choose a new password</h1>
+        <p className="text-xs font-medium tracking-wide text-primary uppercase">{t("passwordReset")}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("resetTitle")}</h1>
         <p className="text-sm text-muted-foreground">
-          Updating the password for <span className="font-medium">{row.user.email}</span> will sign out other
-          sessions.
+          {t.rich("resetDescription", {
+            email: row.user.email,
+            b: (chunks) => <span className="font-medium">{chunks}</span>,
+          })}
         </p>
       </div>
       <ResetPasswordForm token={token} />

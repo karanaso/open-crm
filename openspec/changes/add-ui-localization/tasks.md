@@ -22,9 +22,9 @@
 - [x] 2.2 Convert Zod schemas to `validation.*` keys and add `zodIssueKey`; verify unit tests for required, min, max, uuid, and the two locales.
 - [x] 2.3 Update `FormError`, `FormField`, auth/settings forms, and import report rendering to translate descriptors; verify component tests for Greek field errors and error banners.
 - [x] 2.4 Localize root metadata, auth layout copy, app shell, sidebar/mobile navigation, user menu, and the global search placeholder; verify the English E2E shell and Greek shell assertions.
-- [ ] 2.5 Localize setup, sign-in, invite, reset, profile, and team pages plus their success and error messages; verify auth/team integration tests and the Greek auth E2E path.
-- [ ] 2.6 Localize shared UI primitives and common states (empty state, pagination, confirm submit, toaster, page header, local/date display) without changing behavior; verify component tests and `pnpm test`.
-- [ ] 2.7 Document the error and validation descriptor contract in `docs/i18n/errors.md`; verify its examples match the implemented helpers.
+- [x] 2.5 Localize setup, sign-in, invite, reset, profile, and team pages plus their success and error messages; verify auth/team integration tests and the Greek auth E2E path.
+- [x] 2.6 Localize shared UI primitives and common states (empty state, pagination, confirm submit, toaster, page header, local/date display) without changing behavior; verify component tests and `pnpm test`.
+- [x] 2.7 Document the error and validation descriptor contract in `docs/i18n/errors.md`; verify its examples match the implemented helpers.
 
 ## 3. Directory
 

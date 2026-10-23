@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "@/lib/redirect";
 import { auth } from "@/auth";
 import { countUsers } from "@/db/ensure-default-pipeline";
@@ -21,26 +22,27 @@ export default async function LoginPage({
 
   const rawCallback = params.callbackUrl;
   const callbackUrl = sanitizeCallbackUrl(Array.isArray(rawCallback) ? rawCallback[0] : rawCallback);
+  const t = await getTranslations("auth");
 
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to your team workspace.</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("welcomeBack")}</h1>
+        <p className="text-sm text-muted-foreground">{t("signInSubtitle")}</p>
       </div>
 
       {params.reset ? (
         <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Password updated. Sign in with your new password.
+          {t("passwordResetSuccess")}
         </p>
       ) : null}
 
       <LoginForm callbackUrl={callbackUrl} />
 
       <p className="text-center text-xs text-muted-foreground">
-        Need access? Ask an administrator for an invitation link.{" "}
+        {t("needAccess")}{" "}
         <Link href="/" className="underline underline-offset-4">
-          Back home
+          {t("backHome")}
         </Link>
       </p>
     </div>

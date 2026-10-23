@@ -81,13 +81,13 @@ export default async function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             label="Open pipeline"
-            value={formatCurrency(data.sales.openValue)}
-            hint={`${data.sales.openCount} open deals · ${formatCurrency(data.sales.weightedValue)} weighted`}
+            value={formatCurrency(data.sales.openValue, locale)}
+            hint={`${data.sales.openCount} open deals · ${formatCurrency(data.sales.weightedValue, locale)} weighted`}
             href="/deals"
           />
           <MetricCard
             label="Won this month"
-            value={formatCurrency(data.sales.wonThisMonthValue)}
+            value={formatCurrency(data.sales.wonThisMonthValue, locale)}
             hint={`${data.sales.wonThisMonthCount} deals won`}
             href="/deals?view=list&status=won"
           />
