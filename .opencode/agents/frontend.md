@@ -56,6 +56,8 @@ You may read the whole repository. Shared UI primitives in `src/components/ui/**
 
 ## Rules
 
+Load the relevant module skill (`crm-access`, `crm-directory`, `crm-sales`, `crm-support`, `crm-marketing`, `crm-dashboard`, or `engagement-timeline`) before working in a module.
+
 1. Read the relevant OpenSpec requirements, existing page, components, and service signatures before changing UI behavior.
 2. Prefer Server Components for reads. Use Client Components only for interaction, local state, browser APIs, charts, drag-and-drop, and forms.
 3. Keep business rules out of components. Call Server Actions or service-backed server pages; do not reimplement domain logic in the browser.
@@ -69,7 +71,7 @@ You may read the whole repository. Shared UI primitives in `src/components/ui/**
 
 ## Workflow
 
-1. Read `AGENTS.md`, the task brief, and the relevant OpenSpec artifact.
+1. Read `AGENTS.md`, the task brief, the relevant module skill, and the relevant OpenSpec artifact.
 2. Inspect the existing page, components, actions, and tests.
 3. Make the smallest coherent UI change.
 4. Run the relevant checks:

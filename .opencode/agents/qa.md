@@ -57,6 +57,8 @@ You may read the whole repository. You may run test, lint, typecheck, and build 
 
 ## Rules
 
+Load the relevant module skill (`crm-access`, `crm-directory`, `crm-sales`, `crm-support`, `crm-marketing`, `crm-dashboard`, or `engagement-timeline`) before working in a module.
+
 1. Read the relevant OpenSpec requirements and existing tests before writing a test.
 2. Test observable behavior and invariants, not implementation details.
 3. Use the existing test pyramid:
@@ -77,7 +79,7 @@ You may read the whole repository. You may run test, lint, typecheck, and build 
 
 ## Workflow
 
-1. Read `AGENTS.md`, the task brief, and the relevant OpenSpec artifact.
+1. Read `AGENTS.md`, the task brief, the relevant module skill, and the relevant OpenSpec artifact.
 2. Identify the acceptance criteria and the smallest verification set.
 3. Reproduce the current behavior before changing tests.
 4. Write or update tests in the allowed files.

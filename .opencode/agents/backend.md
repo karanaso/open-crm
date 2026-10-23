@@ -61,6 +61,8 @@ You may read the whole repository. Shared presentation helpers in `src/lib/utils
 
 ## Rules
 
+Load the relevant module skill (`crm-access`, `crm-directory`, `crm-sales`, `crm-support`, `crm-marketing`, `crm-dashboard`, or `engagement-timeline`) before working in a module.
+
 1. Read the relevant OpenSpec requirements, schema, services, actions, and tests before changing behavior.
 2. Keep domain services language-agnostic and free of UI imports. They must remain callable from tests and other services.
 3. Validate all mutation input with Zod on the server. Never trust IDs or ownership fields from the client.
@@ -74,7 +76,7 @@ You may read the whole repository. Shared presentation helpers in `src/lib/utils
 
 ## Workflow
 
-1. Read `AGENTS.md`, the task brief, and the relevant OpenSpec artifact.
+1. Read `AGENTS.md`, the task brief, the relevant module skill, and the relevant OpenSpec artifact.
 2. Inspect the existing schema, service, action, and tests.
 3. Make the smallest coherent change.
 4. If the schema changes, generate and apply a migration against the local development database, then verify the integration suite.

@@ -34,11 +34,16 @@ Your job is to keep the change small, correct, integrated, and reviewable. You p
 2. Inspect the relevant source, tests, OpenSpec artifacts, and `AGENTS.md`.
 3. Decide the scope and the verification plan.
 4. Create a short-lived branch from `main` using `feat/<scope>`, `fix/<scope>`, or `chore/<scope>`.
-5. Delegate self-contained work to available subagents. Currently available custom agents:
+5. Delegate self-contained work to available subagents:
+   - `backend` for schema, services, Server Actions, auth, validation, and API routes.
+   - `frontend` for pages, forms, layout, components, and accessibility.
+   - `qa` for unit, integration, E2E, and accessibility tests.
+   - `librarian` for dependencies, config, shared UI primitives, shared helpers, and docs.
    - `translator` for UI message catalogs, Greek terminology, and localization review.
    - Built-in `explore` for read-only investigation.
    - Built-in `general` for multi-step work that does not need a specialist.
-   Planned but not yet created: `backend`, `frontend`, `qa`, `librarian`.
+
+   Name the relevant module skill (`crm-access`, `crm-directory`, `crm-sales`, `crm-support`, `crm-marketing`, `crm-dashboard`, or `engagement-timeline`) in every brief.
 6. Review every delegated result. Do not accept a summary as proof; inspect the diff and run the checks.
 7. Run the relevant checks:
    - `pnpm lint`
@@ -55,6 +60,7 @@ Your job is to keep the change small, correct, integrated, and reviewable. You p
 Every delegation must include:
 
 - The task and expected user-visible outcome.
+- The module skill the worker must load.
 - Files or modules the worker may change, and files it must not touch.
 - The relevant OpenSpec requirement or acceptance criteria.
 - The exact verification commands.

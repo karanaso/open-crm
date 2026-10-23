@@ -88,9 +88,24 @@ Shared cross-cutting code: activity timeline, tasks, validation, auth guards, UI
 | `frontend` | subagent | Pages, layouts, forms, client components, accessibility, responsive behavior |
 | `qa` | subagent | Unit/integration/E2E tests, regression checks, accessibility verification |
 | `librarian` | subagent | Dependencies, config, shared UI primitives, shared helpers, documentation |
-| `translator` | all | Greek-first message catalogs, glossary, terminology, pluralization, localization review |
+| `translator` | all | Greek message catalogs, glossary, terminology, pluralization, localization review |
 
-- Module knowledge should live in skills such as `crm-directory`, `crm-sales`, `crm-support`, `crm-marketing`, `crm-dashboard`, and `crm-access`.
+### Module skills
+
+Load the relevant module skill alongside the role agent; do not create per-module agents.
+
+| Skill | Covers |
+| --- | --- |
+| `crm-access` | setup, authentication, invitations, roles, profile, team administration |
+| `crm-directory` | companies, contacts, tags, CSV import, directory search |
+| `crm-sales` | pipelines, stages, deals, Kanban, pipeline metrics |
+| `crm-support` | tickets, comments, status machine, SLA |
+| `crm-marketing` | segments, campaigns, audience snapshots, engagement |
+| `crm-dashboard` | dashboard aggregates, charts, recent activity, global search, navigation shell |
+| `engagement-timeline` | activities, tasks, shared record timeline |
+
+- Delegation names both the role agent and the module skill, for example "backend + `crm-sales`".
+- Module skills carry file maps and invariants; role agents keep path permissions and shared rules.
 - Workers return a summary, files changed, tests run, failures, and open questions.
 - Only the lead commits. Workers must not commit or push.
 - Use short-lived branches from `main`: `feat/<scope>`, `fix/<scope>`, `chore/<scope>`.
