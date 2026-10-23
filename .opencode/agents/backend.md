@@ -12,6 +12,9 @@ permissions:
     resource: "src/lib/**"
     effect: allow
   - action: edit
+    resource: "messages/**"
+    effect: allow
+  - action: edit
     resource: "src/actions/**"
     effect: allow
   - action: edit

@@ -15,6 +15,9 @@ permissions:
     resource: "src/components/**"
     effect: allow
   - action: edit
+    resource: "messages/**"
+    effect: allow
+  - action: edit
     resource: "public/**"
     effect: allow
   - action: shell
