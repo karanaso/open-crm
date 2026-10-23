@@ -80,7 +80,7 @@ Change `setLocaleCookie` to write `opencrm_locale` with `httpOnly: false`, keepi
 
 ### D4. Not-found page uses the normal shell
 
-`src/app/not-found.tsx` uses `getTranslations("errorPages")` and renders the localized title, description, and a dashboard link. It remains inside the root layout, so `<html lang>` and the provider are already correct.
+`src/app/not-found.tsx` uses `getTranslations("errorPages")` and renders the localized title, description, and a dashboard link. It remains inside the root layout, so `<html lang>` and the provider are already correct. Because it uses request-scoped translations, it exports `dynamic = "force-dynamic"` so Next.js does not attempt to collect `/_not-found` page data without a request context.
 
 **Why:** 404s are normal navigations, not root failures; they should use the same shell and locale as the rest of the app.
 
