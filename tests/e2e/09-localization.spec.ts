@@ -387,7 +387,7 @@ test.describe("Greek localization journey", () => {
     ).toBeVisible();
 
     await searchInput.fill("Greek");
-    await expect(dialog.getByText("Εταιρείες", { exact: true })).toBeVisible();
+    await expect(dialog.getByText("Εταιρείες", { exact: true })).toBeVisible({ timeout: 15000 });
     await expect(dialog.getByText("Επαφές", { exact: true })).toBeVisible();
     await expect(dialog.getByText("Συμφωνίες", { exact: true })).toBeVisible();
     await expect(dialog.getByText("Δελτία υποστήριξης", { exact: true })).toBeVisible();

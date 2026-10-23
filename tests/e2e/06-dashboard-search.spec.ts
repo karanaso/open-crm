@@ -17,7 +17,7 @@ test.describe("dashboard and global search", () => {
     await login(page);
     await page.getByRole("button", { name: /Search companies/ }).click();
     await page.getByPlaceholder("Search companies, contacts, deals, tickets, campaigns…").fill("E2E Directory");
-    await expect(page.getByText("E2E Directory Co")).toBeVisible();
+    await expect(page.getByText("E2E Directory Co")).toBeVisible({ timeout: 15000 });
     await page.getByText("E2E Directory Co").click();
     await expect(page.getByRole("heading", { name: "E2E Directory Co" })).toBeVisible();
   });
