@@ -4,24 +4,27 @@ import { normalizeEmail } from "@/lib/auth/normalize";
 export const emailSchema = z
   .string()
   .trim()
-  .min(1, "Email is required")
-  .email("Enter a valid email address")
+  .min(1, "validation.emailRequired")
+  .email("validation.email")
   .transform(normalizeEmail);
 
 export const passwordSchema = z
   .string()
-  .min(12, "Password must be at least 12 characters")
-  .max(128, "Password must be at most 128 characters");
+  .min(12, "validation.passwordMin")
+  .max(128, "validation.passwordMax");
 
 export const nameSchema = z
   .string()
   .trim()
-  .min(1, "Name is required")
-  .max(120, "Name must be at most 120 characters");
+  .min(1, "validation.nameRequired")
+  .max(120, "validation.nameMax");
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Password is required").max(128),
+  password: z
+    .string()
+    .min(1, "validation.passwordRequired")
+    .max(128, "validation.passwordMax"),
 });
 
 export const setupSchema = z.object({
@@ -42,22 +45,22 @@ export const inviteAcceptSchema = z.object({
 
 export const passwordChangeSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current password is required"),
+    currentPassword: z.string().min(1, "validation.currentPasswordRequired"),
     newPassword: passwordSchema,
-    confirmPassword: z.string().min(1, "Confirm your new password"),
+    confirmPassword: z.string().min(1, "validation.confirmPasswordRequired"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "validation.passwordsMismatch",
     path: ["confirmPassword"],
   });
 
 export const resetPasswordSchema = z
   .object({
     password: passwordSchema,
-    confirmPassword: z.string().min(1, "Confirm your new password"),
+    confirmPassword: z.string().min(1, "validation.confirmPasswordRequired"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "validation.passwordsMismatch",
     path: ["confirmPassword"],
   });
 

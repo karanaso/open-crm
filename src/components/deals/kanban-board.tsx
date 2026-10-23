@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatCurrency, titleCase } from "@/lib/utils";
 import { DateDisplay } from "@/components/ui/local-time";
+import { useMessageTranslator } from "@/i18n/messages";
 
 type StageOption = {
   id: string;
@@ -176,6 +177,7 @@ export function KanbanBoard({
   const [deals, setDeals] = useState(initialDeals);
   const [activeDeal, setActiveDeal] = useState<BoardDeal | null>(null);
   const router = useRouter();
+  const translate = useMessageTranslator();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   async function move(deal: BoardDeal, stage: StageOption, reason?: string) {
@@ -197,18 +199,18 @@ export function KanbanBoard({
 
     if (result?.error) {
       setDeals(previous);
-      toast.error(result.error);
+      toast.error(translate(result.error));
       router.refresh();
       return;
     }
 
-    toast.success(`Moved to ${stage.name}`);
+    toast.success(translate({ key: "sales.dealMovedTo", params: { stage: stage.name } }));
     router.refresh();
   }
 
   function handleMove(deal: BoardDeal, stage: StageOption) {
     if (stage.outcome === "lost") {
-      const reason = window.prompt("Why was this deal lost?");
+      const reason = window.prompt(translate("sales.lostReasonPrompt"));
       if (!reason || !reason.trim()) return;
       void move(deal, stage, reason.trim());
       return;

@@ -12,7 +12,7 @@ export const segmentCriteriaSchema = z
     createdTo: z.string().optional(),
   })
   .refine((criteria) => Object.values(criteria).some((value) => Array.isArray(value) ? value.length > 0 : Boolean(value)), {
-    message: "Add at least one segment criterion",
+    message: "validation.segmentCriteria",
   })
   .transform((criteria) => ({
     ...criteria,
@@ -20,7 +20,7 @@ export const segmentCriteriaSchema = z
   }));
 
 export const segmentSchema = z.object({
-  name: requiredText("Segment name", 160),
+  name: requiredText(160),
   description: optionalText(2000),
   criteria: segmentCriteriaSchema,
 });
@@ -29,18 +29,18 @@ export type SegmentInput = z.infer<typeof segmentSchema>;
 
 export const campaignSchema = z
   .object({
-    name: requiredText("Campaign name", 200),
+    name: requiredText(200),
     channel: z.enum(["email", "phone", "event", "social", "other"]),
-    segmentId: z.string().uuid("Select a segment"),
+    segmentId: z.string().uuid("validation.selectSegment"),
     ownerId: optionalUuidSchema,
-    budget: z.coerce.number().min(0, "Budget must be zero or greater").default(0),
+    budget: z.coerce.number().min(0, "validation.budgetNonNegative").default(0),
     startDate: z.string().trim().optional().nullable(),
     endDate: z.string().trim().optional().nullable(),
     description: optionalText(5000),
   })
   .refine(
     (data) => !data.startDate || !data.endDate || data.endDate >= data.startDate,
-    { message: "End date cannot be before the start date", path: ["endDate"] },
+    { message: "validation.endDateBeforeStart", path: ["endDate"] },
   )
   .transform((data) => ({
     ...data,

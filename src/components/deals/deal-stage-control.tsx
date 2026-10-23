@@ -7,6 +7,7 @@ import { moveDealAction } from "@/actions/deals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useMessageTranslator } from "@/i18n/messages";
 
 export function DealStageControl({
   dealId,
@@ -23,11 +24,12 @@ export function DealStageControl({
   const [lostReason, setLostReason] = useState("");
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const translate = useMessageTranslator();
   const selected = stages.find((stage) => stage.id === stageId);
 
   function submit() {
     if (selected?.outcome === "lost" && !lostReason.trim()) {
-      toast.error("Add a lost reason before moving the deal.");
+      toast.error(translate("sales.lostReasonRequired"));
       return;
     }
 
@@ -39,11 +41,11 @@ export function DealStageControl({
         expectedUpdatedAt,
       });
       if (result?.error) {
-        toast.error(result.error);
+        toast.error(translate(result.error));
         router.refresh();
         return;
       }
-      toast.success("Stage updated.");
+      toast.success(translate("sales.stageUpdated"));
       router.refresh();
     });
   }

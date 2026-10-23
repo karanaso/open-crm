@@ -8,13 +8,13 @@ import {
 } from "@/lib/validation/common";
 
 export const contactSchema = z.object({
-  firstName: requiredText("First name", 120),
-  lastName: requiredText("Last name", 120),
+  firstName: requiredText(120),
+  lastName: requiredText(120),
   email: z
     .string()
     .trim()
-    .min(1, "Email is required")
-    .email("Enter a valid email address")
+    .min(1, "validation.emailRequired")
+    .email("validation.email")
     .transform(normalizeEmail),
   phone: optionalText(40),
   jobTitle: optionalText(120),

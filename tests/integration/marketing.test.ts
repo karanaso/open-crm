@@ -78,7 +78,7 @@ describe("marketing campaigns", () => {
   it("requires at least one segment criterion", () => {
     expect(() =>
       segmentSchema.parse({ name: "Everything", criteria: {} }),
-    ).toThrow("at least one");
+    ).toThrow("validation.segmentCriteria");
   });
 
   it("snapshots the audience on activation", async () => {

@@ -13,11 +13,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useMessageTranslator } from "@/i18n/messages";
 
 export function ResetLinkButton({ userId, name }: { userId: string; name: string }) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const translate = useMessageTranslator();
 
   return (
     <>
@@ -32,20 +34,22 @@ export function ResetLinkButton({ userId, name }: { userId: string; name: string
               setUrl(result.resetUrl);
               setOpen(true);
             } else {
-              toast.error(result.error ?? "Could not create a reset link.");
+              toast.error(
+                result.error ? translate(result.error) : translate("settings.resetLinkFailed"),
+              );
             }
           })
         }
       >
-        <KeyRound className="size-3.5" /> Reset link
+        <KeyRound className="size-3.5" /> {translate("settings.resetLink")}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Password reset link for {name}</DialogTitle>
-            <DialogDescription>
-              Share this link securely. It expires in 24 hours and can be used once.
-            </DialogDescription>
+            <DialogTitle>
+              {translate({ key: "settings.resetLinkTitle", params: { name } })}
+            </DialogTitle>
+            <DialogDescription>{translate("settings.resetLinkDescription")}</DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-2">
             <Input readOnly value={url ?? ""} className="font-mono text-xs" />
@@ -56,10 +60,10 @@ export function ResetLinkButton({ userId, name }: { userId: string; name: string
               onClick={async () => {
                 if (!url) return;
                 await navigator.clipboard.writeText(url);
-                toast.success("Reset link copied.");
+                toast.success(translate("settings.resetLinkCopied"));
               }}
             >
-              <Copy className="size-3.5" /> Copy
+              <Copy className="size-3.5" /> {translate("common.copy")}
             </Button>
           </div>
         </DialogContent>

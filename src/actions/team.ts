@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireAdminForAction } from "@/lib/auth/guards";
-import { errorMessage } from "@/lib/errors";
+import { errorCode } from "@/lib/errors";
 import { changeUserRole, setUserStatus } from "@/lib/services/users";
 import { revokeInvite } from "@/lib/services/invites";
 
 function teamRedirect(error?: unknown): never {
-  if (error) redirect(`/settings/team?error=${encodeURIComponent(errorMessage(error))}`);
+  if (error) redirect(`/settings/team?error=${encodeURIComponent(errorCode(error))}`);
   redirect("/settings/team");
 }
 

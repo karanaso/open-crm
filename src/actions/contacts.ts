@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireUserForAction } from "@/lib/auth/guards";
 import { fieldErrorsFromZod, type ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorCode, errorDescriptor } from "@/lib/errors";
 import { contactSchema } from "@/lib/validation/contact";
 import { parseTagInput } from "@/lib/validation/common";
 import {
@@ -40,7 +40,7 @@ export async function createContactAction(
     const contact = await createContact(parsed.data, user.id);
     contactId = contact.id;
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/contacts");
@@ -60,7 +60,7 @@ export async function updateContactAction(
   try {
     await updateContact(contactId, parsed.data);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/contacts");
@@ -73,7 +73,7 @@ export async function archiveContactAction(contactId: string) {
   try {
     await setContactArchived(contactId, true);
   } catch (error) {
-    redirect(`/contacts/${contactId}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`/contacts/${contactId}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidatePath("/contacts");
   revalidatePath(`/contacts/${contactId}`);

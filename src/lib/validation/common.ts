@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const uuidSchema = z.string().uuid("Select a valid record");
+export const uuidSchema = z.string().uuid("validation.uuid");
 
 export const optionalUuidSchema = z
   .string()
@@ -8,23 +8,25 @@ export const optionalUuidSchema = z
   .optional()
   .nullable()
   .transform((value) => (value ? value : null))
-  .pipe(z.string().uuid().nullable());
+  .pipe(z.string().uuid("validation.uuid").nullable());
 
 export const optionalText = (max: number) =>
   z
     .string()
     .trim()
-    .max(max)
+    .max(max, "validation.maxLength")
     .optional()
     .nullable()
     .transform((value) => (value ? value : null));
 
-export const requiredText = (label: string, max = 500) =>
-  z.string().trim().min(1, `${label} is required`).max(max);
+export const requiredText = (max = 500) =>
+  z.string().trim().min(1, "validation.required").max(max, "validation.maxLength");
 
 export const tagSchema = z
-  .array(z.string().trim().min(1).max(40, "Tags must be at most 40 characters"))
-  .max(20, "A record can have at most 20 tags");
+  .array(
+    z.string().trim().min(1, "validation.required").max(40, "validation.tagLength"),
+  )
+  .max(20, "validation.maxTags");
 
 export function parseTagInput(value: FormDataEntryValue | null | undefined) {
   if (!value) return [];

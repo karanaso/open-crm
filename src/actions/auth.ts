@@ -5,7 +5,7 @@ import { redirect } from "@/lib/redirect";
 import { revalidatePath } from "next/cache";
 import { signIn, signOut } from "@/auth";
 import { fieldErrorsFromZod, sanitizeCallbackUrl, type ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorDescriptor } from "@/lib/errors";
 import { requireUserForAction, requireAdminForAction } from "@/lib/auth/guards";
 import {
   loginSchema,
@@ -37,7 +37,7 @@ import { defaultLocale, isLocale } from "@/i18n/config";
 import { getLocaleCookie, setLocaleCookie } from "@/i18n/cookie";
 
 function genericSignInError() {
-  return "Unable to sign in. Check your credentials or contact an administrator.";
+  return { key: "auth.signInFailed" } as const;
 }
 
 export async function signInAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
@@ -97,7 +97,7 @@ export async function setupAction(_prevState: ActionState, formData: FormData): 
   try {
     await setupFirstAdmin({ ...parsed.data, locale });
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   await setLocaleCookie(locale);
@@ -110,7 +110,7 @@ export async function setupAction(_prevState: ActionState, formData: FormData): 
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Your account was created, but sign-in failed. Go to sign-in and try again." };
+      return { error: { key: "auth.accountCreatedSignInFailed" } };
     }
     throw error;
   }
@@ -141,7 +141,7 @@ export async function acceptInviteAction(
     });
     email = user.email;
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   await setLocaleCookie(locale);
@@ -154,7 +154,7 @@ export async function acceptInviteAction(
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Your account was created, but sign-in failed. Go to sign-in and try again." };
+      return { error: { key: "auth.accountCreatedSignInFailed" } };
     }
     throw error;
   }
@@ -167,7 +167,7 @@ export async function requestResetAction(
   formData: FormData,
 ): Promise<ActionState> {
   void formData;
-  return { error: "Password resets are issued by an administrator. Ask a teammate with admin access." };
+  return { error: { key: "auth.resetRequestAdmin" } };
 }
 
 export async function resetPasswordAction(
@@ -184,7 +184,7 @@ export async function resetPasswordAction(
   try {
     await resetPasswordWithToken({ token, password: parsed.data.password });
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   redirect("/login?reset=1");
@@ -201,7 +201,7 @@ export async function updateProfileAction(
   await updateUserName(user.id, parsed.data);
   revalidatePath("/settings/profile");
   revalidatePath("/settings");
-  return { success: "Profile updated." };
+  return { success: { key: "settings.profileUpdated" } };
 }
 
 export async function changePasswordAction(
@@ -219,7 +219,7 @@ export async function changePasswordAction(
   try {
     await changePassword(user, parsed.data.currentPassword, parsed.data.newPassword);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   try {
@@ -230,7 +230,7 @@ export async function changePasswordAction(
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Password changed. Sign in again with your new password." };
+      return { error: { key: "auth.passwordChangedSignIn" } };
     }
     throw error;
   }
@@ -257,11 +257,11 @@ export async function createInviteAction(
     });
     revalidatePath("/settings/team");
     return {
-      success: `Invitation created for ${parsed.data.email}. Share this link once:`,
+      success: { key: "settings.invitationCreated", params: { email: parsed.data.email } },
       inviteUrl: `${appUrl}/invite/${token}`,
     };
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 }
 
@@ -270,9 +270,9 @@ export async function revokeInviteAction(inviteId: string) {
   try {
     await revokeInvite(inviteId);
     revalidatePath("/settings/team");
-    return { success: "Invitation revoked." };
+    return { success: { key: "settings.invitationRevoked" } };
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 }
 
@@ -281,9 +281,9 @@ export async function changeRoleAction(userId: string, role: "admin" | "member")
   try {
     await changeUserRole(admin.id, userId, role);
     revalidatePath("/settings/team");
-    return { success: "Role updated." };
+    return { success: { key: "settings.roleUpdated" } };
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 }
 
@@ -292,9 +292,9 @@ export async function setUserStatusAction(userId: string, status: "active" | "in
   try {
     await setUserStatus(admin.id, userId, status);
     revalidatePath("/settings/team");
-    return { success: status === "active" ? "Member reactivated." : "Member deactivated." };
+    return { success: { key: status === "active" ? "settings.memberReactivated" : "settings.memberDeactivated" } };
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 }
 
@@ -303,11 +303,11 @@ export async function createResetLinkAction(userId: string) {
   try {
     const { token } = await createPasswordReset({ userId, createdById: admin.id });
     return {
-      success: "Password reset link created. Share it once:",
+      success: { key: "settings.resetLinkCreated" },
       resetUrl: `${appUrl}/reset/${token}`,
     };
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 }
 

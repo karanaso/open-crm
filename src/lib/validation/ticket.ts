@@ -2,9 +2,9 @@ import { z } from "zod";
 import { optionalUuidSchema, requiredText } from "@/lib/validation/common";
 
 export const ticketSchema = z.object({
-  subject: requiredText("Subject", 300),
-  description: requiredText("Description", 10000),
-  requesterContactId: z.string().uuid("Select a requester"),
+  subject: requiredText(300),
+  description: requiredText(10000),
+  requesterContactId: z.string().uuid("validation.selectRequester"),
   priority: z.enum(["urgent", "high", "normal", "low"]).default("normal"),
   assigneeId: optionalUuidSchema,
 });
@@ -27,7 +27,7 @@ export const ticketPrioritySchema = z.object({
 });
 
 export const commentSchema = z.object({
-  body: z.string().trim().min(1, "Write a comment").max(5000),
+  body: z.string().trim().min(1, "validation.commentRequired").max(5000),
   visibility: z.enum(["reply", "internal"]).default("reply"),
 });
 

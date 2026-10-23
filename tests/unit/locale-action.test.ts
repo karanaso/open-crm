@@ -34,7 +34,9 @@ describe("setLocaleAction", () => {
   });
 
   it("rejects an unsupported locale without writing the cookie", async () => {
-    await expect(setLocaleAction("fr")).resolves.toEqual({ error: "errors.INVALID_LOCALE" });
+    await expect(setLocaleAction("fr")).resolves.toEqual({
+      error: { key: "errors.INVALID_LOCALE" },
+    });
     expect(setLocaleCookieMock).not.toHaveBeenCalled();
   });
 });

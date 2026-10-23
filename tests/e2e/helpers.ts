@@ -24,7 +24,7 @@ export async function login(page: Page, email = ADMIN.email, password = ADMIN.pa
 
 export async function logout(page: Page) {
   await page.getByRole("button", { name: /Alex Morgan|Priya Shah/ }).click();
-  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  await page.getByRole("menuitem", { name: /Sign out|Αποσύνδεση/ }).click();
   await page.waitForURL("**/login", { timeout: 30000 });
 }
 

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireAdminForAction } from "@/lib/auth/guards";
-import { errorMessage } from "@/lib/errors";
+import { errorCode } from "@/lib/errors";
 import { pipelineSchema, stageSchema } from "@/lib/validation/deal";
 import {
   archivePipeline,
@@ -20,7 +20,7 @@ import {
 const settingsPath = "/settings/pipelines";
 
 function fail(error: unknown): never {
-  redirect(`${settingsPath}?error=${encodeURIComponent(errorMessage(error))}`);
+  redirect(`${settingsPath}?error=${encodeURIComponent(errorCode(error))}`);
 }
 
 export async function createPipelineFormAction(formData: FormData) {

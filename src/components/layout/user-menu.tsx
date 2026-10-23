@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronDown, LogOut, Settings, UserRound } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { signOut } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,11 @@ import {
 import { initials } from "@/lib/utils";
 
 export function UserMenu({ user }: { user: { name: string; email: string; role: string } }) {
+  const tNav = useTranslations("nav");
+  const tSettings = useTranslations("settings");
+  const tAuth = useTranslations("auth");
+  const tEnums = useTranslations("enums");
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -31,17 +37,19 @@ export function UserMenu({ user }: { user: { name: string; email: string; role: 
         <DropdownMenuLabel className="font-normal">
           <p className="truncate text-sm font-medium">{user.name}</p>
           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-          <p className="mt-1 text-[11px] tracking-wide text-muted-foreground uppercase">{user.role}</p>
+          <p className="mt-1 text-[11px] tracking-wide text-muted-foreground uppercase">
+            {tEnums(`role.${user.role}` as never)}
+          </p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/settings/profile">
-            <UserRound className="size-4" /> Profile
+            <UserRound className="size-4" /> {tSettings("profile")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/settings">
-            <Settings className="size-4" /> Settings
+            <Settings className="size-4" /> {tNav("settings")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -51,7 +59,7 @@ export function UserMenu({ user }: { user: { name: string; email: string; role: 
             void signOut({ callbackUrl: "/login" });
           }}
         >
-          <LogOut className="size-4" /> Sign out
+          <LogOut className="size-4" /> {tAuth("signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

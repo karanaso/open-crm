@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { BarChart3, Building2, LifeBuoy, Megaphone } from "lucide-react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { APP_NAME } from "@/lib/constants";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("auth");
+
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside className="relative hidden overflow-hidden bg-primary p-10 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
@@ -14,30 +17,25 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </Link>
         <div className="relative max-w-md space-y-6">
           <h2 className="text-3xl leading-tight font-semibold text-balance">
-            One shared workspace for the whole customer lifecycle.
+            {t("heroTitle")}
           </h2>
-          <p className="text-sm text-primary-foreground/80">
-            Keep companies, contacts, deals, support, and campaigns together — with a clear view of what
-            needs attention next.
-          </p>
+          <p className="text-sm text-primary-foreground/80">{t("heroBody")}</p>
           <ul className="grid gap-3 text-sm text-primary-foreground/90">
             <li className="flex items-center gap-2">
-              <Building2 className="size-4" /> A single customer directory
+              <Building2 className="size-4" /> {t("featureDirectory")}
             </li>
             <li className="flex items-center gap-2">
-              <BarChart3 className="size-4" /> Pipeline and performance visibility
+              <BarChart3 className="size-4" /> {t("featurePipeline")}
             </li>
             <li className="flex items-center gap-2">
-              <LifeBuoy className="size-4" /> Support SLAs that stay on track
+              <LifeBuoy className="size-4" /> {t("featureSupport")}
             </li>
             <li className="flex items-center gap-2">
-              <Megaphone className="size-4" /> Segments and campaign tracking
+              <Megaphone className="size-4" /> {t("featureMarketing")}
             </li>
           </ul>
         </div>
-        <p className="relative text-xs text-primary-foreground/60">
-          Self-hosted. Your customer data stays in your database.
-        </p>
+        <p className="relative text-xs text-primary-foreground/60">{t("selfHosted")}</p>
       </aside>
       <main className="flex items-center justify-center p-6">
         <div className="w-full max-w-md">

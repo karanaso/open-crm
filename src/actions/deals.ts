@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireUserForAction } from "@/lib/auth/guards";
 import { fieldErrorsFromZod, type ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorDescriptor } from "@/lib/errors";
 import { dealMoveSchema, dealSchema } from "@/lib/validation/deal";
 import { createDeal, moveDeal, updateDeal } from "@/lib/services/deals";
 
@@ -42,7 +42,7 @@ export async function createDealAction(
     const deal = await createDeal(parsed.data, user.id);
     dealId = deal.id;
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidateDealPaths(dealId);
@@ -66,7 +66,7 @@ export async function updateDealAction(
       formData.get("expectedUpdatedAt")?.toString(),
     );
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidateDealPaths(dealId);
@@ -81,14 +81,14 @@ export async function moveDealAction(input: {
 }) {
   const user = await requireUserForAction();
   const parsed = dealMoveSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid stage move." };
+  if (!parsed.success) return { error: { key: "errors.INVALID_TRANSITION" } };
 
   try {
     await moveDeal(parsed.data, user.id);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidateDealPaths(parsed.data.dealId);
-  return { success: "Deal moved." };
+  return { success: { key: "sales.dealMoved" } };
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUserForAction } from "@/lib/auth/guards";
 import type { ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorDescriptor } from "@/lib/errors";
 import { MAX_CSV_BYTES } from "@/lib/constants";
 import { importCsv, type ImportTarget } from "@/lib/services/csv-import";
 
@@ -14,25 +14,25 @@ export async function importCsvAction(
   const user = await requireUserForAction();
   const target = formData.get("target");
   if (target !== "companies" && target !== "contacts") {
-    return { error: "Choose whether you are importing companies or contacts." };
+    return { error: { key: "directory.importTarget" } };
   }
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Choose a CSV file to import." };
+    return { error: { key: "directory.importFile" } };
   }
   if (!file.name.toLowerCase().endsWith(".csv")) {
-    return { error: "Unsupported file type. Upload a .csv file." };
+    return { error: { key: "directory.importFileType" } };
   }
   if (file.size > MAX_CSV_BYTES) {
-    return { error: "The file is larger than 5 MB." };
+    return { error: { key: "directory.importFileSize" } };
   }
 
   let mapping: Record<string, string> = {};
   try {
     mapping = JSON.parse(String(formData.get("mapping") ?? "{}")) as Record<string, string>;
   } catch {
-    return { error: "The column mapping is invalid." };
+    return { error: { key: "directory.importMapping" } };
   }
 
   try {
@@ -47,6 +47,6 @@ export async function importCsvAction(
     revalidatePath("/dashboard");
     return { report };
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 }

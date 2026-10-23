@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireUserForAction } from "@/lib/auth/guards";
 import { fieldErrorsFromZod, type ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorCode, errorDescriptor } from "@/lib/errors";
 import { commentSchema, ticketSchema } from "@/lib/validation/ticket";
 import {
   addTicketComment,
@@ -49,7 +49,7 @@ export async function createTicketAction(
     const ticket = await createTicket(parsed.data, user.id);
     ticketId = ticket.id;
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidateTicketPaths(ticketId);
@@ -67,7 +67,7 @@ export async function updateTicketAction(
   try {
     await updateTicket(ticketId, parsed.data, formData.get("expectedUpdatedAt")?.toString());
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidateTicketPaths(ticketId);
@@ -83,7 +83,7 @@ export async function changeTicketStatusAction(
   try {
     await changeTicketStatus(ticketId, status);
   } catch (error) {
-    redirect(`${safeReturnTo(returnTo, `/tickets/${ticketId}`)}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`${safeReturnTo(returnTo, `/tickets/${ticketId}`)}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidateTicketPaths(ticketId);
   redirect(safeReturnTo(returnTo, `/tickets/${ticketId}`));
@@ -96,7 +96,7 @@ export async function assignTicketAction(ticketId: string, returnTo: string, for
   try {
     await assignTicket(ticketId, assigneeId);
   } catch (error) {
-    redirect(`${safeReturnTo(returnTo, `/tickets/${ticketId}`)}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`${safeReturnTo(returnTo, `/tickets/${ticketId}`)}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidateTicketPaths(ticketId);
   redirect(safeReturnTo(returnTo, `/tickets/${ticketId}`));
@@ -112,7 +112,7 @@ export async function changeTicketPriorityAction(
   try {
     await changeTicketPriority(ticketId, priority);
   } catch (error) {
-    redirect(`${safeReturnTo(returnTo, `/tickets/${ticketId}`)}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`${safeReturnTo(returnTo, `/tickets/${ticketId}`)}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidateTicketPaths(ticketId);
   redirect(safeReturnTo(returnTo, `/tickets/${ticketId}`));
@@ -133,7 +133,7 @@ export async function addCommentAction(
   try {
     await addTicketComment(ticketId, parsed.data, user);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidateTicketPaths(ticketId);

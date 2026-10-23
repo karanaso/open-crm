@@ -2,17 +2,17 @@ import { z } from "zod";
 import { optionalText, optionalUuidSchema, requiredText } from "@/lib/validation/common";
 
 export const dealSchema = z.object({
-  name: requiredText("Deal name", 200),
-  companyId: z.string().uuid("Select a company"),
+  name: requiredText(200),
+  companyId: z.string().uuid("validation.selectCompany"),
   contactId: optionalUuidSchema,
-  pipelineId: z.string().uuid("Select a pipeline"),
-  stageId: z.string().uuid("Select a stage"),
+  pipelineId: z.string().uuid("validation.selectPipeline"),
+  stageId: z.string().uuid("validation.selectStage"),
   ownerId: optionalUuidSchema,
   amount: z.coerce
     .number()
-    .min(0, "Amount must be zero or greater")
-    .max(999_999_999_999, "Amount is too large")
-    .refine((value) => Number(value.toFixed(2)) === value, "Amount can have at most two decimals"),
+    .min(0, "validation.amountNonNegative")
+    .max(999_999_999_999, "validation.amountTooLarge")
+    .refine((value) => Number(value.toFixed(2)) === value, "validation.amountDecimals"),
   expectedCloseDate: z
     .string()
     .trim()
@@ -46,11 +46,11 @@ export const dealListParamsSchema = z.object({
 });
 
 export const pipelineSchema = z.object({
-  name: requiredText("Pipeline name", 120),
+  name: requiredText(120),
 });
 
 export const stageSchema = z.object({
-  name: requiredText("Stage name", 120),
+  name: requiredText(120),
   probability: z.coerce.number().int().min(0).max(100),
   outcome: z.enum(["open", "won", "lost"]),
   position: z.coerce.number().int().min(0).default(0),

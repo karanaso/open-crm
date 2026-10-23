@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
+import { PageError } from "@/components/ui/page-error";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,11 +56,7 @@ export default async function SegmentDetailPage({
         }
       />
 
-      {error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      <PageError code={error} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <Card>

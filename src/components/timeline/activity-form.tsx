@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { createActivityAction, updateActivityAction } from "@/actions/engagement";
 import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
-import { FormError, FormField } from "@/components/ui/form-field";
+import { FormError, FormField, FieldError } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -96,9 +96,7 @@ export function ActivityForm({
           placeholder="Add context for the team (optional)"
         />
       </FormField>
-      {state?.fieldErrors?.links?.[0] ? (
-        <p className="text-xs text-destructive">{state.fieldErrors.links[0]}</p>
-      ) : null}
+      <FieldError message={state?.fieldErrors?.links?.[0]} />
 
       <div className="flex justify-end gap-2">
         {onCancel ? (

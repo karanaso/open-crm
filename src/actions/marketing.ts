@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireUserForAction } from "@/lib/auth/guards";
 import { fieldErrorsFromZod, type ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorCode, errorDescriptor } from "@/lib/errors";
 import { parseTagInput } from "@/lib/validation/common";
 import { campaignSchema, segmentSchema } from "@/lib/validation/marketing";
 import {
@@ -64,7 +64,7 @@ export async function createSegmentAction(
     const segment = await createSegment(parsed.data, user.id);
     segmentId = segment.id;
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/segments");
@@ -84,7 +84,7 @@ export async function updateSegmentAction(
   try {
     await updateSegment(segmentId, parsed.data);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/segments");
@@ -97,7 +97,7 @@ export async function archiveSegmentAction(segmentId: string) {
   try {
     await archiveSegment(segmentId, true);
   } catch (error) {
-    redirect(`/segments/${segmentId}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`/segments/${segmentId}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidatePath("/segments");
   redirect("/segments");
@@ -116,7 +116,7 @@ export async function createCampaignAction(
     const campaign = await createCampaign(parsed.data, user.id);
     campaignId = campaign.id;
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/campaigns");
@@ -136,7 +136,7 @@ export async function updateCampaignAction(
   try {
     await updateCampaign(campaignId, parsed.data);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/campaigns");
@@ -156,7 +156,7 @@ export async function transitionCampaignAction(
       await transitionCampaign(campaignId, target, user.id);
     }
   } catch (error) {
-    redirect(`/campaigns/${campaignId}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`/campaigns/${campaignId}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidatePath("/campaigns");
   revalidatePath(`/campaigns/${campaignId}`);
@@ -174,7 +174,7 @@ export async function updateRecipientStatusAction(
   try {
     await updateRecipientStatus(recipientId, status, user.id);
   } catch (error) {
-    redirect(`${safeReturnTo(returnTo, "/campaigns")}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`${safeReturnTo(returnTo, "/campaigns")}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidatePath(safeReturnTo(returnTo, "/campaigns"));
   revalidatePath("/dashboard");

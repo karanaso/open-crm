@@ -4,9 +4,9 @@ import { optionalText, optionalUuidSchema, requiredText } from "@/lib/validation
 export const activitySchema = z
   .object({
     type: z.enum(["note", "call", "email", "meeting"]),
-    subject: requiredText("Subject", 300),
+    subject: requiredText(300),
     body: optionalText(10000),
-    occurredAt: z.string().trim().min(1, "Occurred at is required"),
+    occurredAt: z.string().trim().min(1, "validation.occurredAtRequired"),
     companyId: optionalUuidSchema,
     contactId: optionalUuidSchema,
     dealId: optionalUuidSchema,
@@ -16,16 +16,16 @@ export const activitySchema = z
   .refine(
     (data) =>
       Boolean(data.companyId || data.contactId || data.dealId || data.ticketId || data.campaignId),
-    { message: "Link the activity to at least one record", path: ["links"] },
+    { message: "validation.activityLinkRequired", path: ["links"] },
   );
 
 export type ActivityInput = z.infer<typeof activitySchema>;
 
 export const taskSchema = z
   .object({
-    title: requiredText("Task title", 300),
+    title: requiredText(300),
     description: optionalText(5000),
-    dueDate: z.string().trim().min(1, "Due date is required"),
+    dueDate: z.string().trim().min(1, "validation.dueDateRequired"),
     priority: z.enum(["low", "normal", "high"]).default("normal"),
     assigneeId: optionalUuidSchema,
     companyId: optionalUuidSchema,
@@ -37,7 +37,7 @@ export const taskSchema = z
   .refine(
     (data) =>
       Boolean(data.companyId || data.contactId || data.dealId || data.ticketId || data.campaignId),
-    { message: "Link the task to at least one record", path: ["links"] },
+    { message: "validation.taskLinkRequired", path: ["links"] },
   );
 
 export type TaskInput = z.infer<typeof taskSchema>;

@@ -1,27 +1,31 @@
 import type { z } from "zod";
+import type { MessageDescriptor } from "@/lib/errors";
+import { zodIssueDescriptor } from "@/lib/validation/zod-errors";
+
+export type { MessageDescriptor } from "@/lib/errors";
 
 export type ImportReport = {
   target: "companies" | "contacts";
   imported: number;
   skipped: number;
   duplicates: number;
-  errors: Array<{ row: number; message: string }>;
+  errors: Array<{ row: number; message: string | MessageDescriptor }>;
 };
 
 export type ActionState = {
-  error?: string;
-  fieldErrors?: Record<string, string[]>;
-  success?: string;
+  error?: MessageDescriptor;
+  fieldErrors?: Record<string, MessageDescriptor[]>;
+  success?: MessageDescriptor;
   inviteUrl?: string;
   resetUrl?: string;
   report?: ImportReport;
 } | null;
 
 export function fieldErrorsFromZod(error: z.ZodError) {
-  const fieldErrors: Record<string, string[]> = {};
+  const fieldErrors: Record<string, MessageDescriptor[]> = {};
   for (const issue of error.issues) {
     const key = issue.path.length > 0 ? issue.path.join(".") : "form";
-    fieldErrors[key] = [...(fieldErrors[key] ?? []), issue.message];
+    fieldErrors[key] = [...(fieldErrors[key] ?? []), zodIssueDescriptor(issue)];
   }
   return fieldErrors;
 }

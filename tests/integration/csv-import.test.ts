@@ -64,8 +64,8 @@ describe("CSV import", () => {
     expect(report.imported).toBe(2);
     expect(report.duplicates).toBe(1);
     expect(report.skipped).toBe(2);
-    expect(report.errors.some((error) => error.message.includes("Company not found"))).toBe(true);
-    expect(report.errors.some((error) => error.message.includes("email"))).toBe(true);
+    expect(report.errors.some((error) => (typeof error.message === "string" ? error.message : error.message.key).includes("Company not found"))).toBe(true);
+    expect(report.errors.some((error) => (typeof error.message === "string" ? error.message : error.message.key).includes("email"))).toBe(true);
   });
 
   it("rejects imports without the required mapping", async () => {

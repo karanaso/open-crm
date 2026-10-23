@@ -7,7 +7,7 @@ import { isLocale } from "@/i18n/config";
 import { setLocaleCookie } from "@/i18n/cookie";
 
 export async function setLocaleAction(locale: string) {
-  if (!isLocale(locale)) return { error: "errors.INVALID_LOCALE" } as const;
+  if (!isLocale(locale)) return { error: { key: "errors.INVALID_LOCALE" } } as const;
 
   await setLocaleCookie(locale);
 

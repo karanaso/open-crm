@@ -55,15 +55,18 @@ test.describe("authentication and team onboarding", () => {
     await page.getByRole("combobox", { name: "Language" }).click();
     await page.getByRole("option", { name: "Greek" }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "el");
+    await expect(page.getByRole("link", { name: "Πίνακας ελέγχου" })).toBeVisible();
     await logout(page);
 
     await login(page);
     await expect(page.locator("html")).toHaveAttribute("lang", "el");
+    await expect(page.getByRole("link", { name: "Πίνακας ελέγχου" })).toBeVisible();
 
     await page.goto("/settings/profile");
     await page.getByRole("combobox", { name: "Γλώσσα" }).click();
     await page.getByRole("option", { name: "Αγγλικά" }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
     await logout(page);
   });
 

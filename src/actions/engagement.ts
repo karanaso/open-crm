@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireUserForAction } from "@/lib/auth/guards";
 import { fieldErrorsFromZod, type ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorDescriptor } from "@/lib/errors";
 import { activitySchema, taskSchema } from "@/lib/validation/engagement";
 import {
   createActivity,
@@ -77,7 +77,7 @@ export async function createActivityAction(
   try {
     await createActivity(parsed.data, user.id);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   const returnTo = safeReturnTo(formData.get("returnTo"), "/dashboard");
@@ -97,7 +97,7 @@ export async function updateActivityAction(
   try {
     await updateActivity(activityId, parsed.data, user);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   const returnTo = safeReturnTo(formData.get("returnTo"), "/dashboard");
@@ -123,7 +123,7 @@ export async function createTaskAction(
   try {
     await createTask(parsed.data, user.id);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   const returnTo = safeReturnTo(formData.get("returnTo"), "/tasks");
@@ -143,7 +143,7 @@ export async function updateTaskAction(
   try {
     await updateTask(taskId, parsed.data);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   const returnTo = safeReturnTo(formData.get("returnTo"), "/tasks");

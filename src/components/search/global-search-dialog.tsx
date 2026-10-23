@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Building2, Handshake, LifeBuoy, Megaphone, Users } from "lucide-react";
 import {
   CommandDialog,
@@ -22,14 +23,14 @@ const emptyResults: GlobalSearchResults = {
 
 const groups: Array<{
   key: keyof GlobalSearchResults;
-  label: string;
+  labelKey: "companies" | "contacts" | "deals" | "tickets" | "campaigns";
   icon: typeof Building2;
 }> = [
-  { key: "companies", label: "Companies", icon: Building2 },
-  { key: "contacts", label: "Contacts", icon: Users },
-  { key: "deals", label: "Deals", icon: Handshake },
-  { key: "tickets", label: "Tickets", icon: LifeBuoy },
-  { key: "campaigns", label: "Campaigns", icon: Megaphone },
+  { key: "companies", labelKey: "companies", icon: Building2 },
+  { key: "contacts", labelKey: "contacts", icon: Users },
+  { key: "deals", labelKey: "deals", icon: Handshake },
+  { key: "tickets", labelKey: "tickets", icon: LifeBuoy },
+  { key: "campaigns", labelKey: "campaigns", icon: Megaphone },
 ];
 
 export function GlobalSearchDialog({
@@ -44,6 +45,8 @@ export function GlobalSearchDialog({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GlobalSearchResults>(emptyResults);
   const [loading, setLoading] = useState(false);
+  const t = useTranslations("common");
+  const tNav = useTranslations("nav");
 
   useEffect(() => {
     if (!open) {
@@ -89,28 +92,28 @@ export function GlobalSearchDialog({
       <CommandInput
         value={query}
         onValueChange={setQuery}
-        placeholder="Search companies, contacts, deals, tickets, campaigns…"
+        placeholder={t("searchDialogPlaceholder")}
       />
       <CommandList>
         {query.trim().length < 2 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            Type at least two characters to search.
+            {t("searchMinChars")}
           </p>
         ) : loading && !hasResults ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">Searching…</p>
+          <p className="py-6 text-center text-sm text-muted-foreground">{t("searching")}</p>
         ) : (
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>{t("noResults")}</CommandEmpty>
         )}
         {groups.map((group) => {
           const items = results[group.key];
           if (items.length === 0) return null;
           const Icon = group.icon;
           return (
-            <CommandGroup key={group.key} heading={group.label}>
+            <CommandGroup key={group.key} heading={tNav(group.labelKey)}>
               {items.map((item: SearchResult) => (
                 <CommandItem
                   key={item.id}
-                  value={`${group.label} ${item.title} ${item.subtitle}`}
+                  value={`${tNav(group.labelKey)} ${item.title} ${item.subtitle}`}
                   onSelect={() => onSelect(item.href)}
                 >
                   <Icon className="size-4 text-muted-foreground" />

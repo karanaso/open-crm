@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "@/lib/redirect";
 import { requireUserForAction } from "@/lib/auth/guards";
 import { fieldErrorsFromZod, type ActionState } from "@/lib/action-state";
-import { errorMessage } from "@/lib/errors";
+import { errorCode, errorDescriptor } from "@/lib/errors";
 import { companySchema } from "@/lib/validation/company";
 import { parseTagInput } from "@/lib/validation/common";
 import {
@@ -46,7 +46,7 @@ export async function createCompanyAction(
     const company = await createCompany(parsed.data, user.id);
     companyId = company.id;
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/companies");
@@ -66,7 +66,7 @@ export async function updateCompanyAction(
   try {
     await updateCompany(companyId, parsed.data);
   } catch (error) {
-    return { error: errorMessage(error) };
+    return { error: errorDescriptor(error) };
   }
 
   revalidatePath("/companies");
@@ -79,7 +79,7 @@ export async function archiveCompanyAction(companyId: string) {
   try {
     await setCompanyArchived(companyId, true);
   } catch (error) {
-    redirect(`/companies/${companyId}?error=${encodeURIComponent(errorMessage(error))}`);
+    redirect(`/companies/${companyId}?error=${encodeURIComponent(errorCode(error))}`);
   }
   revalidatePath("/companies");
   revalidatePath(`/companies/${companyId}`);

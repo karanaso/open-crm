@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { changePasswordAction, updateProfileAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
-import { FormError, FormField } from "@/components/ui/form-field";
+import { FormError, FormField, FormSuccess } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import type { ActionState } from "@/lib/action-state";
 
@@ -13,11 +13,7 @@ export function ProfileForm({ name, email }: { name: string; email: string }) {
   return (
     <form action={action} className="space-y-4">
       <FormError message={state?.error} />
-      {state?.success ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          {state.success}
-        </p>
-      ) : null}
+      <FormSuccess message={state?.success} />
       <FormField label="Display name" htmlFor="profile-name" error={state?.fieldErrors?.name?.[0]} required>
         <Input id="profile-name" name="name" defaultValue={name} required />
       </FormField>

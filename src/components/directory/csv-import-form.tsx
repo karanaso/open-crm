@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ActionState } from "@/lib/action-state";
 import { MAX_CSV_BYTES, MAX_CSV_ROWS } from "@/lib/constants";
+import { useMessageTranslator } from "@/i18n/messages";
 
 type Target = "companies" | "contacts";
 
@@ -79,6 +80,7 @@ function guessMapping(headers: string[], target: Target) {
 }
 
 export function CsvImportForm({ defaultTarget = "companies" }: { defaultTarget?: Target }) {
+  const translate = useMessageTranslator();
   const [target, setTarget] = useState<Target>(defaultTarget);
   const [headers, setHeaders] = useState<string[]>([]);
   const [preview, setPreview] = useState<Array<Record<string, string>>>([]);
@@ -262,10 +264,14 @@ export function CsvImportForm({ defaultTarget = "companies" }: { defaultTarget?:
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {state.report.errors.map((error) => (
-                    <TableRow key={`${error.row}-${error.message}`}>
+                  {state.report.errors.map((error, index) => (
+                    <TableRow key={`${error.row}-${index}`}>
                       <TableCell className="align-top">{error.row}</TableCell>
-                      <TableCell className="text-xs">{error.message}</TableCell>
+                      <TableCell className="text-xs">
+                        {typeof error.message === "string"
+                          ? error.message
+                          : translate(error.message)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

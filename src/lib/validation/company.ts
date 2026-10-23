@@ -8,7 +8,7 @@ import {
 } from "@/lib/validation/common";
 
 export const companySchema = z.object({
-  name: requiredText("Company name", 200),
+  name: requiredText(200),
   domain: optionalText(253).transform((value) => normalizeDomain(value)),
   industry: optionalText(120),
   employeeCount: z

@@ -67,7 +67,7 @@ describe("engagement timeline and tasks", () => {
         subject: "No links",
         occurredAt: new Date().toISOString(),
       }),
-    ).toThrow("at least one record");
+    ).toThrow("validation.activityLinkRequired");
   });
 
   it("enforces activity edit and delete permissions", async () => {
@@ -149,7 +149,7 @@ describe("engagement timeline and tasks", () => {
         title: "No link",
         dueDate: todayUtc(),
       }),
-    ).toThrow("at least one record");
+    ).toThrow("validation.taskLinkRequired");
     expect(() =>
       taskSchema.parse({
         title: "Bad date",
