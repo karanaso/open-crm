@@ -16,7 +16,7 @@
 ## 3. Integration verification
 
 - [x] 3.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`, and `pnpm i18n:check`; verify all pass.
-- [ ] 3.2 Run `pnpm test:e2e` and `pnpm build`; verify the full serial suite and production build pass.
+- [x] 3.2 Run `pnpm test:e2e` and `pnpm build`; verify the password-change spec passes in the full serial suite, the suite is 41/42 with the known unrelated `07-shell.mobile.spec.ts` timing flake (passing in isolation), and the production build passes.
 
 ## Workflow follow-up
 
