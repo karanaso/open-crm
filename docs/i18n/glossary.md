@@ -29,7 +29,11 @@ Gender is shown as **(f)** feminine, **(m)** masculine, or **(n)** neuter. Greek
 | requester | **αιτών** (m) | Generic masculine when referring to the role. If a specific person is known to be female and the sentence allows it, «αιτούσα» is possible; UI labels stay generic. |
 | assignee | **ανατεθειμένος** (m) | The person a ticket/task is assigned to. Do **not** use «ανάθεση» for the person. |
 | assignment | **ανάθεση** (f) | The act or field. «Αποθήκευση ανάθεσης» is correct for the action; the person is «ανατεθειμένος». |
-| owner | **υπεύθυνος** (m) | Record owner. Do not use «ιδιοκτήτης»; keep it distinct from «ανατεθειμένος». |
+| owner | **υπεύθυνος** (m) | Record owner. Do not use «ιδιοκτήτης»; keep it distinct from «ανατεθειμένος». The listing's `agent` field is the record owner, so it is also «υπεύθυνος», not «μεσίτης». |
+| seller | **πωλητής** (m) | The contact selling a property (sale listings). The shared `listings.seller` field also covers rent listings, where the correct term would be «εκμισθωτής»; see open flag 6. |
+| landlord | **εκμισθωτής** (m) | The contact renting out a property (rent listings). |
+| buyer | **αγοραστής** (m) | The deal contact buying a property. For rent deals the correct term is «ενοικιαστής»; the shared `sales`/`listings` buyer label cannot branch. See open flag 6. |
+| tenant | **ενοικιαστής** (m) | The contact renting a property. |
 | administrator | **διαχειριστής** (m) | Generic masculine. The role label is «Διαχειριστής». |
 | member | **μέλος** (n) | Role label «Μέλος»; team members are neuter. |
 | teammate | **συνεργάτης** (m) | Used in invitation copy. The neutral alternative «μέλος της ομάδας» is also acceptable. |
@@ -38,14 +42,34 @@ Gender is shown as **(f)** feminine, **(m)** masculine, or **(n)** neuter. Greek
 
 | English | Greek | Notes |
 | --- | --- | --- |
-| deal amount / amount | **ποσό** (n) | The value entered on the deal form; label «Ποσό (USD)». |
-| deal value / open value | **αξία** (f) | Aggregated metric. «Αξία ανοιχτών συμφωνιών» for open pipeline value; «σταθμισμένη αξία» for weighted value. Do not use «αξία» for the form field. |
+| deal amount / amount | **ποσό** (n) | The money field on the deal form. After the listings change this field holds the commission, so the label is «Προμήθεια»; `sales.amountUsd` is now a legacy key. |
+| deal value / open value | **αξία** (f) | Aggregated value metric. For commission totals use «προμήθεια» («ανοιχτή προμήθεια», «σταθμισμένη προμήθεια»). Do not use «αξία» for the form field. |
 | expected close date | **αναμενόμενη ημερομηνία κλεισίματος** (f) | The forecast date. |
 | close date | **ημερομηνία κλεισίματος** (f) | The actual close date. |
 | pipeline board | **πίνακας ροής** (m) | Short form of «πίνακας ροής πωλήσεων» used in tabs. |
 | probability | **πιθανότητα** (f) | Stage probability, shown as a percentage. |
 | stage outcome | **αποτέλεσμα σταδίου** (n) | Labels are neuter because they agree with «στάδιο». |
 | lost reason | **λόγος απώλειας** (m) | Required when a deal is moved to a lost stage. |
+
+## Listings and property
+
+| English | Greek | Notes |
+| --- | --- | --- |
+| listing | **αγγελία** (f) | A property record for sale or rent. Nav/page title «Αγγελίες»; table header «Αγγελία». |
+| property | **ακίνητο** (n) | The physical property. Use «αγγελία» for the CRM record, «ακίνητο» when the source refers to the property itself. |
+| property type | **τύπος ακινήτου** (m) | Listing field. Stored values (`apartment`, `house`, …) are not translated. |
+| feature | **χαρακτηριστικό** (n) | A selected listing feature. Plural «χαρακτηριστικά». |
+| feature group | **ομάδα χαρακτηριστικών** (f) | The 18 collapsible groups in the feature picker. |
+| commission | **προμήθεια** (f) | The agency commission on a listing or deal. Never «κόμισιόν». |
+| asking price | **ζητούμενη τιμή** (f) | Listing price. The field label is «Τιμή». |
+| rent roll | **μηνιαία ενοίκια** (n pl.) | Monthly rent total across active rent listings. |
+| aging listing | **παλαιότερη αγγελία** (f) | Active listing older than the aging threshold. |
+| energy class | **ενεργειακή κλάση** (f) | Greek labels are the standard Latin letters (A+, A, B … G); do not transliterate. |
+| viewing | **επίσκεψη ακινήτου** (f) | Short form «επίσκεψη» in tables and badges. Not «προβολή» or «θέαση». |
+| sale | **πώληση** (f) | Transaction type. Display label «Προς πώληση». |
+| rent | **ενοικίαση** (f) | Transaction type. Display label «Προς ενοικίαση». |
+| active listing | **ενεργή αγγελία** (f) | Agrees with «αγγελία». |
+| inactive listing | **ανενεργή αγγελία** (f) | Deactivated, not deleted; the record and photos remain. |
 
 ## Support
 
@@ -73,7 +97,7 @@ Gender is shown as **(f)** feminine, **(m)** masculine, or **(n)** neuter. Greek
 | channel | **κανάλι** (n) | Campaign channel. |
 | response rate | **ποσοστό απόκρισης** (n) | Engagement metric. |
 | conversion rate | **ποσοστό μετατροπής** (n) | Engagement metric. |
-| budget | **προϋπολογισμός** (m) | Campaign budget; label «Προϋπολογισμός (USD)». |
+| budget | **προϋπολογισμός** (m) | Campaign budget; label «Προϋπολογισμός» with the workspace-default currency. |
 | outreach | **προσέγγιση** (f) | Campaign outreach, not “εξόρμηση”. |
 
 ## Timeline and tasks
@@ -98,7 +122,7 @@ Gender is shown as **(f)** feminine, **(m)** masculine, or **(n)** neuter. Greek
 | reopen | **επανάνοιγμα** (n) | Reopen a completed task. Do not use «επαναφορά»; that is reserved for restore. |
 | reactivate | **επανενεργοποίηση** (f) | Reactivate a team member. |
 | delete | **διαγραφή** (f) | Destructive action. |
-| deactivate | **απενεργοποίηση** (f) | Remove a member’s access without deleting the account. |
+| deactivate | **απενεργοποίηση** (f) | Remove a member’s access without deleting the account; also hides a listing from the active inventory. |
 | revoke | **ανάκληση** (f) | Revoke an invitation. |
 | activate | **ενεργοποίηση** (f) | Activate a campaign. |
 | complete | **ολοκλήρωση** (f) | Complete a campaign or task. |
@@ -123,6 +147,70 @@ Gender is shown as **(f)** feminine, **(m)** masculine, or **(n)** neuter. Greek
 | open | **Ανοιχτή** |
 | won | **Κερδισμένη** |
 | lost | **Χαμένη** |
+
+### Listing transactions (labels)
+
+| English | Greek |
+| --- | --- |
+| for sale | **Προς πώληση** |
+| for rent | **Προς ενοικίαση** |
+
+### Listing statuses (feminine, agreeing with «αγγελία»)
+
+| English | Greek |
+| --- | --- |
+| active | **Ενεργή** |
+| inactive | **Ανενεργή** |
+
+### Viewing statuses (feminine, agreeing with «επίσκεψη»)
+
+| English | Greek |
+| --- | --- |
+| scheduled | **Προγραμματισμένη** |
+| completed | **Ολοκληρωμένη** |
+| cancelled | **Ακυρωμένη** |
+| no show | **Μη προσέλευση** |
+
+These labels are used in badges and status actions. `markCompleted` is the action «Ολοκλήρωση», `markCancelled` «Ακύρωση», `markNoShow` «Μη προσέλευση».
+
+### Property types (labels, not stored values)
+
+| English | Greek |
+| --- | --- |
+| apartment | **Διαμέρισμα** |
+| house | **Κατοικία** |
+| villa | **Βίλα** |
+| maisonette | **Μεζονέτα** |
+| plot | **Οικόπεδο** |
+| commercial | **Επαγγελματικό ακίνητο** |
+| other | **Άλλο** |
+
+The stored values (`apartment`, `house`, `villa`, `maisonette`, `plot`, `commercial`, `other`) stay as they are.
+
+### Feature group labels
+
+| Group key | Greek |
+| --- | --- |
+| `location` | **Τοποθεσία** |
+| `construction` | **Κατασκευή** |
+| `exterior` | **Εξωτερικό** |
+| `style` | **Στυλ** |
+| `roof` | **Στέγη** |
+| `yard` | **Αυλή** |
+| `homeType` | **Τύπος κατοικίας** |
+| `homeFeatures` | **Χαρακτηριστικά κατοικίας** |
+| `rooms` | **Δωμάτια** |
+| `flooring` | **Δάπεδα** |
+| `kitchenAppliances` | **Συσκευές κουζίνας** |
+| `kitchenCounters` | **Πάγκοι κουζίνας** |
+| `kitchenFeatures` | **Χαρακτηριστικά κουζίνας** |
+| `dining` | **Τραπεζαρία** |
+| `masterSuite` | **Κύρια σουίτα** |
+| `bath` | **Μπάνιο** |
+| `energy` | **Ενέργεια** |
+| `accessibility` | **Προσβασιμότητα** |
+
+Feature labels use common Greek real-estate vocabulary. Keep standard loanwords in their usual Greek form («σπα», «τζακούζι», «σάουνα», «λαμινέ», «μπανγκαλόου») and keep the acronyms **HVAC**, **RV**, and **BBQ** in Latin capitals.
 
 ### Stage outcomes (neuter, agreeing with «στάδιο»)
 
@@ -192,7 +280,7 @@ These describe what happened to a recipient (masculine «παραλήπτης»)
 | --- | --- |
 | OpenCRM | Product name. Exact spelling and capitalization everywhere. |
 | CRM | Acronym. Keep Latin capitals. |
-| USD | Currency code. Amounts are formatted for the locale, but the currency is always USD. |
+| USD | Currency code. Keep Latin capitals. Amounts are formatted for the locale with the record's own currency or the workspace default; totals are grouped per currency and never summed across currencies. |
 | CSV | File format. Keep Latin capitals; file extension stays `.csv`. |
 | SLA | Acronym. Never expand or translate. |
 | Email | Keep in address/format contexts. In running prose, «email» is acceptable. |
@@ -205,15 +293,15 @@ These describe what happened to a recipient (masculine «παραλήπτης»)
 
 ## Never translate: user data
 
-Company and contact names, tags, pipeline and stage names, notes, descriptions, campaign copy, activity subjects and bodies, task titles and descriptions, comments, email addresses, URLs, CSV headers, and any other text entered by a user are displayed exactly as stored. This includes the seeded default stage names (`Lead`, `Qualified`, `Proposal`, `Negotiation`, `Won`, `Lost`): they are stored strings, not catalog labels. Greek users see them in English until an administrator renames them.
+Company and contact names, tags, pipeline and stage names, notes, descriptions, campaign copy, activity subjects and bodies, task titles and descriptions, comments, email addresses, URLs, CSV headers, and any other text entered by a user are displayed exactly as stored. For listings this includes the reference, title, description, address fields, and photo alt text. This also includes the seeded default stage names (`Lead`, `Qualified`, `Proposal`, `Negotiation`, `Won`, `Lost`): they are stored strings, not catalog labels. Greek users see them in English until an administrator renames them.
 
 ## Gender and pluralization traps
 
 ### Record genders
 
-- company **εταιρεία** (f), contact **επαφή** (f), deal **συμφωνία** (f), pipeline **ροή** (f), campaign **καμπάνια** (f), task **εργασία** (f), activity **δραστηριότητα** (f).
-- stage **στάδιο** (n), ticket **δελτίο** (n), segment **τμήμα** (n), audience **κοινό** (n), member **μέλος** (n).
-- owner **υπεύθυνος** (m), requester **αιτών** (m), assignee **ανατεθειμένος** (m), administrator **διαχειριστής** (m), role **ρόλος** (m).
+- company **εταιρεία** (f), contact **επαφή** (f), deal **συμφωνία** (f), pipeline **ροή** (f), campaign **καμπάνια** (f), task **εργασία** (f), activity **δραστηριότητα** (f), listing **αγγελία** (f), viewing **επίσκεψη** (f), commission **προμήθεια** (f).
+- stage **στάδιο** (n), ticket **δελτίο** (n), segment **τμήμα** (n), audience **κοινό** (n), member **μέλος** (n), property **ακίνητο** (n), feature **χαρακτηριστικό** (n).
+- owner **υπεύθυνος** (m), requester **αιτών** (m), assignee **ανατεθειμένος** (m), administrator **διαχειριστής** (m), role **ρόλος** (m), seller **πωλητής** (m).
 
 ### Shared keys
 
@@ -245,3 +333,6 @@ Greek has two plural categories in this catalog: `one` for exactly 1 and `other`
 3. **`deleteTaskConfirm`** only asks “Delete this task?” without saying the action cannot be undone. Greek does not add a warning that the English source does not contain; flag it for the English owner.
 4. **Default pipeline stage names** are stored in English. This is correct per the “user data is never translated” rule, but it is a visible Greek/English mix on first run.
 5. **`sales.closed`** is a label for the close timestamp. It is translated as «Κλεισμένη» (the deal is closed); confirm the layout still reads naturally beside a date.
+6. **`listings.seller` and the deal buyer label are transaction-agnostic.** The English source uses one label for sale and rent records. Greek uses «Πωλητής» and «Αγοραστής», which are correct for sale records but wrong for rent records (where «Εκμισθωτής» and «Ενοικιαστής» would be correct). The listing form does switch on transaction, but the label key does not; recommend splitting the English keys or choosing a neutral label such as «Ιδιοκτήτης ακινήτου». Do not add a slash form («Πωλητής/Εκμισθωτής») — the labels are table headers.
+7. **Multi-currency copy was updated for listings and deals.** The style guide now uses per-record/workspace-default currency and per-currency totals; the campaign budget label no longer hardcodes USD. The unused `sales.amountUsd` key can be cleaned up in a future catalog tidy.
+8. **`listings.photos.errors.size` and `errors.count` hardcode limits (8 MB, 20 photos).** The server constants are `LISTING_PHOTO_MAX_BYTES` and `LISTING_PHOTO_MAX_COUNT`. The message descriptors pass no parameters, so the Greek catalog repeats the numbers; if the limits change, update both catalogs.

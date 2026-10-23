@@ -3,9 +3,13 @@ import { db } from "@/db";
 import {
   companies,
   contacts,
+  listings,
+  listingViewings,
   pipelines,
   stages,
   users,
+  type NewListing,
+  type NewListingViewing,
   type NewUser,
 } from "@/db/schema";
 import { hashPassword } from "@/lib/auth/password";
@@ -73,4 +77,48 @@ export async function createTestPipeline() {
     .returning();
 
   return { pipeline, openStage: stageRows[0], wonStage: stageRows[1], lostStage: stageRows[2] };
+}
+
+export async function createListing(
+  sellerContactId: string,
+  ownerId: string,
+  overrides: Partial<NewListing> = {},
+) {
+  const [listing] = await db
+    .insert(listings)
+    .values({
+      reference: `RE-${randomUUID().slice(0, 8).toUpperCase()}`,
+      title: "Test listing",
+      transaction: "sale",
+      price: "100000.00",
+      currency: "USD",
+      propertyType: "apartment",
+      sellerContactId,
+      ownerId,
+      ...overrides,
+    })
+    .returning();
+  return listing;
+}
+
+export async function createViewing(
+  listingId: string,
+  contactId: string,
+  actorId: string,
+  overrides: Partial<NewListingViewing> = {},
+) {
+  const [viewing] = await db
+    .insert(listingViewings)
+    .values({
+      listingId,
+      contactId,
+      agentId: actorId,
+      scheduledAt: new Date("2030-01-10T10:00:00.000Z"),
+      durationMinutes: 30,
+      status: "scheduled",
+      createdById: actorId,
+      ...overrides,
+    })
+    .returning();
+  return viewing;
 }

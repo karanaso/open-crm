@@ -1,4 +1,21 @@
 services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-opencode_crm}
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production-32-characters}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_TRUST_HOST: "true"
+      IMAGE_STORAGE_DIR: /app/storage/listing-images
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - crm_images:/app/storage/listing-images
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -18,3 +35,4 @@ services:
 
 volumes:
   crm_postgres_data:
+  crm_images:

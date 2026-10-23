@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Building2, Handshake, LifeBuoy, Megaphone, Users } from "lucide-react";
+import { Building2, Handshake, House, LifeBuoy, Megaphone, Users } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -11,25 +11,27 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatNumber } from "@/i18n/format";
 import type { GlobalSearchResults, SearchResult } from "@/lib/services/search";
 
 const emptyResults: GlobalSearchResults = {
   companies: [],
   contacts: [],
   deals: [],
+  listings: [],
   tickets: [],
   campaigns: [],
 };
 
 const groups: Array<{
   key: keyof GlobalSearchResults;
-  labelKey: "companies" | "contacts" | "deals" | "tickets" | "campaigns";
+  labelKey: "companies" | "contacts" | "deals" | "listings" | "tickets" | "campaigns";
   icon: typeof Building2;
 }> = [
   { key: "companies", labelKey: "companies", icon: Building2 },
   { key: "contacts", labelKey: "contacts", icon: Users },
   { key: "deals", labelKey: "deals", icon: Handshake },
+  { key: "listings", labelKey: "listings", icon: House },
   { key: "tickets", labelKey: "tickets", icon: LifeBuoy },
   { key: "campaigns", labelKey: "campaigns", icon: Megaphone },
 ];
@@ -47,18 +49,35 @@ export function GlobalSearchDialog({
   const [results, setResults] = useState<GlobalSearchResults>(emptyResults);
   const [loading, setLoading] = useState(false);
   const t = useTranslations("common");
-  const tNav = useTranslations("nav");
+  const tNav = useTranslations("nav") as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const tEnums = useTranslations("enums");
+  const tListings = useTranslations("listings") as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const locale = useLocale();
 
   function resultSubtitle(item: SearchResult, groupKey: keyof GlobalSearchResults) {
     const parts: string[] = [];
     if (groupKey === "campaigns") parts.push(t("campaign"));
     if (item.subtitle) parts.push(item.subtitle);
-    if (item.amount) parts.push(formatCurrency(item.amount, locale));
+    if (item.amount) {
+      parts.push(
+        item.currency
+          ? formatCurrency(Number(item.amount), locale, item.currency)
+          : formatNumber(Number(item.amount), locale),
+      );
+    }
     if (item.status) {
-      const group = groupKey === "tickets" ? "ticketStatus" : "campaignStatus";
-      parts.push(tEnums(`${group}.${item.status}` as never));
+      if (groupKey === "listings") {
+        parts.push(tListings(`enums.status.${item.status}`));
+      } else {
+        const group = groupKey === "tickets" ? "ticketStatus" : "campaignStatus";
+        parts.push(tEnums(`${group}.${item.status}` as never));
+      }
     }
     if (groupKey === "companies" && !item.subtitle) parts.push(t("company"));
     return parts.join(" · ");
@@ -112,11 +131,9 @@ export function GlobalSearchDialog({
       />
       <CommandList>
         {query.trim().length < 2 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            {t("searchMinChars")}
-          </p>
+          <p className="text-muted-foreground py-6 text-center text-sm">{t("searchMinChars")}</p>
         ) : loading && !hasResults ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">{t("searching")}</p>
+          <p className="text-muted-foreground py-6 text-center text-sm">{t("searching")}</p>
         ) : (
           <CommandEmpty>{t("noResults")}</CommandEmpty>
         )}
@@ -134,10 +151,10 @@ export function GlobalSearchDialog({
                     value={`${tNav(group.labelKey)} ${item.title} ${subtitle}`}
                     onSelect={() => onSelect(item.href)}
                   >
-                    <Icon className="size-4 text-muted-foreground" />
+                    <Icon className="text-muted-foreground size-4" />
                     <div className="min-w-0">
                       <p className="truncate">{item.title}</p>
-                      <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+                      <p className="text-muted-foreground truncate text-xs">{subtitle}</p>
                     </div>
                   </CommandItem>
                 );

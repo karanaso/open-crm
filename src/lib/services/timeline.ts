@@ -7,6 +7,7 @@ import {
   companies,
   contacts,
   deals,
+  listings,
   tasks,
   tickets,
   users,
@@ -20,12 +21,13 @@ export type RecordLinks = {
   companyId?: string | null;
   contactId?: string | null;
   dealId?: string | null;
+  listingId?: string | null;
   ticketId?: string | null;
   campaignId?: string | null;
 };
 
 export type TimelineLink = {
-  type: "company" | "contact" | "deal" | "ticket" | "campaign";
+  type: "company" | "contact" | "deal" | "listing" | "ticket" | "campaign";
   id: string;
   label: string;
   href: Route;
@@ -50,6 +52,7 @@ export function recordLinkCondition(
     | typeof activities.companyId
     | typeof activities.contactId
     | typeof activities.dealId
+    | typeof activities.listingId
     | typeof activities.ticketId
     | typeof activities.campaignId,
   id: string,
@@ -61,34 +64,55 @@ export async function loadLinkLabels(rows: RecordLinks[]) {
   const companyIds = [...new Set(rows.map((row) => row.companyId).filter(Boolean))] as string[];
   const contactIds = [...new Set(rows.map((row) => row.contactId).filter(Boolean))] as string[];
   const dealIds = [...new Set(rows.map((row) => row.dealId).filter(Boolean))] as string[];
+  const listingIds = [...new Set(rows.map((row) => row.listingId).filter(Boolean))] as string[];
   const ticketIds = [...new Set(rows.map((row) => row.ticketId).filter(Boolean))] as string[];
   const campaignIds = [...new Set(rows.map((row) => row.campaignId).filter(Boolean))] as string[];
 
-  const [companyRows, contactRows, dealRows, ticketRows, campaignRows] = await Promise.all([
-    companyIds.length
-      ? db.select({ id: companies.id, name: companies.name }).from(companies).where(inArray(companies.id, companyIds))
-      : Promise.resolve([]),
-    contactIds.length
-      ? db
-          .select({ id: contacts.id, firstName: contacts.firstName, lastName: contacts.lastName })
-          .from(contacts)
-          .where(inArray(contacts.id, contactIds))
-      : Promise.resolve([]),
-    dealIds.length
-      ? db.select({ id: deals.id, name: deals.name }).from(deals).where(inArray(deals.id, dealIds))
-      : Promise.resolve([]),
-    ticketIds.length
-      ? db.select({ id: tickets.id, subject: tickets.subject }).from(tickets).where(inArray(tickets.id, ticketIds))
-      : Promise.resolve([]),
-    campaignIds.length
-      ? db.select({ id: campaigns.id, name: campaigns.name }).from(campaigns).where(inArray(campaigns.id, campaignIds))
-      : Promise.resolve([]),
-  ]);
+  const [companyRows, contactRows, dealRows, listingRows, ticketRows, campaignRows] =
+    await Promise.all([
+      companyIds.length
+        ? db
+            .select({ id: companies.id, name: companies.name })
+            .from(companies)
+            .where(inArray(companies.id, companyIds))
+        : Promise.resolve([]),
+      contactIds.length
+        ? db
+            .select({ id: contacts.id, firstName: contacts.firstName, lastName: contacts.lastName })
+            .from(contacts)
+            .where(inArray(contacts.id, contactIds))
+        : Promise.resolve([]),
+      dealIds.length
+        ? db
+            .select({ id: deals.id, name: deals.name })
+            .from(deals)
+            .where(inArray(deals.id, dealIds))
+        : Promise.resolve([]),
+      listingIds.length
+        ? db
+            .select({ id: listings.id, reference: listings.reference, title: listings.title })
+            .from(listings)
+            .where(inArray(listings.id, listingIds))
+        : Promise.resolve([]),
+      ticketIds.length
+        ? db
+            .select({ id: tickets.id, subject: tickets.subject })
+            .from(tickets)
+            .where(inArray(tickets.id, ticketIds))
+        : Promise.resolve([]),
+      campaignIds.length
+        ? db
+            .select({ id: campaigns.id, name: campaigns.name })
+            .from(campaigns)
+            .where(inArray(campaigns.id, campaignIds))
+        : Promise.resolve([]),
+    ]);
 
   const maps = {
     company: new Map(companyRows.map((row) => [row.id, row.name])),
     contact: new Map(contactRows.map((row) => [row.id, `${row.firstName} ${row.lastName}`])),
     deal: new Map(dealRows.map((row) => [row.id, row.name])),
+    listing: new Map(listingRows.map((row) => [row.id, `${row.reference} · ${row.title}`])),
     ticket: new Map(ticketRows.map((row) => [row.id, row.subject])),
     campaign: new Map(campaignRows.map((row) => [row.id, row.name])),
   };
@@ -119,6 +143,14 @@ export async function loadLinkLabels(rows: RecordLinks[]) {
         href: `/deals/${row.dealId}` as Route,
       });
     }
+    if (row.listingId) {
+      links.push({
+        type: "listing",
+        id: row.listingId,
+        label: maps.listing.get(row.listingId) ?? "Listing",
+        href: `/listings/${row.listingId}` as Route,
+      });
+    }
     if (row.ticketId) {
       links.push({
         type: "ticket",
@@ -144,6 +176,7 @@ function linkWhere(link: RecordLinks) {
   if (link.companyId) conditions.push(eq(activities.companyId, link.companyId));
   if (link.contactId) conditions.push(eq(activities.contactId, link.contactId));
   if (link.dealId) conditions.push(eq(activities.dealId, link.dealId));
+  if (link.listingId) conditions.push(eq(activities.listingId, link.listingId));
   if (link.ticketId) conditions.push(eq(activities.ticketId, link.ticketId));
   if (link.campaignId) conditions.push(eq(activities.campaignId, link.campaignId));
   return and(...conditions);
@@ -154,6 +187,7 @@ function taskLinkWhere(link: RecordLinks) {
   if (link.companyId) conditions.push(eq(tasks.companyId, link.companyId));
   if (link.contactId) conditions.push(eq(tasks.contactId, link.contactId));
   if (link.dealId) conditions.push(eq(tasks.dealId, link.dealId));
+  if (link.listingId) conditions.push(eq(tasks.listingId, link.listingId));
   if (link.ticketId) conditions.push(eq(tasks.ticketId, link.ticketId));
   if (link.campaignId) conditions.push(eq(tasks.campaignId, link.campaignId));
   return and(...conditions);
@@ -195,6 +229,7 @@ export async function getTimeline(
       companyId: row.activity.companyId,
       contactId: row.activity.contactId,
       dealId: row.activity.dealId,
+      listingId: row.activity.listingId,
       ticketId: row.activity.ticketId,
       campaignId: row.activity.campaignId,
     },
@@ -209,13 +244,7 @@ export async function getTimeline(
       })
       .from(tasks)
       .leftJoin(users, eq(tasks.completedById, users.id))
-      .where(
-        and(
-          taskLinkWhere(link),
-          eq(tasks.status, "completed"),
-          isNotNull(tasks.completedAt),
-        ),
-      )
+      .where(and(taskLinkWhere(link), eq(tasks.status, "completed"), isNotNull(tasks.completedAt)))
       .orderBy(desc(tasks.completedAt));
 
     const taskLinks = await loadLinkLabels(completedRows.map((row) => row.task));
@@ -234,6 +263,7 @@ export async function getTimeline(
           companyId: row.task.companyId,
           contactId: row.task.contactId,
           dealId: row.task.dealId,
+          listingId: row.task.listingId,
           ticketId: row.task.ticketId,
           campaignId: row.task.campaignId,
         },
@@ -257,19 +287,38 @@ export async function getTimeline(
 async function assertActivityLinks(input: ActivityInput) {
   const checks = await Promise.all([
     input.companyId
-      ? db.select({ id: companies.id }).from(companies).where(eq(companies.id, input.companyId)).limit(1)
+      ? db
+          .select({ id: companies.id })
+          .from(companies)
+          .where(eq(companies.id, input.companyId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.contactId
-      ? db.select({ id: contacts.id }).from(contacts).where(eq(contacts.id, input.contactId)).limit(1)
+      ? db
+          .select({ id: contacts.id })
+          .from(contacts)
+          .where(eq(contacts.id, input.contactId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.dealId
       ? db.select({ id: deals.id }).from(deals).where(eq(deals.id, input.dealId)).limit(1)
+      : Promise.resolve([{ id: "ok" }]),
+    input.listingId
+      ? db
+          .select({ id: listings.id })
+          .from(listings)
+          .where(eq(listings.id, input.listingId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.ticketId
       ? db.select({ id: tickets.id }).from(tickets).where(eq(tickets.id, input.ticketId)).limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.campaignId
-      ? db.select({ id: campaigns.id }).from(campaigns).where(eq(campaigns.id, input.campaignId)).limit(1)
+      ? db
+          .select({ id: campaigns.id })
+          .from(campaigns)
+          .where(eq(campaigns.id, input.campaignId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
   ]);
   if (checks.some((rows) => rows.length === 0)) {
@@ -279,7 +328,8 @@ async function assertActivityLinks(input: ActivityInput) {
 
 export async function createActivity(input: ActivityInput, actorId: string) {
   const occurredAt = new Date(input.occurredAt);
-  if (Number.isNaN(occurredAt.getTime())) throw new AppError("Enter a valid activity time", "INVALID_TIME");
+  if (Number.isNaN(occurredAt.getTime()))
+    throw new AppError("Enter a valid activity time", "INVALID_TIME");
   if (occurredAt.getTime() > Date.now() + 60_000) {
     throw new AppError("Activity time cannot be in the future", "FUTURE_ACTIVITY");
   }
@@ -296,6 +346,7 @@ export async function createActivity(input: ActivityInput, actorId: string) {
       companyId: input.companyId,
       contactId: input.contactId,
       dealId: input.dealId,
+      listingId: input.listingId,
       ticketId: input.ticketId,
       campaignId: input.campaignId,
     })
@@ -309,12 +360,18 @@ export async function updateActivity(
   input: ActivityInput,
   actor: { id: string; role: "admin" | "member" },
 ) {
-  const [activity] = await db.select().from(activities).where(eq(activities.id, activityId)).limit(1);
+  const [activity] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, activityId))
+    .limit(1);
   if (!activity) throw new AppError("Activity not found", "NOT_FOUND");
-  if (activity.authorId !== actor.id) throw new AppError("You can only edit your own activities", "FORBIDDEN");
+  if (activity.authorId !== actor.id)
+    throw new AppError("You can only edit your own activities", "FORBIDDEN");
 
   const occurredAt = new Date(input.occurredAt);
-  if (Number.isNaN(occurredAt.getTime())) throw new AppError("Enter a valid activity time", "INVALID_TIME");
+  if (Number.isNaN(occurredAt.getTime()))
+    throw new AppError("Enter a valid activity time", "INVALID_TIME");
   if (occurredAt.getTime() > Date.now() + 60_000) {
     throw new AppError("Activity time cannot be in the future", "FUTURE_ACTIVITY");
   }
@@ -330,6 +387,7 @@ export async function updateActivity(
       companyId: input.companyId,
       contactId: input.contactId,
       dealId: input.dealId,
+      listingId: input.listingId,
       ticketId: input.ticketId,
       campaignId: input.campaignId,
       updatedAt: new Date(),
@@ -344,7 +402,11 @@ export async function deleteActivity(
   activityId: string,
   actor: { id: string; role: "admin" | "member" },
 ) {
-  const [activity] = await db.select().from(activities).where(eq(activities.id, activityId)).limit(1);
+  const [activity] = await db
+    .select()
+    .from(activities)
+    .where(eq(activities.id, activityId))
+    .limit(1);
   if (!activity) throw new AppError("Activity not found", "NOT_FOUND");
   if (activity.authorId !== actor.id && actor.role !== "admin") {
     throw new AppError("You cannot delete this activity", "FORBIDDEN");

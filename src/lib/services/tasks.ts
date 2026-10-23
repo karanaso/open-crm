@@ -5,6 +5,7 @@ import {
   companies,
   contacts,
   deals,
+  listings,
   tasks,
   tickets,
   users,
@@ -25,25 +26,45 @@ export type TaskListItem = Task & {
 async function assertActiveAssignee(assigneeId: string) {
   const [user] = await db.select().from(users).where(eq(users.id, assigneeId)).limit(1);
   if (!user) throw new AppError("Assignee not found", "NOT_FOUND");
-  if (user.status !== "active") throw new AppError("Choose an active team member as assignee", "INACTIVE_ASSIGNEE");
+  if (user.status !== "active")
+    throw new AppError("Choose an active team member as assignee", "INACTIVE_ASSIGNEE");
 }
 
 async function assertTaskLinks(input: TaskInput) {
   const checks = await Promise.all([
     input.companyId
-      ? db.select({ id: companies.id }).from(companies).where(eq(companies.id, input.companyId)).limit(1)
+      ? db
+          .select({ id: companies.id })
+          .from(companies)
+          .where(eq(companies.id, input.companyId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.contactId
-      ? db.select({ id: contacts.id }).from(contacts).where(eq(contacts.id, input.contactId)).limit(1)
+      ? db
+          .select({ id: contacts.id })
+          .from(contacts)
+          .where(eq(contacts.id, input.contactId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.dealId
       ? db.select({ id: deals.id }).from(deals).where(eq(deals.id, input.dealId)).limit(1)
+      : Promise.resolve([{ id: "ok" }]),
+    input.listingId
+      ? db
+          .select({ id: listings.id })
+          .from(listings)
+          .where(eq(listings.id, input.listingId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.ticketId
       ? db.select({ id: tickets.id }).from(tickets).where(eq(tickets.id, input.ticketId)).limit(1)
       : Promise.resolve([{ id: "ok" }]),
     input.campaignId
-      ? db.select({ id: campaigns.id }).from(campaigns).where(eq(campaigns.id, input.campaignId)).limit(1)
+      ? db
+          .select({ id: campaigns.id })
+          .from(campaigns)
+          .where(eq(campaigns.id, input.campaignId))
+          .limit(1)
       : Promise.resolve([{ id: "ok" }]),
   ]);
   if (checks.some((rows) => rows.length === 0)) {
@@ -72,6 +93,7 @@ export async function createTask(input: TaskInput, actorId: string) {
       companyId: input.companyId,
       contactId: input.contactId,
       dealId: input.dealId,
+      listingId: input.listingId,
       ticketId: input.ticketId,
       campaignId: input.campaignId,
     })
@@ -97,6 +119,7 @@ export async function updateTask(taskId: string, input: TaskInput) {
       companyId: input.companyId,
       contactId: input.contactId,
       dealId: input.dealId,
+      listingId: input.listingId,
       ticketId: input.ticketId,
       campaignId: input.campaignId,
       updatedAt: new Date(),
@@ -155,19 +178,22 @@ export async function getTask(taskId: string) {
     .limit(1);
   if (!row) return null;
   const links = await loadLinkLabels([row.task]);
-  return { ...row.task, assigneeName: row.assigneeName, assigneeStatus: row.assigneeStatus, links: links[0] };
+  return {
+    ...row.task,
+    assigneeName: row.assigneeName,
+    assigneeStatus: row.assigneeStatus,
+    links: links[0],
+  };
 }
 
-export async function listTasks(
-  options: {
-    view: "mine" | "all";
-    userId: string;
-    assigneeId?: string;
-    priority?: "low" | "normal" | "high";
-    status?: "open" | "completed";
-    recordType?: "company" | "contact" | "deal" | "ticket" | "campaign";
-  },
-) {
+export async function listTasks(options: {
+  view: "mine" | "all";
+  userId: string;
+  assigneeId?: string;
+  priority?: "low" | "normal" | "high";
+  status?: "open" | "completed";
+  recordType?: "company" | "contact" | "deal" | "listing" | "ticket" | "campaign";
+}) {
   const conditions = [];
   if (options.view === "mine") conditions.push(eq(tasks.assigneeId, options.userId));
   if (options.assigneeId) conditions.push(eq(tasks.assigneeId, options.assigneeId));
@@ -176,6 +202,7 @@ export async function listTasks(
   if (options.recordType === "company") conditions.push(isNotNull(tasks.companyId));
   if (options.recordType === "contact") conditions.push(isNotNull(tasks.contactId));
   if (options.recordType === "deal") conditions.push(isNotNull(tasks.dealId));
+  if (options.recordType === "listing") conditions.push(isNotNull(tasks.listingId));
   if (options.recordType === "ticket") conditions.push(isNotNull(tasks.ticketId));
   if (options.recordType === "campaign") conditions.push(isNotNull(tasks.campaignId));
 
@@ -206,6 +233,7 @@ export async function getTasksForRecord(link: RecordLinks) {
   if (link.companyId) conditions.push(eq(tasks.companyId, link.companyId));
   if (link.contactId) conditions.push(eq(tasks.contactId, link.contactId));
   if (link.dealId) conditions.push(eq(tasks.dealId, link.dealId));
+  if (link.listingId) conditions.push(eq(tasks.listingId, link.listingId));
   if (link.ticketId) conditions.push(eq(tasks.ticketId, link.ticketId));
   if (link.campaignId) conditions.push(eq(tasks.campaignId, link.campaignId));
 

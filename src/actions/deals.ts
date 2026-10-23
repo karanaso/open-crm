@@ -8,25 +8,35 @@ import { errorDescriptor } from "@/lib/errors";
 import { dealMoveSchema, dealSchema } from "@/lib/validation/deal";
 import { createDeal, moveDeal, updateDeal } from "@/lib/services/deals";
 
+function optionalLink(formData: FormData, field: string) {
+  const value = formData.get(field);
+  return value === "none" || value === "" ? null : value;
+}
+
 function dealFromFormData(formData: FormData) {
   return {
     name: formData.get("name"),
-    companyId: formData.get("companyId"),
-    contactId: formData.get("contactId") === "none" ? null : formData.get("contactId"),
+    companyId: optionalLink(formData, "companyId"),
+    contactId: formData.get("contactId"),
+    listingId: optionalLink(formData, "listingId"),
     pipelineId: formData.get("pipelineId"),
     stageId: formData.get("stageId"),
     ownerId: formData.get("ownerId"),
+    propertyPrice: formData.get("propertyPrice"),
     amount: formData.get("amount"),
+    currency: formData.get("currency"),
     expectedCloseDate: formData.get("expectedCloseDate"),
     description: formData.get("description"),
     lostReason: formData.get("lostReason"),
   };
 }
 
-function revalidateDealPaths(dealId?: string) {
+function revalidateDealPaths(dealId?: string, listingId?: string | null) {
   revalidatePath("/deals");
   revalidatePath("/dashboard");
+  revalidatePath("/listings");
   if (dealId) revalidatePath(`/deals/${dealId}`);
+  if (listingId) revalidatePath(`/listings/${listingId}`);
 }
 
 export async function createDealAction(
@@ -45,7 +55,7 @@ export async function createDealAction(
     return { error: errorDescriptor(error) };
   }
 
-  revalidateDealPaths(dealId);
+  revalidateDealPaths(dealId, parsed.data.listingId);
   redirect(`/deals/${dealId}`);
 }
 
@@ -59,17 +69,12 @@ export async function updateDealAction(
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error) };
 
   try {
-    await updateDeal(
-      dealId,
-      parsed.data,
-      user.id,
-      formData.get("expectedUpdatedAt")?.toString(),
-    );
+    await updateDeal(dealId, parsed.data, user.id, formData.get("expectedUpdatedAt")?.toString());
   } catch (error) {
     return { error: errorDescriptor(error) };
   }
 
-  revalidateDealPaths(dealId);
+  revalidateDealPaths(dealId, parsed.data.listingId);
   redirect(`/deals/${dealId}`);
 }
 

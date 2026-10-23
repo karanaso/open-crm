@@ -18,7 +18,7 @@ export async function RecordEngagement({
   assignees,
 }: {
   currentUser: Pick<User, "id" | "role">;
-  links: Partial<Record<"companyId" | "contactId" | "dealId" | "ticketId" | "campaignId", string | null>>;
+  links: Partial<Record<"companyId" | "contactId" | "dealId" | "listingId" | "ticketId" | "campaignId", string | null>>;
   returnTo: string;
   timeline: { items: TimelineItem[]; page: number; pageCount: number };
   filterType?: string;

@@ -29,7 +29,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
+import { formatCurrency } from "@/i18n/format";
+import type { Locale } from "@/i18n/config";
 import { DateDisplay } from "@/components/ui/local-time";
 import { useMessageTranslator } from "@/i18n/messages";
 
@@ -41,17 +43,37 @@ type StageOption = {
   position: number;
 };
 
-type BoardDeal = {
+type CurrencyTotal = {
+  currency: string;
+  total: number;
+};
+
+type StageMetrics = {
+  id: string;
+  dealCount: number;
+  totalValueByCurrency: CurrencyTotal[];
+  weightedValueByCurrency: CurrencyTotal[];
+};
+
+export type BoardDeal = {
   id: string;
   name: string;
-  companyName: string;
+  contactName: string;
+  companyName: string | null;
+  listingReference: string | null;
   amount: string;
+  currency: string;
   ownerName: string;
   expectedCloseDate: string | null;
   stageId: string;
   status: "open" | "won" | "lost";
   updatedAt: string;
 };
+
+function currencyTotalsText(totals: CurrencyTotal[] | undefined, locale: Locale) {
+  if (!totals || totals.length === 0) return "—";
+  return totals.map((total) => formatCurrency(total.total, locale, total.currency)).join(" · ");
+}
 
 function DealCard({
   deal,
@@ -64,7 +86,9 @@ function DealCard({
   onMove: (deal: BoardDeal, stage: StageOption) => void;
   dragging?: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: deal.id });
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: deal.id,
+  });
   const t = useTranslations("sales");
   const tEnums = useTranslations("enums");
   const locale = useLocale();
@@ -74,7 +98,7 @@ function DealCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border bg-card p-3 shadow-sm ${isDragging || dragging ? "opacity-50" : ""}`}
+      className={`bg-card rounded-lg border p-3 shadow-sm ${isDragging || dragging ? "opacity-50" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <Link
@@ -110,7 +134,7 @@ function DealCard({
           </DropdownMenu>
           <button
             type="button"
-            className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+            className="text-muted-foreground cursor-grab touch-none active:cursor-grabbing"
             aria-label={t("dragDeal", { name: deal.name })}
             {...listeners}
             {...attributes}
@@ -119,13 +143,30 @@ function DealCard({
           </button>
         </div>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">{deal.companyName}</p>
-      <p className="mt-2 text-sm font-semibold">{formatCurrency(deal.amount, locale)}</p>
-      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+      <p className="text-muted-foreground mt-1 text-xs">
+        {deal.contactName}
+        {deal.companyName ? <span> · {deal.companyName}</span> : null}
+      </p>
+      {deal.listingReference ? (
+        <p className="text-muted-foreground mt-0.5 text-xs">{deal.listingReference}</p>
+      ) : null}
+      <p className="mt-2 text-sm font-semibold">
+        {formatCurrency(Number(deal.amount), locale, deal.currency)}
+      </p>
+      <div className="text-muted-foreground mt-2 flex items-center justify-between text-xs">
         <span>{deal.ownerName}</span>
-        {deal.expectedCloseDate ? <DateDisplay value={deal.expectedCloseDate} /> : <span>{t("noCloseDate")}</span>}
+        {deal.expectedCloseDate ? (
+          <DateDisplay value={deal.expectedCloseDate} />
+        ) : (
+          <span>{t("noCloseDate")}</span>
+        )}
       </div>
-      <Badge variant={deal.status === "won" ? "success" : deal.status === "lost" ? "destructive" : "outline"} className="mt-2">
+      <Badge
+        variant={
+          deal.status === "won" ? "success" : deal.status === "lost" ? "destructive" : "outline"
+        }
+        className="mt-2"
+      >
         {tEnums(`dealStatus.${deal.status}`)}
       </Badge>
     </div>
@@ -136,28 +177,34 @@ function StageColumn({
   stage,
   deals,
   stages,
+  metrics,
   onMove,
 }: {
   stage: StageOption;
   deals: BoardDeal[];
   stages: StageOption[];
+  metrics?: StageMetrics;
   onMove: (deal: BoardDeal, stage: StageOption) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const t = useTranslations("sales");
   const locale = useLocale();
-  const total = deals.reduce((sum, deal) => sum + Number(deal.amount), 0);
 
   return (
     <div className="flex w-72 shrink-0 flex-col gap-3">
-      <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
+      <div className="bg-muted/40 flex items-center justify-between rounded-lg border px-3 py-2">
         <div>
           <p className="text-sm font-medium">{stage.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {t("dealCount", { count: deals.length })} · {formatCurrency(total, locale)}
+          <p className="text-muted-foreground text-xs">
+            {t("dealCount", {
+              count: stage.outcome === "open" ? (metrics?.dealCount ?? deals.length) : deals.length,
+            })}{" "}
+            · {currencyTotalsText(metrics?.totalValueByCurrency, locale)}
           </p>
         </div>
-        <Badge variant="outline">{t("probabilityValue", { value: formatNumber(stage.probability, locale) })}</Badge>
+        <Badge variant="outline">
+          {t("probabilityValue", { value: formatNumber(stage.probability, locale) })}
+        </Badge>
       </div>
       <div
         ref={setNodeRef}
@@ -169,7 +216,7 @@ function StageColumn({
           <DealCard key={deal.id} deal={deal} stages={stages} onMove={onMove} />
         ))}
         {deals.length === 0 ? (
-          <p className="px-2 py-6 text-center text-xs text-muted-foreground">{t("dropHere")}</p>
+          <p className="text-muted-foreground px-2 py-6 text-center text-xs">{t("dropHere")}</p>
         ) : null}
       </div>
     </div>
@@ -180,10 +227,12 @@ export function KanbanBoard({
   pipeline,
   stages,
   initialDeals,
+  metrics,
 }: {
   pipeline: { id: string; name: string };
   stages: StageOption[];
   initialDeals: BoardDeal[];
+  metrics: StageMetrics[];
 }) {
   const [deals, setDeals] = useState(initialDeals);
   const [activeDeal, setActiveDeal] = useState<BoardDeal | null>(null);
@@ -198,7 +247,12 @@ export function KanbanBoard({
     setDeals((current) =>
       current.map((item) =>
         item.id === deal.id
-          ? { ...item, stageId: stage.id, status: stage.outcome, updatedAt: new Date().toISOString() }
+          ? {
+              ...item,
+              stageId: stage.id,
+              status: stage.outcome,
+              updatedAt: new Date().toISOString(),
+            }
           : item,
       ),
     );
@@ -247,12 +301,16 @@ export function KanbanBoard({
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-3" aria-label={t("boardLabel", { pipeline: pipeline.name })}>
+      <div
+        className="flex gap-4 overflow-x-auto pb-3"
+        aria-label={t("boardLabel", { pipeline: pipeline.name })}
+      >
         {stages.map((stage) => (
           <StageColumn
             key={stage.id}
             stage={stage}
             stages={stages}
+            metrics={metrics.find((item) => item.id === stage.id)}
             deals={deals.filter((deal) => deal.stageId === stage.id)}
             onMove={handleMove}
           />
@@ -260,10 +318,15 @@ export function KanbanBoard({
       </div>
       <DragOverlay>
         {activeDeal ? (
-          <div className="w-64 rotate-2 rounded-lg border bg-card p-3 shadow-lg">
+          <div className="bg-card w-64 rotate-2 rounded-lg border p-3 shadow-lg">
             <p className="text-sm font-medium">{activeDeal.name}</p>
-            <p className="text-xs text-muted-foreground">{activeDeal.companyName}</p>
-            <p className="mt-1 text-sm font-semibold">{formatCurrency(activeDeal.amount, locale)}</p>
+            <p className="text-muted-foreground text-xs">
+              {activeDeal.contactName}
+              {activeDeal.companyName ? ` · ${activeDeal.companyName}` : ""}
+            </p>
+            <p className="mt-1 text-sm font-semibold">
+              {formatCurrency(Number(activeDeal.amount), locale, activeDeal.currency)}
+            </p>
           </div>
         ) : null}
       </DragOverlay>

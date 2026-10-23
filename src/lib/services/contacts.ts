@@ -21,6 +21,7 @@ import {
   contactTags,
   contacts,
   deals,
+  listings,
   tags,
   tickets,
   users,
@@ -28,6 +29,7 @@ import {
 } from "@/db/schema";
 import { normalizeTags } from "@/lib/auth/normalize";
 import { AppError } from "@/lib/errors";
+import { listContactViewings } from "@/lib/services/listing-viewings";
 import { ensureTags } from "@/lib/services/tags";
 import type { ContactInput } from "@/lib/validation/contact";
 import type { contactListParamsSchema } from "@/lib/validation/contact";
@@ -170,12 +172,13 @@ export async function getContact(contactId: string) {
 }
 
 export async function getContactRelations(contactId: string) {
-  const [dealRows, ticketRows, campaignRows] = await Promise.all([
+  const [dealRows, listingRows, viewingRows, ticketRows, campaignRows] = await Promise.all([
     db
       .select({
         id: deals.id,
         name: deals.name,
         amount: deals.amount,
+        currency: deals.currency,
         status: deals.status,
         expectedCloseDate: deals.expectedCloseDate,
       })
@@ -183,6 +186,25 @@ export async function getContactRelations(contactId: string) {
       .where(eq(deals.contactId, contactId))
       .orderBy(desc(deals.updatedAt))
       .limit(50),
+    db
+      .select({
+        id: listings.id,
+        reference: listings.reference,
+        title: listings.title,
+        transaction: listings.transaction,
+        status: listings.status,
+        price: listings.price,
+        pricePeriod: listings.pricePeriod,
+        currency: listings.currency,
+        listedAt: listings.listedAt,
+        sellerArchivedAt: contacts.archivedAt,
+      })
+      .from(listings)
+      .innerJoin(contacts, eq(listings.sellerContactId, contacts.id))
+      .where(eq(listings.sellerContactId, contactId))
+      .orderBy(desc(listings.listedAt))
+      .limit(50),
+    listContactViewings(contactId),
     db
       .select({
         id: tickets.id,
@@ -209,13 +231,20 @@ export async function getContactRelations(contactId: string) {
       .limit(50),
   ]);
 
-  return { deals: dealRows, tickets: ticketRows, campaigns: campaignRows };
+  return {
+    deals: dealRows,
+    sellingListings: listingRows,
+    viewings: viewingRows,
+    tickets: ticketRows,
+    campaigns: campaignRows,
+  };
 }
 
 async function assertActiveOwner(ownerId: string) {
   const [user] = await db.select().from(users).where(eq(users.id, ownerId)).limit(1);
   if (!user) throw new AppError("Owner not found", "NOT_FOUND");
-  if (user.status !== "active") throw new AppError("Choose an active team member as owner", "INACTIVE_OWNER");
+  if (user.status !== "active")
+    throw new AppError("Choose an active team member as owner", "INACTIVE_OWNER");
   return user;
 }
 

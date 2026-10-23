@@ -6,7 +6,7 @@ import {
   isDateBeforeToday,
   todayUtc,
 } from "@/lib/dates";
-import { formatCurrencyUsd, formatDate } from "@/i18n/format";
+import { formatCurrencyUsd, formatDate, formatDateTime } from "@/i18n/format";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 
 const now = new Date("2026-10-21T12:00:00Z");
@@ -55,5 +55,14 @@ describe("date helpers", () => {
   it("formats shared currency and numbers by locale", () => {
     expect(formatCurrency(1234.5, "el")).toContain("1.234,50");
     expect(formatNumber(1234.5, "el")).toBe("1.234,5");
+  });
+
+  it("formats per-record currencies and workspace time zones", () => {
+    expect(formatCurrency(1234.5, "en", "USD")).toContain("$");
+    expect(formatCurrency(1234.5, "en", "EUR")).toContain("€");
+    expect(formatCurrency(1234.5, "el", "EUR")).toContain("1.234,50");
+    expect(formatDate("2026-10-21T23:30:00Z", "en", "UTC")).toContain("21");
+    expect(formatDate("2026-10-21T23:30:00Z", "en", "Europe/Athens")).toContain("22");
+    expect(formatDateTime("2026-10-21T23:30:00Z", "en", "Europe/Athens")).toContain("2:30");
   });
 });

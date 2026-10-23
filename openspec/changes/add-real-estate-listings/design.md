@@ -107,7 +107,7 @@ Alternatives considered: one global currency (cannot represent an international 
 Files live under `IMAGE_STORAGE_DIR` (default `./storage/listing-images`) and are served by an unauthenticated `GET /images/listings/[...key]` route with public cache headers. The URL is public; the CRM does not require a session to fetch a listing photo.
 
 - Do not write runtime uploads into Next.js `public/`. With `output: "standalone"`, runtime files are not reliably served unless the directory is separately mounted, and container replacement loses them.
-- File key: `listings/<listingId>/<photoSeq>_<contentHash8>.webp`. `photoSeq` is assigned once at upload; `position` in `listing_photos` controls display order. Reordering never renames files.
+- File key: `listings/<listingId>/<photoId>.webp`, where `photoId` is a UUID assigned once at upload; `position` in `listing_photos` controls display order. Reordering never renames files.
 - Upload: one image per Server Action, validate content and dimensions, re-encode with `sharp`, strip EXIF/GPS, cap the long edge, write the file, insert the row, and append `position`.
 - Reorder: validate that every id belongs to the listing, then update positions in a transaction. UI uses dnd-kit plus keyboard move buttons.
 - Delete: remove the row and unlink the file. An orphan-cleanup script compares the directory with `listing_photos`, supports a dry run, and reports both orphan files and missing files.
@@ -162,7 +162,7 @@ GET /api/public/v1/listings/{id}
 - Never public: seller contact, agent/user records, commission, internal notes, deactivation metadata, activities, tasks, or other CRM records.
 - Query validation with Zod. Price filters and price sorting require `currency`; missing currency is a 400.
 - Responses use `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`, `Access-Control-Allow-Origin: *` for GET, an `OPTIONS` handler, and a stable `{ error: { code, message } }` shape.
-- A small in-memory fixed-window rate limiter guards the public read path. A reverse proxy can replace it; the route still returns a retry hint when the local limit is hit.
+- A small in-memory fixed-window rate limiter guards the public read path. Client identifiers are hashed and bounded before they enter the bucket map; the deployment proxy must overwrite `X-Forwarded-For` rather than append to it. A reverse proxy can replace the limiter; the route still returns a retry hint when the local limit is hit.
 - Photo URLs are absolute using the configured public app URL.
 - The endpoint is versioned in the path and documented in `docs/public-api.md`.
 - Security tests assert that seller, agent, commission, and internal fields never appear.

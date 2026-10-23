@@ -9,7 +9,7 @@ import { FormError, FormField, FieldError } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-const linkFields = ["companyId", "contactId", "dealId", "ticketId", "campaignId"] as const;
+const linkFields = ["companyId", "contactId", "dealId", "listingId", "ticketId", "campaignId"] as const;
 
 type ActivityInitial = {
   id: string;
@@ -20,6 +20,7 @@ type ActivityInitial = {
   companyId?: string | null;
   contactId?: string | null;
   dealId?: string | null;
+  listingId?: string | null;
   ticketId?: string | null;
   campaignId?: string | null;
 };

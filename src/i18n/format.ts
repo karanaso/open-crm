@@ -14,19 +14,29 @@ function toDate(value: Date | string | null | undefined) {
 export function formatDate(
   value: Date | string | null | undefined,
   locale: Locale = "en",
+  timeZone = "UTC",
   options?: Intl.DateTimeFormatOptions,
 ) {
   const date = toDate(value);
   if (!date) return "—";
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
-    timeZone: "UTC",
+    timeZone,
     ...options,
   }).format(date);
 }
 
-export function formatDateTime(value: Date | string | null | undefined, locale: Locale = "en") {
-  return formatDate(value, locale, { dateStyle: "medium", timeStyle: "short" });
+export function formatDateTime(
+  value: Date | string | null | undefined,
+  locale: Locale = "en",
+  timeZone = "UTC",
+  options?: Intl.DateTimeFormatOptions,
+) {
+  return formatDate(value, locale, timeZone, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    ...options,
+  });
 }
 
 export function formatNumber(
@@ -38,17 +48,26 @@ export function formatNumber(
   return new Intl.NumberFormat(locale, options).format(value);
 }
 
-export function formatCurrencyUsd(
+export function formatCurrency(
   value: number | null | undefined,
   locale: Locale = "en",
+  currency = "USD",
   options?: Intl.NumberFormatOptions,
 ) {
   if (value === null || value === undefined || !Number.isFinite(value)) return "—";
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "USD",
+    currency,
     ...options,
   }).format(value);
+}
+
+export function formatCurrencyUsd(
+  value: number | null | undefined,
+  locale: Locale = "en",
+  options?: Intl.NumberFormatOptions,
+) {
+  return formatCurrency(value, locale, "USD", options);
 }
 
 export function formatDurationHours(hours: number | null | undefined, locale: Locale = "en") {

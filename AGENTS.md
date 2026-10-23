@@ -53,22 +53,23 @@ Integration tests use `opencode_crm_test`. E2E tests prepare and use `opencode_c
 
 ## Architecture rules
 
-- Server Components perform reads. Server Actions perform mutations. API route handlers are limited to auth, health, and read-only search.
+- Server Components perform reads. Server Actions perform mutations. API route handlers are limited to auth, health, read-only search, and the unauthenticated read-only public listings API.
 - Domain services in `src/lib/services/` must not import UI code. They should be callable from tests and other services.
 - Zod schemas in `src/lib/validation/` are the shared input contract. Every Server Action re-validates on the server.
 - Shared UI belongs in `src/components/ui/`. Module-specific UI belongs under the module folder.
 - Database enum values are stable identifiers. Translate display labels, not stored values.
 - UI strings live in `messages/en.json` (source) and `messages/el.json`. Do not hardcode user-facing strings. Run `pnpm i18n:check` after catalog changes.
 - Server Actions and services return locale-independent message descriptors; translate them at the UI boundary. Never return English display sentences from services.
-- Use `src/i18n/format.ts` for locale-aware dates, numbers, USD amounts, and durations. USD and UTC SLA calculations do not change.
+- Use `src/i18n/format.ts` for locale-aware dates, numbers, currency amounts, and durations. Money uses the workspace default currency or the record's own currency, and dates render in the workspace display time zone.
 - Do not translate user data or stored enum values. Greek terminology lives in `docs/i18n/glossary.md` and `docs/i18n/style-guide.md`; do not send strings to an external translation service.
 - One workspace per deployment. All active members share records. Do not introduce `workspace_id` casually.
-- Amounts are USD. SLA calculations use calendar hours in UTC. Do not silently change these constraints.
-- No email/calendar delivery, file attachments, public API, or multi-tenancy in this version.
+- Money uses the workspace default currency or the record's own currency. There is no FX conversion and totals are never summed across currencies. SLA calculations use calendar hours in UTC. Do not silently change these constraints.
+- No email/calendar delivery, general file attachments, or multi-tenancy in this version. Uploads are limited to listing photos and no other record type accepts attachments. The unauthenticated read-only public listings API is the only unauthenticated data surface; it must never expose seller, agent, commission, activity, task, or other CRM data.
 
 ## Modules
 
 - Directory: companies, contacts, tags, CSV import
+- Listings: sale and rent properties, photos, viewings, commission
 - Sales: pipelines, stages, deals, Kanban, stage-change activity
 - Support: tickets, status machine, SLA, comments
 - Marketing: segments, campaigns, audience snapshots, engagement

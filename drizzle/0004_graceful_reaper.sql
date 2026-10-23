@@ -1,0 +1,2 @@
+ALTER TABLE "listings" DROP CONSTRAINT "listings_price_period_check";--> statement-breakpoint
+ALTER TABLE "listings" ADD CONSTRAINT "listings_price_period_check" CHECK (("listings"."transaction" = 'sale' AND "listings"."price_period" IS NULL) OR ("listings"."transaction" = 'rent' AND "listings"."price_period" IS NOT NULL AND "listings"."price_period" = 'month'));

@@ -1,18 +1,37 @@
 import { z } from "zod";
 import { optionalText, optionalUuidSchema, requiredText } from "@/lib/validation/common";
+import { currencyCodeSchema } from "@/lib/validation/listing";
+
+const isEmptyInput = (value: unknown) =>
+  value === undefined || value === null || (typeof value === "string" && value.trim() === "");
+
+const emptyToUndefined = (value: unknown) => (isEmptyInput(value) ? undefined : value);
+const emptyToNull = (value: unknown) => (isEmptyInput(value) ? null : value);
+
+const moneySchema = z.coerce
+  .number()
+  .min(0, "validation.amountNonNegative")
+  .max(999_999_999_999, "validation.amountTooLarge")
+  .refine((value) => Number(value.toFixed(2)) === value, "validation.amountDecimals");
+
+const optionalMoneySchema = z.preprocess(emptyToNull, moneySchema.nullable());
+
+const optionalCurrencySchema = z.preprocess(emptyToUndefined, currencyCodeSchema.optional());
 
 export const dealSchema = z.object({
   name: requiredText(200),
-  companyId: z.string().uuid("validation.selectCompany"),
-  contactId: optionalUuidSchema,
+  companyId: optionalUuidSchema,
+  contactId: z.preprocess(
+    (value) => (typeof value === "string" ? value : ""),
+    z.string().trim().min(1, "validation.selectContact").uuid("validation.selectContact"),
+  ),
+  listingId: optionalUuidSchema,
   pipelineId: z.string().uuid("validation.selectPipeline"),
   stageId: z.string().uuid("validation.selectStage"),
   ownerId: optionalUuidSchema,
-  amount: z.coerce
-    .number()
-    .min(0, "validation.amountNonNegative")
-    .max(999_999_999_999, "validation.amountTooLarge")
-    .refine((value) => Number(value.toFixed(2)) === value, "validation.amountDecimals"),
+  propertyPrice: optionalMoneySchema,
+  amount: z.preprocess(emptyToUndefined, moneySchema.optional()),
+  currency: optionalCurrencySchema,
   expectedCloseDate: z
     .string()
     .trim()
@@ -38,9 +57,13 @@ export const dealListParamsSchema = z.object({
   stageId: z.string().uuid().optional(),
   status: z.enum(["open", "won", "lost"]).optional(),
   ownerId: z.string().uuid().optional(),
+  currency: optionalCurrencySchema,
   closeFrom: z.string().optional(),
   closeTo: z.string().optional(),
-  sort: z.enum(["updated", "amount_desc", "amount_asc", "close_date"]).optional().default("updated"),
+  sort: z
+    .enum(["updated", "amount_desc", "amount_asc", "close_date"])
+    .optional()
+    .default("updated"),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });

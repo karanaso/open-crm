@@ -18,6 +18,7 @@ import {
   companyTags,
   contacts,
   deals,
+  listings,
   tags,
   tickets,
   users,
@@ -153,7 +154,7 @@ export async function getCompany(companyId: string) {
 }
 
 export async function getCompanyRelations(companyId: string) {
-  const [contactRows, dealRows, ticketRows] = await Promise.all([
+  const [contactRows, listingRows, dealRows, ticketRows] = await Promise.all([
     db
       .select({
         id: contacts.id,
@@ -169,9 +170,29 @@ export async function getCompanyRelations(companyId: string) {
       .limit(50),
     db
       .select({
+        id: listings.id,
+        reference: listings.reference,
+        title: listings.title,
+        transaction: listings.transaction,
+        status: listings.status,
+        price: listings.price,
+        currency: listings.currency,
+        sellerContactId: listings.sellerContactId,
+        sellerFirstName: contacts.firstName,
+        sellerLastName: contacts.lastName,
+        sellerArchivedAt: contacts.archivedAt,
+      })
+      .from(listings)
+      .innerJoin(contacts, eq(listings.sellerContactId, contacts.id))
+      .where(eq(contacts.companyId, companyId))
+      .orderBy(desc(listings.listedAt))
+      .limit(50),
+    db
+      .select({
         id: deals.id,
         name: deals.name,
         amount: deals.amount,
+        currency: deals.currency,
         status: deals.status,
         expectedCloseDate: deals.expectedCloseDate,
       })
@@ -195,13 +216,14 @@ export async function getCompanyRelations(companyId: string) {
       .limit(50),
   ]);
 
-  return { contacts: contactRows, deals: dealRows, tickets: ticketRows };
+  return { contacts: contactRows, listings: listingRows, deals: dealRows, tickets: ticketRows };
 }
 
 async function assertActiveOwner(ownerId: string) {
   const [user] = await db.select().from(users).where(eq(users.id, ownerId)).limit(1);
   if (!user) throw new AppError("Owner not found", "NOT_FOUND");
-  if (user.status !== "active") throw new AppError("Choose an active team member as owner", "INACTIVE_OWNER");
+  if (user.status !== "active")
+    throw new AppError("Choose an active team member as owner", "INACTIVE_OWNER");
   return user;
 }
 
@@ -330,7 +352,9 @@ export async function getCompanyFilterOptions() {
 
   return {
     owners: ownerRows,
-    industries: industryRows.map((row) => row.industry).filter((value): value is string => Boolean(value)),
+    industries: industryRows
+      .map((row) => row.industry)
+      .filter((value): value is string => Boolean(value)),
     tags: tagRows.map((row) => row.name),
   };
 }

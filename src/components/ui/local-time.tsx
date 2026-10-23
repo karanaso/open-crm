@@ -1,18 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
+
+const WorkspaceTimeZoneContext = createContext<string | undefined>(undefined);
+
+export function WorkspaceTimeZoneProvider({
+  timeZone,
+  children,
+}: {
+  timeZone: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <WorkspaceTimeZoneContext.Provider value={timeZone}>
+      {children}
+    </WorkspaceTimeZoneContext.Provider>
+  );
+}
 
 export function LocalTime({
   value,
   options,
+  timeZone,
   fallback = "—",
 }: {
   value: Date | string | null | undefined;
   options?: Intl.DateTimeFormatOptions;
+  timeZone?: string;
   fallback?: string;
 }) {
   const locale = useLocale();
+  const workspaceTimeZone = useContext(WorkspaceTimeZoneContext);
+  const resolvedTimeZone = timeZone ?? workspaceTimeZone;
   const [formatted, setFormatted] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,14 +49,24 @@ export function LocalTime({
       new Intl.DateTimeFormat(locale, {
         dateStyle: "medium",
         timeStyle: "short",
+        timeZone: resolvedTimeZone,
         ...options,
       }).format(date),
     );
-  }, [fallback, locale, options, value]);
+  }, [fallback, locale, options, resolvedTimeZone, value]);
 
   if (!formatted) {
     const date = value ? (value instanceof Date ? value : new Date(value)) : null;
-    const utc = date && !Number.isNaN(date.getTime()) ? date.toISOString().replace("T", " ").slice(0, 16) + " UTC" : fallback;
+    const utc =
+      date && !Number.isNaN(date.getTime())
+        ? resolvedTimeZone
+          ? new Intl.DateTimeFormat(locale, {
+              dateStyle: "medium",
+              timeStyle: "short",
+              timeZone: resolvedTimeZone,
+            }).format(date)
+          : date.toISOString().replace("T", " ").slice(0, 16) + " UTC"
+        : fallback;
     return (
       <time dateTime={date?.toISOString()} suppressHydrationWarning>
         {utc}
@@ -51,7 +81,13 @@ export function LocalTime({
   );
 }
 
-export function DateDisplay({ value, fallback = "—" }: { value: string | Date | null | undefined; fallback?: string }) {
+export function DateDisplay({
+  value,
+  fallback = "—",
+}: {
+  value: string | Date | null | undefined;
+  fallback?: string;
+}) {
   const locale = useLocale();
   if (!value) return <span>{fallback}</span>;
   const date = value instanceof Date ? value : new Date(`${value}T00:00:00Z`);

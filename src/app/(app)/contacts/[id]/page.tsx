@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import {
   Building2,
+  CalendarClock,
+  Home,
   Mail,
   Pencil,
   Phone,
@@ -20,11 +22,24 @@ import { getParam } from "@/lib/search-params";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LocalTime } from "@/components/ui/local-time";
 import { DealStatusBadge, PriorityBadge, TagList, TicketStatusBadge } from "@/components/ui/badges";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, formatCurrency } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/i18n/format";
 import { getContact, getContactRelations } from "@/lib/services/contacts";
+import { getWorkspaceDefaults } from "@/lib/services/workspace-settings";
 import { archiveContactAction, restoreContactAction } from "@/actions/contacts";
+
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 export default async function ContactDetailPage({
   params,
@@ -42,17 +57,19 @@ export default async function ContactDetailPage({
   const timelinePage = Math.max(1, Number(getParam(raw, "timelinePage") ?? 1) || 1);
   const t = await getTranslations("directory");
   const tCommon = await getTranslations("common");
-  const tSales = await getTranslations("sales");
+  const tSales = (await getTranslations("sales")) as unknown as Translator;
   const tSupport = await getTranslations("support");
   const tMarketing = await getTranslations("marketing");
   const tEnums = await getTranslations("enums");
+  const tListings = (await getTranslations("listings")) as unknown as Translator;
   const locale = await getLocale();
 
-  const [relations, timeline, tasks, team] = await Promise.all([
+  const [relations, timeline, tasks, team, workspace] = await Promise.all([
     getContactRelations(id),
     getTimeline({ contactId: id }, { type: filterType, page: timelinePage }),
     getTasksForRecord({ contactId: id }),
     listTeamMembers(),
+    getWorkspaceDefaults(),
   ]);
 
   const assignees = team
@@ -97,18 +114,75 @@ export default async function ContactDetailPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>{tSales("deals")}</CardTitle>
+              <CardTitle>{tListings("sellingListings")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {relations.sellingListings.length === 0 ? (
+                <EmptyState
+                  icon={Home}
+                  title={tListings("listingsEmptyTitle")}
+                  description={tListings("listingsEmptyDescription")}
+                />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{tListings("reference")}</TableHead>
+                      <TableHead>{tCommon("name")}</TableHead>
+                      <TableHead>{tListings("transaction")}</TableHead>
+                      <TableHead>{tCommon("status")}</TableHead>
+                      <TableHead>{tListings("price")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {relations.sellingListings.map((listing) => (
+                      <TableRow key={listing.id}>
+                        <TableCell>
+                          <Link
+                            href={`/listings/${listing.id}`}
+                            className="font-medium hover:underline"
+                          >
+                            {listing.reference}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Link href={`/listings/${listing.id}`} className="hover:underline">
+                            {listing.title}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          {tListings(`enums.transaction.${listing.transaction}`)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={listing.status === "active" ? "success" : "outline"}>
+                            {tListings(`enums.status.${listing.status}`)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {formatCurrency(Number(listing.price), locale, listing.currency)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{tListings("buyingDeals")}</CardTitle>
             </CardHeader>
             <CardContent>
               {relations.deals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("contactDealsEmpty")}</p>
+                <p className="text-muted-foreground text-sm">{t("contactDealsEmpty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>{tSales("deal")}</TableHead>
                       <TableHead>{tCommon("status")}</TableHead>
-                      <TableHead>{tSales("amount")}</TableHead>
+                      <TableHead>{tSales("commission")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -122,7 +196,69 @@ export default async function ContactDetailPage({
                         <TableCell>
                           <DealStatusBadge status={deal.status} />
                         </TableCell>
-                        <TableCell>{formatCurrency(deal.amount, locale)}</TableCell>
+                        <TableCell>
+                          {formatCurrency(Number(deal.amount), locale, deal.currency)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{tListings("viewings.title")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {relations.viewings.length === 0 ? (
+                <EmptyState
+                  icon={CalendarClock}
+                  title={tListings("viewings.noViewings")}
+                  description={tListings("viewings.noViewingsDescription")}
+                />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{tListings("listing")}</TableHead>
+                      <TableHead>{tListings("viewings.dateTime")}</TableHead>
+                      <TableHead>{tCommon("status")}</TableHead>
+                      <TableHead>{tListings("viewings.agent")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {relations.viewings.map((viewing) => (
+                      <TableRow key={viewing.id}>
+                        <TableCell>
+                          <Link
+                            href={`/listings/${viewing.listingId}`}
+                            className="font-medium hover:underline"
+                          >
+                            {viewing.listingReference} · {viewing.listingTitle}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <LocalTime value={viewing.scheduledAt} timeZone={workspace.timeZone} />
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {tListings(`enums.viewingStatus.${viewing.status}`)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {viewing.agentName ? (
+                            <span className="flex flex-wrap items-center gap-2">
+                              {viewing.agentName}
+                              {viewing.agentStatus === "inactive" ? (
+                                <Badge variant="outline">{tCommon("inactive")}</Badge>
+                              ) : null}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">{tCommon("unassigned")}</span>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -137,7 +273,7 @@ export default async function ContactDetailPage({
             </CardHeader>
             <CardContent>
               {relations.tickets.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("contactTicketsEmpty")}</p>
+                <p className="text-muted-foreground text-sm">{t("contactTicketsEmpty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
@@ -151,7 +287,10 @@ export default async function ContactDetailPage({
                     {relations.tickets.map((ticket) => (
                       <TableRow key={ticket.id}>
                         <TableCell>
-                          <Link href={`/tickets/${ticket.id}`} className="font-medium hover:underline">
+                          <Link
+                            href={`/tickets/${ticket.id}`}
+                            className="font-medium hover:underline"
+                          >
                             {ticket.subject}
                           </Link>
                         </TableCell>
@@ -175,7 +314,7 @@ export default async function ContactDetailPage({
             </CardHeader>
             <CardContent>
               {relations.campaigns.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("contactCampaignsEmpty")}</p>
+                <p className="text-muted-foreground text-sm">{t("contactCampaignsEmpty")}</p>
               ) : (
                 <ul className="space-y-2">
                   {relations.campaigns.map((campaign) => (
@@ -183,7 +322,10 @@ export default async function ContactDetailPage({
                       key={campaign.campaignId}
                       className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm"
                     >
-                      <Link href={`/campaigns/${campaign.campaignId}`} className="font-medium hover:underline">
+                      <Link
+                        href={`/campaigns/${campaign.campaignId}`}
+                        className="font-medium hover:underline"
+                      >
                         {campaign.campaignName}
                       </Link>
                       <Badge variant="outline">
@@ -206,7 +348,10 @@ export default async function ContactDetailPage({
               <div>
                 <p className="text-muted-foreground">{tCommon("company")}</p>
                 {contact.companyId ? (
-                  <Link href={`/companies/${contact.companyId}`} className="flex items-center gap-2 font-medium hover:underline">
+                  <Link
+                    href={`/companies/${contact.companyId}`}
+                    className="flex items-center gap-2 font-medium hover:underline"
+                  >
                     <Building2 className="size-3.5" /> {contact.companyName}
                     {contact.companyArchivedAt ? (
                       <Badge variant="outline">{tCommon("archived")}</Badge>
@@ -228,16 +373,16 @@ export default async function ContactDetailPage({
                 </p>
               </div>
               <p className="flex items-center gap-2 break-all">
-                <Mail className="size-3.5 text-muted-foreground" /> {contact.email}
+                <Mail className="text-muted-foreground size-3.5" /> {contact.email}
               </p>
               {contact.phone ? (
                 <p className="flex items-center gap-2">
-                  <Phone className="size-3.5 text-muted-foreground" /> {contact.phone}
+                  <Phone className="text-muted-foreground size-3.5" /> {contact.phone}
                 </p>
               ) : null}
               <TagList tags={contact.tagNames} />
               {contact.notes ? (
-                <p className="whitespace-pre-wrap text-muted-foreground">{contact.notes}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{contact.notes}</p>
               ) : null}
             </CardContent>
           </Card>
@@ -247,17 +392,17 @@ export default async function ContactDetailPage({
               <CardTitle>{t("atAGlance")}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg bg-muted/50 p-3">
+              <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-xl font-semibold">{relations.deals.length}</p>
-                <p className="text-xs text-muted-foreground">{tSales("deals")}</p>
+                <p className="text-muted-foreground text-xs">{tSales("deals")}</p>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3">
+              <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-xl font-semibold">{relations.tickets.length}</p>
-                <p className="text-xs text-muted-foreground">{tSupport("tickets")}</p>
+                <p className="text-muted-foreground text-xs">{tSupport("tickets")}</p>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3">
+              <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-xl font-semibold">{relations.campaigns.length}</p>
-                <p className="text-xs text-muted-foreground">{tMarketing("campaigns")}</p>
+                <p className="text-muted-foreground text-xs">{tMarketing("campaigns")}</p>
               </div>
             </CardContent>
           </Card>

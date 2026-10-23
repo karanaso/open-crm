@@ -85,4 +85,21 @@ test.describe("sales pipeline", () => {
     await page.click('button[type="submit"]');
     await expect(page.getByRole("link", { name: DEAL })).toBeVisible();
   });
+
+  test("labels commission and requires a buyer contact", async ({ page }) => {
+    await login(page);
+    await page.goto("/deals/new");
+
+    await expect(page.locator('label[for="amount"]')).toContainText("Commission");
+    const contact = page.locator("#contactId");
+    await expect(contact).toHaveAttribute("required", "");
+
+    await page.fill("#name", "E2E Missing Contact Deal");
+    await page.getByRole("button", { name: "Create deal" }).click();
+
+    await expect(page).toHaveURL(/\/deals\/new/);
+    expect(await contact.evaluate((element: HTMLSelectElement) => element.validity.valid)).toBe(
+      false,
+    );
+  });
 });

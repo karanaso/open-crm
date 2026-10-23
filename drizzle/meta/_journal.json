@@ -22,6 +22,20 @@
       "when": 1792756175351,
       "tag": "0002_luxuriant_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792784187583,
+      "tag": "0003_wise_the_initiative",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792784318246,
+      "tag": "0004_graceful_reaper",
+      "breakpoints": true
     }
   ]
 }

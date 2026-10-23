@@ -14,3 +14,4 @@ test-results
 drizzle/meta/_journal.json.bak
 tsconfig.tsbuildinfo
 karanaso.txt
+storage/

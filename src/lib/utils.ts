@@ -6,11 +6,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(value: number | string | null | undefined, locale: Locale = "en") {
+export function formatCurrency(
+  value: number | string | null | undefined,
+  locale: Locale = "en",
+  currency = "USD",
+) {
   const amount = Number(value ?? 0);
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "USD",
+    currency,
     maximumFractionDigits: 2,
   }).format(Number.isFinite(amount) ? amount : 0);
 }
@@ -29,9 +33,7 @@ export function initials(name: string) {
 }
 
 export function titleCase(value: string) {
-  return value
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+  return value.replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 export function parseNumber(value: FormDataEntryValue | null | undefined) {

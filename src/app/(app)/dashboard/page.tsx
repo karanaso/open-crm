@@ -1,14 +1,8 @@
 import Link from "next/link";
 import type { Route } from "next";
+import type { ReactNode } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
-import {
-  ArrowUpRight,
-  CheckSquare,
-  Handshake,
-  LifeBuoy,
-  Megaphone,
-  Sparkles,
-} from "lucide-react";
+import { ArrowUpRight, CheckSquare, Handshake, LifeBuoy, Megaphone, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,13 +12,46 @@ import { LocalTime } from "@/components/ui/local-time";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { requireUser } from "@/lib/auth/guards";
 import { getDashboardData } from "@/lib/services/dashboard";
+import { getWorkspaceDefaults } from "@/lib/services/workspace-settings";
 import { formatDurationHours } from "@/lib/dates";
-import { formatCurrency, formatNumber } from "@/lib/utils";
-import { formatNumber as formatLocaleNumber } from "@/i18n/format";
+import { formatNumber } from "@/lib/utils";
+import { formatCurrency, formatNumber as formatLocaleNumber } from "@/i18n/format";
 import type { Locale } from "@/i18n/config";
+
+type CurrencyTotal = {
+  currency: string;
+  total: number;
+};
+
+type Translator = (key: string, values?: Record<string, string | number>) => string;
+
+async function getRawTranslator(namespace: "dashboard" | "nav" | "sales" | "listings") {
+  return (await getTranslations(namespace)) as unknown as Translator;
+}
 
 function percent(value: number, locale: Locale) {
   return `${formatLocaleNumber(value, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}
+
+function MoneyLines({
+  totals,
+  locale,
+  fallbackCurrency,
+}: {
+  totals: CurrencyTotal[];
+  locale: Locale;
+  fallbackCurrency: string;
+}) {
+  if (totals.length === 0) {
+    return <p>{formatCurrency(0, locale, fallbackCurrency)}</p>;
+  }
+  return (
+    <div className="space-y-0.5">
+      {totals.map((total) => (
+        <p key={total.currency}>{formatCurrency(total.total, locale, total.currency)}</p>
+      ))}
+    </div>
+  );
 }
 
 function MetricCard({
@@ -34,18 +61,18 @@ function MetricCard({
   href,
 }: {
   label: string;
-  value: string;
-  hint?: string;
+  value: ReactNode;
+  hint?: ReactNode;
   href?: string;
 }) {
   const content = (
-    <Card className="h-full transition-colors hover:border-primary/40">
+    <Card className="hover:border-primary/40 h-full transition-colors">
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        <CardTitle className="text-muted-foreground text-sm font-medium">{label}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold">{value}</p>
-        {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
+        <div className="text-2xl font-semibold">{value}</div>
+        {hint ? <div className="text-muted-foreground mt-1 text-xs">{hint}</div> : null}
       </CardContent>
     </Card>
   );
@@ -54,17 +81,36 @@ function MetricCard({
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const [data, locale, t, tNav, tEnums, tSales, tSupport, tMarketing, tTimeline] = await Promise.all([
+  const [
+    data,
+    locale,
+    workspace,
+    t,
+    tNav,
+    tEnums,
+    tSales,
+    tSupport,
+    tMarketing,
+    tTimeline,
+    tListings,
+  ] = await Promise.all([
     getDashboardData(user.id),
     getLocale(),
-    getTranslations("dashboard"),
-    getTranslations("nav"),
+    getWorkspaceDefaults(),
+    getRawTranslator("dashboard"),
+    getRawTranslator("nav"),
     getTranslations("enums"),
-    getTranslations("sales"),
+    getRawTranslator("sales"),
     getTranslations("support"),
     getTranslations("marketing"),
     getTranslations("timeline"),
+    getRawTranslator("listings"),
   ]);
+
+  const activeSale =
+    data.listings.activeByTransaction.find((item) => item.transaction === "sale")?.count ?? 0;
+  const activeRent =
+    data.listings.activeByTransaction.find((item) => item.transaction === "rent")?.count ?? 0;
 
   return (
     <div className="space-y-8">
@@ -93,20 +139,41 @@ export default async function DashboardPage() {
       />
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("sales")}</h2>
+        <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+          {t("sales")}
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label={t("openPipeline")}
-            value={formatCurrency(data.sales.openValue, locale)}
-            hint={t("openPipelineHint", {
-              count: data.sales.openCount,
-              weighted: formatCurrency(data.sales.weightedValue, locale),
-            })}
+            label={t("openCommission")}
+            value={
+              <MoneyLines
+                totals={data.sales.openValueByCurrency}
+                locale={locale}
+                fallbackCurrency={workspace.defaultCurrency}
+              />
+            }
+            hint={
+              <div className="space-y-0.5">
+                <p>{tSales("dealCount", { count: data.sales.openCount })}</p>
+                <p>{tSales("weightedCommission")}</p>
+                <MoneyLines
+                  totals={data.sales.weightedValueByCurrency}
+                  locale={locale}
+                  fallbackCurrency={workspace.defaultCurrency}
+                />
+              </div>
+            }
             href="/deals"
           />
           <MetricCard
-            label={t("wonThisMonth")}
-            value={formatCurrency(data.sales.wonThisMonthValue, locale)}
+            label={t("wonCommission")}
+            value={
+              <MoneyLines
+                totals={data.sales.wonThisMonthByCurrency}
+                locale={locale}
+                fallbackCurrency={workspace.defaultCurrency}
+              />
+            }
             hint={t("dealsWon", { count: data.sales.wonThisMonthCount })}
             href="/deals?view=list&status=won"
           />
@@ -125,7 +192,47 @@ export default async function DashboardPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("support")}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+            {tNav("listings")}
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/listings/dashboard">{tListings("overviewTitle")}</Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/listings">{tNav("listings")}</Link>
+            </Button>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label={tListings("dashboard.activeListings")}
+            value={formatNumber(data.listings.activeTotal, locale)}
+            href="/listings?status=active"
+          />
+          <MetricCard
+            label={tListings("dashboard.saleListings")}
+            value={formatNumber(activeSale, locale)}
+            href="/listings?transaction=sale&status=active"
+          />
+          <MetricCard
+            label={tListings("dashboard.rentListings")}
+            value={formatNumber(activeRent, locale)}
+            href="/listings?transaction=rent&status=active"
+          />
+          <MetricCard
+            label={tListings("dashboard.upcomingViewings")}
+            value={formatNumber(data.listings.upcomingViewings, locale)}
+            href="/listings/dashboard"
+          />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+          {t("support")}
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             label={t("openTickets")}
@@ -154,7 +261,9 @@ export default async function DashboardPage() {
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("marketing")}</h2>
+          <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+            {t("marketing")}
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <MetricCard
               label={t("activeCampaigns")}
@@ -170,17 +279,33 @@ export default async function DashboardPage() {
           </div>
         </div>
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{tTimeline("myTasks")}</h2>
+          <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+            {tTimeline("myTasks")}
+          </h2>
           <div className="grid gap-4 sm:grid-cols-3">
-            <MetricCard label={t("overdueTasks")} value={formatNumber(data.tasks.overdue, locale)} href="/tasks" />
-            <MetricCard label={t("dueToday")} value={formatNumber(data.tasks.dueToday, locale)} href="/tasks" />
-            <MetricCard label={t("upcoming")} value={formatNumber(data.tasks.upcoming, locale)} href="/tasks" />
+            <MetricCard
+              label={t("overdueTasks")}
+              value={formatNumber(data.tasks.overdue, locale)}
+              href="/tasks"
+            />
+            <MetricCard
+              label={t("dueToday")}
+              value={formatNumber(data.tasks.dueToday, locale)}
+              href="/tasks"
+            />
+            <MetricCard
+              label={t("upcoming")}
+              value={formatNumber(data.tasks.upcoming, locale)}
+              href="/tasks"
+            />
           </div>
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("trends")}</h2>
+        <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
+          {t("trends")}
+        </h2>
         <DashboardCharts
           pipeline={data.charts.pipeline}
           tickets={data.charts.tickets}
@@ -207,9 +332,9 @@ export default async function DashboardPage() {
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <p className="font-medium">{activity.subject}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {tEnums(`activityType.${activity.type}`)} · {activity.authorName} ·{" "}
-                          <LocalTime value={activity.occurredAt} />
+                          <LocalTime value={activity.occurredAt} timeZone={workspace.timeZone} />
                         </p>
                       </div>
                       <Badge variant="outline">{tEnums(`activityType.${activity.type}`)}</Badge>
@@ -220,7 +345,7 @@ export default async function DashboardPage() {
                           <Link
                             key={`${link.type}-${link.id}`}
                             href={link.href}
-                            className="rounded border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted"
+                            className="text-muted-foreground hover:bg-muted rounded border px-1.5 py-0.5 text-[11px]"
                           >
                             {link.label}
                           </Link>
@@ -239,17 +364,31 @@ export default async function DashboardPage() {
             <CardTitle>{t("quickLinks")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Link href="/companies" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
+            <Link
+              href="/companies"
+              className="hover:bg-muted flex items-center justify-between rounded-md border p-3 text-sm"
+            >
               {tNav("companies")} <ArrowUpRight className="size-4" />
             </Link>
-            <Link href="/contacts" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
+            <Link
+              href="/contacts"
+              className="hover:bg-muted flex items-center justify-between rounded-md border p-3 text-sm"
+            >
               {tNav("contacts")} <ArrowUpRight className="size-4" />
             </Link>
-            <Link href="/tasks" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
-              <span className="flex items-center gap-2"><CheckSquare className="size-4" /> {tNav("tasks")}</span>
+            <Link
+              href="/tasks"
+              className="hover:bg-muted flex items-center justify-between rounded-md border p-3 text-sm"
+            >
+              <span className="flex items-center gap-2">
+                <CheckSquare className="size-4" /> {tNav("tasks")}
+              </span>
               <ArrowUpRight className="size-4" />
             </Link>
-            <Link href="/segments" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
+            <Link
+              href="/segments"
+              className="hover:bg-muted flex items-center justify-between rounded-md border p-3 text-sm"
+            >
               {tMarketing("segments")} <ArrowUpRight className="size-4" />
             </Link>
           </CardContent>

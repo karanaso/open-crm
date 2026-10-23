@@ -6,18 +6,39 @@ import {
   companies,
   contacts,
   deals,
+  listings,
   pipelines,
   stages,
   users,
+  type Company,
   type Deal,
+  type Listing,
   type Stage,
 } from "@/db/schema";
 import { AppError } from "@/lib/errors";
 import type { DealInput } from "@/lib/validation/deal";
 import type { dealListParamsSchema } from "@/lib/validation/deal";
-import { dealMetrics } from "@/lib/services/pipelines";
+import { getWorkspaceDefaults } from "@/lib/services/workspace-settings";
 
 type DealListParams = z.infer<typeof dealListParamsSchema>;
+
+export type CurrencyTotal = {
+  currency: string;
+  total: number;
+};
+
+function groupCurrencyTotals<T extends { currency: string }>(
+  rows: T[],
+  getAmount: (row: T) => number,
+): CurrencyTotal[] {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    totals.set(row.currency, (totals.get(row.currency) ?? 0) + getAmount(row));
+  }
+  return [...totals.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([currency, total]) => ({ currency, total }));
+}
 
 function statusForOutcome(outcome: Stage["outcome"]): Deal["status"] {
   return outcome;
@@ -31,6 +52,8 @@ export async function getDeal(dealId: string) {
       companyArchivedAt: companies.archivedAt,
       contactFirstName: contacts.firstName,
       contactLastName: contacts.lastName,
+      listingTitle: listings.title,
+      listingReference: listings.reference,
       pipelineName: pipelines.name,
       stageName: stages.name,
       stageOutcome: stages.outcome,
@@ -40,8 +63,9 @@ export async function getDeal(dealId: string) {
       ownerStatus: users.status,
     })
     .from(deals)
-    .innerJoin(companies, eq(deals.companyId, companies.id))
-    .leftJoin(contacts, eq(deals.contactId, contacts.id))
+    .leftJoin(companies, eq(deals.companyId, companies.id))
+    .innerJoin(contacts, eq(deals.contactId, contacts.id))
+    .leftJoin(listings, eq(deals.listingId, listings.id))
     .innerJoin(pipelines, eq(deals.pipelineId, pipelines.id))
     .innerJoin(stages, eq(deals.stageId, stages.id))
     .innerJoin(users, eq(deals.ownerId, users.id))
@@ -54,9 +78,9 @@ export async function getDeal(dealId: string) {
     ...row.deal,
     companyName: row.companyName,
     companyArchivedAt: row.companyArchivedAt,
-    contactName: row.contactFirstName
-      ? `${row.contactFirstName} ${row.contactLastName ?? ""}`.trim()
-      : null,
+    contactName: `${row.contactFirstName} ${row.contactLastName}`.trim(),
+    listingTitle: row.listingTitle,
+    listingReference: row.listingReference,
     pipelineName: row.pipelineName,
     stageName: row.stageName,
     stageOutcome: row.stageOutcome,
@@ -71,12 +95,21 @@ export async function listDeals(params: DealListParams) {
   const conditions = [];
   if (params.q) {
     const pattern = `%${params.q}%`;
-    conditions.push(or(ilike(deals.name, pattern), ilike(companies.name, pattern)));
+    conditions.push(
+      or(
+        ilike(deals.name, pattern),
+        ilike(contacts.firstName, pattern),
+        ilike(contacts.lastName, pattern),
+        sql`(${contacts.firstName} || ' ' || ${contacts.lastName}) ilike ${pattern}`,
+        ilike(companies.name, pattern),
+      ),
+    );
   }
   if (params.pipelineId) conditions.push(eq(deals.pipelineId, params.pipelineId));
   if (params.stageId) conditions.push(eq(deals.stageId, params.stageId));
   if (params.status) conditions.push(eq(deals.status, params.status));
   if (params.ownerId) conditions.push(eq(deals.ownerId, params.ownerId));
+  if (params.currency) conditions.push(eq(deals.currency, params.currency));
   if (params.closeFrom) conditions.push(gte(deals.expectedCloseDate, params.closeFrom));
   if (params.closeTo) conditions.push(lte(deals.expectedCloseDate, params.closeTo));
 
@@ -95,6 +128,9 @@ export async function listDeals(params: DealListParams) {
       .select({
         deal: deals,
         companyName: companies.name,
+        contactFirstName: contacts.firstName,
+        contactLastName: contacts.lastName,
+        listingReference: listings.reference,
         stageName: stages.name,
         stageOutcome: stages.outcome,
         pipelineName: pipelines.name,
@@ -102,7 +138,9 @@ export async function listDeals(params: DealListParams) {
         ownerStatus: users.status,
       })
       .from(deals)
-      .innerJoin(companies, eq(deals.companyId, companies.id))
+      .leftJoin(companies, eq(deals.companyId, companies.id))
+      .innerJoin(contacts, eq(deals.contactId, contacts.id))
+      .leftJoin(listings, eq(deals.listingId, listings.id))
       .innerJoin(stages, eq(deals.stageId, stages.id))
       .innerJoin(pipelines, eq(deals.pipelineId, pipelines.id))
       .innerJoin(users, eq(deals.ownerId, users.id))
@@ -113,7 +151,9 @@ export async function listDeals(params: DealListParams) {
     db
       .select({ count: count() })
       .from(deals)
-      .innerJoin(companies, eq(deals.companyId, companies.id))
+      .leftJoin(companies, eq(deals.companyId, companies.id))
+      .innerJoin(contacts, eq(deals.contactId, contacts.id))
+      .leftJoin(listings, eq(deals.listingId, listings.id))
       .where(where),
   ]);
 
@@ -122,6 +162,8 @@ export async function listDeals(params: DealListParams) {
     items: rows.map((row) => ({
       ...row.deal,
       companyName: row.companyName,
+      contactName: `${row.contactFirstName} ${row.contactLastName}`.trim(),
+      listingReference: row.listingReference,
       stageName: row.stageName,
       stageOutcome: row.stageOutcome,
       pipelineName: row.pipelineName,
@@ -140,11 +182,17 @@ export async function getDealsForBoard(pipelineId: string) {
     .select({
       deal: deals,
       companyName: companies.name,
+      contactFirstName: contacts.firstName,
+      contactLastName: contacts.lastName,
+      listingReference: listings.reference,
+      listingTitle: listings.title,
       ownerName: users.name,
       stage: stages,
     })
     .from(deals)
-    .innerJoin(companies, eq(deals.companyId, companies.id))
+    .leftJoin(companies, eq(deals.companyId, companies.id))
+    .innerJoin(contacts, eq(deals.contactId, contacts.id))
+    .leftJoin(listings, eq(deals.listingId, listings.id))
     .innerJoin(users, eq(deals.ownerId, users.id))
     .innerJoin(stages, eq(deals.stageId, stages.id))
     .where(eq(deals.pipelineId, pipelineId))
@@ -153,6 +201,9 @@ export async function getDealsForBoard(pipelineId: string) {
   return rows.map((row) => ({
     ...row.deal,
     companyName: row.companyName,
+    contactName: `${row.contactFirstName} ${row.contactLastName}`.trim(),
+    listingReference: row.listingReference,
+    listingTitle: row.listingTitle,
     ownerName: row.ownerName,
     stage: row.stage,
   }));
@@ -167,27 +218,22 @@ export async function getPipelineMetrics(pipelineId: string) {
   const boardDeals = await getDealsForBoard(pipelineId);
 
   return pipelineStages.map((stage) => {
-    const stageDeals = boardDeals.filter((deal) => deal.stageId === stage.id && deal.status === "open");
+    const stageDeals = boardDeals.filter(
+      (deal) => deal.stageId === stage.id && deal.status === "open",
+    );
     return {
       ...stage,
       dealCount: stageDeals.length,
-      totalValue: stageDeals.reduce((sum, deal) => sum + Number(deal.amount), 0),
-      metrics: dealMetrics(
-        stageDeals.map((deal) => ({
-          amount: deal.amount,
-          probability: stage.probability,
-          outcome: stage.outcome,
-        })),
+      totalValueByCurrency: groupCurrencyTotals(stageDeals, (deal) => Number(deal.amount)),
+      weightedValueByCurrency: groupCurrencyTotals(
+        stageDeals,
+        (deal) => (Number(deal.amount) * stage.probability) / 100,
       ),
     };
   });
 }
 
-async function validateDeal(
-  input: DealInput,
-  actorId: string,
-  existing?: Deal | null,
-) {
+async function validateDeal(input: DealInput, actorId: string, existing?: Deal | null) {
   const ownerId = input.ownerId ?? existing?.ownerId ?? actorId;
   const [owner] = await db.select().from(users).where(eq(users.id, ownerId)).limit(1);
   if (!owner) throw new AppError("Owner not found", "NOT_FOUND");
@@ -195,31 +241,74 @@ async function validateDeal(
     throw new AppError("Choose an active team member as owner", "INACTIVE_OWNER");
   }
 
-  const [company] = await db.select().from(companies).where(eq(companies.id, input.companyId)).limit(1);
-  if (!company) throw new AppError("Company not found", "NOT_FOUND");
-  if (company.archivedAt && input.companyId !== existing?.companyId) {
-    throw new AppError("Choose an active company", "ARCHIVED_COMPANY");
+  let company: Company | null = null;
+  if (input.companyId) {
+    const [row] = await db
+      .select()
+      .from(companies)
+      .where(eq(companies.id, input.companyId))
+      .limit(1);
+    if (!row) throw new AppError("Company not found", "NOT_FOUND");
+    if (row.archivedAt && input.companyId !== existing?.companyId) {
+      throw new AppError("Choose an active company", "ARCHIVED_COMPANY");
+    }
+    company = row;
+  }
+
+  const [contact] = await db
+    .select()
+    .from(contacts)
+    .where(eq(contacts.id, input.contactId))
+    .limit(1);
+  if (!contact) throw new AppError("Contact not found", "NOT_FOUND");
+  if (company && contact.companyId !== company.id) {
+    throw new AppError(
+      "The primary contact must belong to the selected company.",
+      "CONTACT_COMPANY_MISMATCH",
+    );
+  }
+
+  let listing: Listing | null = null;
+  if (input.listingId) {
+    const [row] = await db.select().from(listings).where(eq(listings.id, input.listingId)).limit(1);
+    if (!row) throw new AppError("Listing not found", "NOT_FOUND");
+    listing = row;
   }
 
   const [stage] = await db.select().from(stages).where(eq(stages.id, input.stageId)).limit(1);
   if (!stage) throw new AppError("Stage not found", "NOT_FOUND");
   if (stage.pipelineId !== input.pipelineId) {
-    throw new AppError("The selected stage does not belong to the selected pipeline.", "STAGE_PIPELINE_MISMATCH");
-  }
-
-  if (input.contactId) {
-    const [contact] = await db.select().from(contacts).where(eq(contacts.id, input.contactId)).limit(1);
-    if (!contact) throw new AppError("Contact not found", "NOT_FOUND");
-    if (contact.companyId !== input.companyId) {
-      throw new AppError("The primary contact must belong to the selected company.", "CONTACT_COMPANY_MISMATCH");
-    }
+    throw new AppError(
+      "The selected stage does not belong to the selected pipeline.",
+      "STAGE_PIPELINE_MISMATCH",
+    );
   }
 
   if (stage.outcome === "lost" && !input.lostReason) {
     throw new AppError("A lost reason is required for a lost deal.", "LOST_REASON_REQUIRED");
   }
 
-  return { ownerId, stage, company };
+  const listingChanged = Boolean(listing && input.listingId !== existing?.listingId);
+  const inheritedCurrency =
+    listing && (!existing || listingChanged)
+      ? listing.currency
+      : (existing?.currency ?? listing?.currency ?? null);
+  const currency =
+    input.currency ?? inheritedCurrency ?? (await getWorkspaceDefaults()).defaultCurrency;
+
+  const inheritedPropertyPrice =
+    listing && (!existing || listingChanged) ? Number(listing.price) : null;
+  const propertyPrice = input.propertyPrice ?? inheritedPropertyPrice;
+
+  const inheritedAmount =
+    listing && (!existing || listingChanged)
+      ? Number(listing.commissionAmount)
+      : existing
+        ? Number(existing.amount)
+        : 0;
+  const amount = input.amount ?? inheritedAmount;
+
+  return { ownerId, stage, company, currency, propertyPrice, amount };
 }
 
 async function insertStageChange(
@@ -237,6 +326,7 @@ async function insertStageChange(
     companyId: deal.companyId,
     contactId: deal.contactId,
     dealId: deal.id,
+    listingId: deal.listingId,
     metadata: {
       fromStageId: fromStage.id,
       toStageId: toStage.id,
@@ -247,7 +337,11 @@ async function insertStageChange(
 }
 
 export async function createDeal(input: DealInput, actorId: string) {
-  const { ownerId, stage } = await validateDeal(input, actorId, null);
+  const { ownerId, stage, currency, propertyPrice, amount } = await validateDeal(
+    input,
+    actorId,
+    null,
+  );
 
   const [deal] = await db
     .insert(deals)
@@ -255,10 +349,13 @@ export async function createDeal(input: DealInput, actorId: string) {
       name: input.name,
       companyId: input.companyId,
       contactId: input.contactId,
+      listingId: input.listingId,
       pipelineId: input.pipelineId,
       stageId: input.stageId,
       ownerId,
-      amount: input.amount.toFixed(2),
+      propertyPrice: propertyPrice === null ? null : propertyPrice.toFixed(2),
+      amount: amount.toFixed(2),
+      currency,
       expectedCloseDate: input.expectedCloseDate,
       description: input.description,
       status: statusForOutcome(stage.outcome),
@@ -280,7 +377,11 @@ export async function updateDeal(
   const existing = await getDeal(dealId);
   if (!existing) throw new AppError("Deal not found", "NOT_FOUND");
 
-  const { ownerId, stage } = await validateDeal(input, actorId, existing);
+  const { ownerId, stage, currency, propertyPrice, amount } = await validateDeal(
+    input,
+    actorId,
+    existing,
+  );
   const stageChanged = existing.stageId !== input.stageId;
 
   return db.transaction(async (tx) => {
@@ -297,14 +398,17 @@ export async function updateDeal(
         name: input.name,
         companyId: input.companyId,
         contactId: input.contactId,
+        listingId: input.listingId,
         pipelineId: input.pipelineId,
         stageId: input.stageId,
         ownerId,
-        amount: input.amount.toFixed(2),
+        propertyPrice: propertyPrice === null ? null : propertyPrice.toFixed(2),
+        amount: amount.toFixed(2),
+        currency,
         expectedCloseDate: input.expectedCloseDate,
         description: input.description,
         status: statusForOutcome(stage.outcome),
-        closedAt: stage.outcome === "open" ? null : existing.closedAt ?? new Date(),
+        closedAt: stage.outcome === "open" ? null : (existing.closedAt ?? new Date()),
         lostReason: stage.outcome === "lost" ? input.lostReason : null,
         updatedAt: new Date(),
       })
@@ -312,7 +416,10 @@ export async function updateDeal(
       .returning();
 
     if (!deal) {
-      throw new AppError("This deal changed since you loaded it. Refresh and try again.", "CONFLICT");
+      throw new AppError(
+        "This deal changed since you loaded it. Refresh and try again.",
+        "CONFLICT",
+      );
     }
 
     if (stageChanged) {
@@ -330,7 +437,12 @@ export async function updateDeal(
 }
 
 export async function moveDeal(
-  input: { dealId: string; stageId: string; lostReason?: string | null; expectedUpdatedAt?: string },
+  input: {
+    dealId: string;
+    stageId: string;
+    lostReason?: string | null;
+    expectedUpdatedAt?: string;
+  },
   actorId: string,
 ) {
   const existing = await getDeal(input.dealId);
@@ -339,7 +451,10 @@ export async function moveDeal(
   const [stage] = await db.select().from(stages).where(eq(stages.id, input.stageId)).limit(1);
   if (!stage) throw new AppError("Stage not found", "NOT_FOUND");
   if (stage.pipelineId !== existing.pipelineId) {
-    throw new AppError("The selected stage does not belong to this deal's pipeline.", "STAGE_PIPELINE_MISMATCH");
+    throw new AppError(
+      "The selected stage does not belong to this deal's pipeline.",
+      "STAGE_PIPELINE_MISMATCH",
+    );
   }
   if (stage.outcome === "lost" && !input.lostReason) {
     throw new AppError("A lost reason is required for a lost deal.", "LOST_REASON_REQUIRED");
@@ -358,7 +473,7 @@ export async function moveDeal(
       .set({
         stageId: stage.id,
         status: statusForOutcome(stage.outcome),
-        closedAt: stage.outcome === "open" ? null : existing.closedAt ?? new Date(),
+        closedAt: stage.outcome === "open" ? null : (existing.closedAt ?? new Date()),
         lostReason: stage.outcome === "lost" ? input.lostReason : null,
         updatedAt: new Date(),
       })
@@ -366,7 +481,10 @@ export async function moveDeal(
       .returning();
 
     if (!deal) {
-      throw new AppError("This deal changed since you loaded it. Refresh and try again.", "CONFLICT");
+      throw new AppError(
+        "This deal changed since you loaded it. Refresh and try again.",
+        "CONFLICT",
+      );
     }
 
     await insertStageChange(

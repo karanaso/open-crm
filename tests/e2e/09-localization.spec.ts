@@ -73,13 +73,7 @@ test.describe("Greek localization journey", () => {
     await expect(companyMain.getByText("Στοιχεία", { exact: true }).first()).toBeVisible();
     await expect(companyMain.getByText("Με μια ματιά", { exact: true })).toBeVisible();
 
-    await createContact(
-      page,
-      CONTACT.firstName,
-      CONTACT.lastName,
-      CONTACT.email,
-      COMPANY,
-    );
+    await createContact(page, CONTACT.firstName, CONTACT.lastName, CONTACT.email, COMPANY);
     await expect(page.getByText("Στοιχεία επαφής", { exact: true })).toBeVisible();
     await expect(page.getByText("Με μια ματιά", { exact: true })).toBeVisible();
 
@@ -168,10 +162,9 @@ test.describe("Greek localization journey", () => {
 
     await expect(page).toHaveURL(/\/settings\/pipelines\?error=OCCUPIED_STAGE/);
     await expect(
-      page.getByText(
-        "Αυτό το στάδιο περιέχει ακόμη συμφωνίες και δεν μπορεί να αφαιρεθεί.",
-        { exact: true },
-      ),
+      page.getByText("Αυτό το στάδιο περιέχει ακόμη συμφωνίες και δεν μπορεί να αφαιρεθεί.", {
+        exact: true,
+      }),
     ).toBeVisible();
   });
 
@@ -319,9 +312,7 @@ test.describe("Greek localization journey", () => {
     await login(page);
     await page.goto(companyUrl);
 
-    await expect(
-      page.getByText("Καταγραφή δραστηριότητας", { exact: true }).first(),
-    ).toBeVisible();
+    await expect(page.getByText("Καταγραφή δραστηριότητας", { exact: true }).first()).toBeVisible();
     await page.selectOption("#activity-type", "call");
     await page.fill("#activity-subject", ACTIVITY);
     await page.fill("#activity-body", "Καταγράφηκε από τη δοκιμή E2E.");
@@ -366,19 +357,17 @@ test.describe("Greek localization journey", () => {
   test("shows Greek dashboard metrics and grouped search results", async ({ page }) => {
     await login(page);
 
-    await expect(page.getByText("Ανοιχτή ροή πωλήσεων", { exact: true })).toBeVisible();
+    await expect(page.getByText("Ανοιχτή προμήθεια", { exact: true })).toBeVisible();
     await expect(page.getByText("Ανοιχτά δελτία", { exact: true })).toBeVisible();
     await expect(page.getByText("Ενεργές καμπάνιες", { exact: true })).toBeVisible();
     await expect(
-      page.getByText("Αξία ανοιχτών συμφωνιών ανά στάδιο", { exact: true }),
+      page.getByText("Αξία ανοιχτών συμφωνιών ανά στάδιο", { exact: true }).first(),
     ).toBeVisible();
     await expect(page.getByText("Πρόσφατη δραστηριότητα", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: /Αναζήτηση εταιρειών/ }).click();
     const dialog = page.getByRole("dialog");
-    const searchInput = dialog.getByPlaceholder(
-      "Αναζήτηση εταιρειών, επαφών, συμφωνιών, δελτίων, καμπανιών…",
-    );
+    const searchInput = dialog.getByPlaceholder(/Αναζήτηση εταιρειών, επαφών, αγγελιών/);
     await expect(searchInput).toBeVisible();
 
     await searchInput.fill("G");

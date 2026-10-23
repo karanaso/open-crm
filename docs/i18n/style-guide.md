@@ -187,8 +187,8 @@ The seeded pipeline stages (`Lead`, `Qualified`, `Proposal`, `Negotiation`, `Won
 
 ## Numbers, dates, and currency
 
-- Use the helpers in `src/i18n/format.ts` for dates, times, numbers, USD amounts, and durations. Do not hardcode `$`, currency placement, separators, or unit abbreviations.
-- Amounts remain **USD** in both locales. Greek formatting may move the symbol, but the currency does not change.
+- Use the helpers in `src/i18n/format.ts` for dates, times, numbers, currency amounts, and durations. Do not hardcode `$`, currency placement, separators, or unit abbreviations.
+- Amounts use the record's own currency, or the workspace default for records without one. Greek formatting may move the symbol, but the currency does not change. Never sum amounts across currencies; show one total per currency.
 - Date-only values and SLA calculations remain **UTC**. Timestamp display keeps the existing local-time behavior; only the locale changes.
 - Use Greek decimal and thousands separators through the formatter. In prose, use an en dash for ranges («12–128»), not a hyphen.
 - Do not write «ώρες»/«λεπτά» inside a duration string if the helper already provides translated units.

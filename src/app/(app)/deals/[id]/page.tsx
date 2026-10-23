@@ -17,7 +17,10 @@ import { getPipeline } from "@/lib/services/pipelines";
 import { getTimeline } from "@/lib/services/timeline";
 import { getTasksForRecord } from "@/lib/services/tasks";
 import { listTeamMembers } from "@/lib/services/users";
-import { formatCurrency } from "@/lib/utils";
+import { getWorkspaceDefaults } from "@/lib/services/workspace-settings";
+import { formatCurrency } from "@/i18n/format";
+
+type SalesTranslator = (key: string, values?: Record<string, string | number>) => string;
 
 export default async function DealDetailPage({
   params,
@@ -33,15 +36,16 @@ export default async function DealDetailPage({
   const currentUser = await requireUser();
   const filterType = getParam(raw, "activityType");
   const timelinePage = Math.max(1, Number(getParam(raw, "timelinePage") ?? 1) || 1);
-  const t = await getTranslations("sales");
+  const t = (await getTranslations("sales")) as unknown as SalesTranslator;
   const tCommon = await getTranslations("common");
   const locale = await getLocale();
 
-  const [pipeline, timeline, tasks, team] = await Promise.all([
+  const [pipeline, timeline, tasks, team, workspace] = await Promise.all([
     getPipeline(deal.pipelineId),
     getTimeline({ dealId: id }, { type: filterType, page: timelinePage }),
     getTasksForRecord({ dealId: id }),
     listTeamMembers(),
+    getWorkspaceDefaults(),
   ]);
 
   const assignees = team
@@ -70,58 +74,92 @@ export default async function DealDetailPage({
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-sm text-muted-foreground">{t("amount")}</p>
-                <p className="text-2xl font-semibold">{formatCurrency(deal.amount, locale)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{tCommon("status")}</p>
-                <DealStatusBadge status={deal.status} />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{tCommon("company")}</p>
-                <Link href={`/companies/${deal.companyId}`} className="flex items-center gap-2 font-medium hover:underline">
-                  <Building2 className="size-4" /> {deal.companyName}
-                  {deal.companyArchivedAt ? <Badge variant="outline">{tCommon("archived")}</Badge> : null}
-                </Link>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("primaryContact")}</p>
-                {deal.contactId ? (
-                  <Link href={`/contacts/${deal.contactId}`} className="font-medium hover:underline">
-                    {deal.contactName}
-                  </Link>
-                ) : (
-                  <p>—</p>
-                )}
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{tCommon("owner")}</p>
-                <p className="flex items-center gap-2 font-medium">
-                  <UserRound className="size-4" /> {deal.ownerName}
-                  {deal.ownerStatus === "inactive" ? <Badge variant="outline">{tCommon("inactive")}</Badge> : null}
+                <p className="text-muted-foreground text-sm">{t("commission")}</p>
+                <p className="text-2xl font-semibold">
+                  {formatCurrency(Number(deal.amount), locale, deal.currency)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">{t("expectedClose")}</p>
+                <p className="text-muted-foreground text-sm">{t("propertyPrice")}</p>
+                <p className="text-2xl font-semibold">
+                  {deal.propertyPrice === null
+                    ? "—"
+                    : formatCurrency(Number(deal.propertyPrice), locale, deal.currency)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">{tCommon("status")}</p>
+                <DealStatusBadge status={deal.status} />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">{t("primaryContact")}</p>
+                <Link
+                  href={`/contacts/${deal.contactId}`}
+                  className="flex items-center gap-2 font-medium hover:underline"
+                >
+                  <UserRound className="size-4" /> {deal.contactName}
+                </Link>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">{tCommon("company")}</p>
+                {deal.companyId ? (
+                  <Link
+                    href={`/companies/${deal.companyId}`}
+                    className="flex items-center gap-2 font-medium hover:underline"
+                  >
+                    <Building2 className="size-4" /> {deal.companyName}
+                    {deal.companyArchivedAt ? (
+                      <Badge variant="outline">{tCommon("archived")}</Badge>
+                    ) : null}
+                  </Link>
+                ) : (
+                  <p className="font-medium">{t("individualBuyer")}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">{t("listing")}</p>
+                {deal.listingId ? (
+                  <Link
+                    href={`/listings/${deal.listingId}`}
+                    className="font-medium hover:underline"
+                  >
+                    {deal.listingReference}
+                    {deal.listingTitle ? ` · ${deal.listingTitle}` : ""}
+                  </Link>
+                ) : (
+                  <p>{t("standaloneDeal")}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">{tCommon("owner")}</p>
+                <p className="flex items-center gap-2 font-medium">
+                  <UserRound className="size-4" /> {deal.ownerName}
+                  {deal.ownerStatus === "inactive" ? (
+                    <Badge variant="outline">{tCommon("inactive")}</Badge>
+                  ) : null}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-sm">{t("expectedClose")}</p>
                 <p className="flex items-center gap-2">
                   <CalendarDays className="size-4" /> <DateDisplay value={deal.expectedCloseDate} />
                 </p>
               </div>
               {deal.closedAt ? (
                 <div>
-                  <p className="text-sm text-muted-foreground">{t("closed")}</p>
-                  <LocalTime value={deal.closedAt} />
+                  <p className="text-muted-foreground text-sm">{t("closed")}</p>
+                  <LocalTime value={deal.closedAt} timeZone={workspace.timeZone} />
                 </div>
               ) : null}
               {deal.lostReason ? (
                 <div className="sm:col-span-2">
-                  <p className="text-sm text-muted-foreground">{t("lostReason")}</p>
+                  <p className="text-muted-foreground text-sm">{t("lostReason")}</p>
                   <p>{deal.lostReason}</p>
                 </div>
               ) : null}
               {deal.description ? (
                 <div className="sm:col-span-2">
-                  <p className="text-sm text-muted-foreground">{tCommon("description")}</p>
+                  <p className="text-muted-foreground text-sm">{tCommon("description")}</p>
                   <p className="whitespace-pre-wrap">{deal.description}</p>
                 </div>
               ) : null}
@@ -143,7 +181,7 @@ export default async function DealDetailPage({
                   expectedUpdatedAt={deal.updatedAt.toISOString()}
                 />
               ) : (
-                <p className="text-sm text-muted-foreground">{t("pipelineUnavailable")}</p>
+                <p className="text-muted-foreground text-sm">{t("pipelineUnavailable")}</p>
               )}
             </CardContent>
           </Card>

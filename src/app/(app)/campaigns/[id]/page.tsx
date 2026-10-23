@@ -18,6 +18,7 @@ import { getCampaign } from "@/lib/services/marketing";
 import { getTimeline } from "@/lib/services/timeline";
 import { getTasksForRecord } from "@/lib/services/tasks";
 import { listTeamMembers } from "@/lib/services/users";
+import { getWorkspaceDefaults } from "@/lib/services/workspace-settings";
 import {
   transitionCampaignAction,
   updateRecipientStatusAction,
@@ -46,6 +47,7 @@ export default async function CampaignDetailPage({
   const tCommon = await getTranslations("common");
   const tEnums = await getTranslations("enums");
   const locale = await getLocale();
+  const workspace = await getWorkspaceDefaults();
   const recipientStatusLabels = {
     targeted: tEnums("recipientStatus.targeted"),
     sent: tEnums("recipientStatus.sent"),
@@ -154,7 +156,9 @@ export default async function CampaignDetailPage({
             <CardTitle className="text-sm font-medium text-muted-foreground">{t("budget")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{formatCurrency(campaign.budget, locale)}</p>
+            <p className="text-2xl font-semibold">
+              {formatCurrency(campaign.budget, locale, workspace.defaultCurrency)}
+            </p>
           </CardContent>
         </Card>
       </div>

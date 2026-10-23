@@ -10,12 +10,20 @@ export const activitySchema = z
     companyId: optionalUuidSchema,
     contactId: optionalUuidSchema,
     dealId: optionalUuidSchema,
+    listingId: optionalUuidSchema,
     ticketId: optionalUuidSchema,
     campaignId: optionalUuidSchema,
   })
   .refine(
     (data) =>
-      Boolean(data.companyId || data.contactId || data.dealId || data.ticketId || data.campaignId),
+      Boolean(
+        data.companyId ||
+        data.contactId ||
+        data.dealId ||
+        data.listingId ||
+        data.ticketId ||
+        data.campaignId,
+      ),
     { message: "validation.activityLinkRequired", path: ["links"] },
   );
 
@@ -31,12 +39,20 @@ export const taskSchema = z
     companyId: optionalUuidSchema,
     contactId: optionalUuidSchema,
     dealId: optionalUuidSchema,
+    listingId: optionalUuidSchema,
     ticketId: optionalUuidSchema,
     campaignId: optionalUuidSchema,
   })
   .refine(
     (data) =>
-      Boolean(data.companyId || data.contactId || data.dealId || data.ticketId || data.campaignId),
+      Boolean(
+        data.companyId ||
+        data.contactId ||
+        data.dealId ||
+        data.listingId ||
+        data.ticketId ||
+        data.campaignId,
+      ),
     { message: "validation.taskLinkRequired", path: ["links"] },
   );
 
@@ -47,7 +63,7 @@ export const taskListParamsSchema = z.object({
   assigneeId: z.string().uuid().optional(),
   priority: z.enum(["low", "normal", "high"]).optional(),
   status: z.enum(["open", "completed"]).optional(),
-  recordType: z.enum(["company", "contact", "deal", "ticket", "campaign"]).optional(),
+  recordType: z.enum(["company", "contact", "deal", "listing", "ticket", "campaign"]).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(50),
 });

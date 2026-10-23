@@ -1,5 +1,9 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { sql } from "drizzle-orm";
+import sharp from "sharp";
 import { db } from "@/db";
+import { imageStorageDir } from "@/lib/env";
 import {
   activities,
   campaignRecipients,
@@ -9,6 +13,9 @@ import {
   contacts,
   contactTags,
   deals,
+  listingPhotos,
+  listings,
+  listingViewings,
   segments,
   tags,
   tasks,
@@ -18,12 +25,52 @@ import {
 } from "@/db/schema";
 import { hashPassword } from "@/lib/auth/password";
 import { ensureDefaultPipeline, DEFAULT_PIPELINE_ID } from "@/db/ensure-default-pipeline";
+import { ensureWorkspaceSettings } from "@/db/ensure-workspace-settings";
 
 const ADMIN_ID = "10000000-0000-4000-8000-000000000001";
 const MEMBER_ID = "10000000-0000-4000-8000-000000000002";
 const COMPANY_ACME = "20000000-0000-4000-8000-000000000001";
 const COMPANY_NORTHWIND = "20000000-0000-4000-8000-000000000002";
 const COMPANY_BLUEHARBOR = "20000000-0000-4000-8000-000000000003";
+const SELLER_CONTACT_ID = "40000000-0000-4000-8000-000000000005";
+const BUYER_CONTACT_ID = "40000000-0000-4000-8000-000000000006";
+const SALE_LISTING_ID = "b0000000-0000-4000-8000-000000000001";
+const RENT_LISTING_ID = "b0000000-0000-4000-8000-000000000002";
+
+const SEED_LISTING_PHOTOS = [
+  {
+    storageKey: `listings/${SALE_LISTING_ID}/1_seed0001.webp`,
+    background: "#dbeafe",
+  },
+  {
+    storageKey: `listings/${SALE_LISTING_ID}/2_seed0002.webp`,
+    background: "#fef3c7",
+  },
+  {
+    storageKey: `listings/${RENT_LISTING_ID}/1_seed0003.webp`,
+    background: "#dcfce7",
+  },
+] as const;
+
+async function writeSeedListingPhotos() {
+  await Promise.all(
+    SEED_LISTING_PHOTOS.map(async (photo) => {
+      const absolute = path.join(imageStorageDir, photo.storageKey);
+      await mkdir(path.dirname(absolute), { recursive: true });
+      const data = await sharp({
+        create: {
+          width: 1600,
+          height: 1067,
+          channels: 3,
+          background: photo.background,
+        },
+      })
+        .webp({ quality: 78 })
+        .toBuffer();
+      await writeFile(absolute, data);
+    }),
+  );
+}
 
 async function seed() {
   if (process.env.NODE_ENV === "production") {
@@ -35,6 +82,7 @@ async function seed() {
   const now = new Date();
 
   await ensureDefaultPipeline();
+  await ensureWorkspaceSettings();
 
   await db.transaction(async (tx) => {
     await tx
@@ -111,7 +159,11 @@ async function seed() {
 
     await tx
       .insert(tags)
-      .values([{ id: "30000000-0000-4000-8000-000000000001", name: "vip" }, { id: "30000000-0000-4000-8000-000000000002", name: "enterprise" }, { id: "30000000-0000-4000-8000-000000000003", name: "renewal" }])
+      .values([
+        { id: "30000000-0000-4000-8000-000000000001", name: "vip" },
+        { id: "30000000-0000-4000-8000-000000000002", name: "enterprise" },
+        { id: "30000000-0000-4000-8000-000000000003", name: "renewal" },
+      ])
       .onConflictDoNothing();
 
     await tx
@@ -169,15 +221,191 @@ async function seed() {
           ownerId: ADMIN_ID,
           updatedAt: now,
         },
+        {
+          id: SELLER_CONTACT_ID,
+          firstName: "Elena",
+          lastName: "Papadopoulou",
+          email: "elena.papadopoulou@example.com",
+          phone: "+30 210 555 0140",
+          ownerId: ADMIN_ID,
+          notes: "Individual seller for the Glyfada and Kolonaki properties.",
+          updatedAt: now,
+        },
+        {
+          id: BUYER_CONTACT_ID,
+          firstName: "Nikos",
+          lastName: "Georgiou",
+          email: "nikos.georgiou@example.com",
+          phone: "+30 694 555 0142",
+          ownerId: MEMBER_ID,
+          notes: "Individual buyer and tenant; no company affiliation.",
+          updatedAt: now,
+        },
       ])
       .onConflictDoNothing();
 
     await tx
       .insert(contactTags)
       .values([
-        { contactId: "40000000-0000-4000-8000-000000000001", tagId: "30000000-0000-4000-8000-000000000001" },
-        { contactId: "40000000-0000-4000-8000-000000000001", tagId: "30000000-0000-4000-8000-000000000002" },
-        { contactId: "40000000-0000-4000-8000-000000000003", tagId: "30000000-0000-4000-8000-000000000003" },
+        {
+          contactId: "40000000-0000-4000-8000-000000000001",
+          tagId: "30000000-0000-4000-8000-000000000001",
+        },
+        {
+          contactId: "40000000-0000-4000-8000-000000000001",
+          tagId: "30000000-0000-4000-8000-000000000002",
+        },
+        {
+          contactId: "40000000-0000-4000-8000-000000000003",
+          tagId: "30000000-0000-4000-8000-000000000003",
+        },
+      ])
+      .onConflictDoNothing();
+
+    await tx
+      .insert(listings)
+      .values([
+        {
+          id: SALE_LISTING_ID,
+          reference: "RE-S-001",
+          title: "Seafront villa in Glyfada",
+          description:
+            "Five-bedroom villa with a private pool and direct sea views, close to the marina.",
+          transaction: "sale",
+          status: "active",
+          price: "1250000.00",
+          commissionAmount: "37500.00",
+          currency: "EUR",
+          addressLine1: "12 Poseidonos Avenue",
+          city: "Athens",
+          region: "Attica",
+          postalCode: "16674",
+          country: "Greece",
+          propertyType: "villa",
+          bedrooms: 5,
+          bathrooms: "4.5",
+          sizeSqm: "320.00",
+          lotSqm: "600.00",
+          yearBuilt: 2008,
+          floors: 2,
+          parking: 2,
+          energyClass: "a",
+          sellerContactId: SELLER_CONTACT_ID,
+          ownerId: ADMIN_ID,
+          features: {
+            location: { viewOfCoast: true, gatedCommunity: true },
+            yard: { swimmingPool: true, spa: true },
+            kitchen: { islands: true },
+          },
+          listedAt: new Date("2026-09-01T08:00:00Z"),
+          updatedAt: now,
+        },
+        {
+          id: RENT_LISTING_ID,
+          reference: "RE-R-002",
+          title: "Two-bedroom apartment in Kolonaki",
+          description:
+            "Renovated upper-floor apartment with a balcony, lift access, and a short walk to the metro.",
+          transaction: "rent",
+          status: "active",
+          price: "1800.00",
+          pricePeriod: "month",
+          commissionAmount: "1800.00",
+          currency: "EUR",
+          addressLine1: "8 Skoufa Street",
+          city: "Athens",
+          region: "Attica",
+          postalCode: "10673",
+          country: "Greece",
+          propertyType: "apartment",
+          bedrooms: 2,
+          bathrooms: "1.0",
+          sizeSqm: "85.00",
+          yearBuilt: 1995,
+          floors: 1,
+          parking: 1,
+          energyClass: "c",
+          sellerContactId: SELLER_CONTACT_ID,
+          ownerId: MEMBER_ID,
+          features: {
+            location: { gatedCommunity: true },
+            kitchen: { islands: true },
+          },
+          listedAt: new Date("2026-10-01T08:00:00Z"),
+          updatedAt: now,
+        },
+      ])
+      .onConflictDoNothing();
+
+    await tx
+      .insert(listingPhotos)
+      .values([
+        {
+          id: "b1000000-0000-4000-8000-000000000001",
+          listingId: SALE_LISTING_ID,
+          storageKey: `listings/${SALE_LISTING_ID}/1_seed0001.webp`,
+          mimeType: "image/webp",
+          width: 1600,
+          height: 1067,
+          byteSize: 184320,
+          position: 0,
+          alt: "Sea-facing villa exterior",
+          updatedAt: now,
+        },
+        {
+          id: "b1000000-0000-4000-8000-000000000002",
+          listingId: SALE_LISTING_ID,
+          storageKey: `listings/${SALE_LISTING_ID}/2_seed0002.webp`,
+          mimeType: "image/webp",
+          width: 1600,
+          height: 1067,
+          byteSize: 201728,
+          position: 1,
+          alt: "Villa living room",
+          updatedAt: now,
+        },
+        {
+          id: "b1000000-0000-4000-8000-000000000003",
+          listingId: RENT_LISTING_ID,
+          storageKey: `listings/${RENT_LISTING_ID}/1_seed0003.webp`,
+          mimeType: "image/webp",
+          width: 1600,
+          height: 1067,
+          byteSize: 158720,
+          position: 0,
+          alt: "Kolonaki apartment balcony",
+          updatedAt: now,
+        },
+      ])
+      .onConflictDoNothing();
+
+    await tx
+      .insert(listingViewings)
+      .values([
+        {
+          id: "b2000000-0000-4000-8000-000000000001",
+          listingId: RENT_LISTING_ID,
+          contactId: BUYER_CONTACT_ID,
+          agentId: MEMBER_ID,
+          scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+          durationMinutes: 45,
+          status: "scheduled",
+          notes: "Tenant wants to measure the living room for furniture.",
+          createdById: ADMIN_ID,
+          updatedAt: now,
+        },
+        {
+          id: "b2000000-0000-4000-8000-000000000002",
+          listingId: SALE_LISTING_ID,
+          contactId: BUYER_CONTACT_ID,
+          agentId: ADMIN_ID,
+          scheduledAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          durationMinutes: 30,
+          status: "completed",
+          notes: "Second viewing completed; buyer asked about the pool maintenance contract.",
+          createdById: ADMIN_ID,
+          updatedAt: now,
+        },
       ])
       .onConflictDoNothing();
 
@@ -266,6 +494,23 @@ async function seed() {
           lostReason: "Budget postponed to next fiscal year.",
           updatedAt: now,
         },
+        {
+          id: "50000000-0000-4000-8000-000000000007",
+          name: "Kolonaki apartment rental offer",
+          companyId: null,
+          contactId: BUYER_CONTACT_ID,
+          listingId: RENT_LISTING_ID,
+          propertyPrice: "1800.00",
+          currency: "EUR",
+          pipelineId: DEFAULT_PIPELINE_ID,
+          stageId: "00000000-0000-4000-8000-000000000102",
+          ownerId: MEMBER_ID,
+          amount: "1800.00",
+          expectedCloseDate: "2026-12-01",
+          status: "open",
+          description: "Individual tenant offer for the Kolonaki apartment.",
+          updatedAt: now,
+        },
       ])
       .onConflictDoNothing();
 
@@ -275,7 +520,8 @@ async function seed() {
         {
           id: "60000000-0000-4000-8000-000000000001",
           subject: "SSO login loop for finance team",
-          description: "Finance users are redirected back to the login screen after authenticating with SSO.",
+          description:
+            "Finance users are redirected back to the login screen after authenticating with SSO.",
           requesterContactId: "40000000-0000-4000-8000-000000000002",
           assigneeId: ADMIN_ID,
           createdById: ADMIN_ID,
@@ -357,7 +603,10 @@ async function seed() {
         startDate: "2026-10-15",
         endDate: "2026-12-15",
         description: "Quarterly check-in with our highest-value software contacts.",
-        segmentSnapshot: { name: "VIP software contacts", criteria: { tags: ["vip"], industry: "Software" } },
+        segmentSnapshot: {
+          name: "VIP software contacts",
+          criteria: { tags: ["vip"], industry: "Software" },
+        },
         activatedAt: new Date("2026-10-15T09:00:00Z"),
         updatedAt: now,
       })
@@ -420,6 +669,15 @@ async function seed() {
           companyId: COMPANY_BLUEHARBOR,
           contactId: "40000000-0000-4000-8000-000000000004",
         },
+        {
+          id: "90000000-0000-4000-8000-000000000004",
+          type: "meeting",
+          subject: "Villa viewing with the Georgiou family",
+          body: "Walked through the villa and discussed the pool maintenance contract.",
+          occurredAt: new Date("2026-10-18T12:00:00Z"),
+          authorId: ADMIN_ID,
+          listingId: SALE_LISTING_ID,
+        },
       ])
       .onConflictDoNothing();
 
@@ -458,11 +716,24 @@ async function seed() {
           createdById: ADMIN_ID,
           campaignId: "80000000-0000-4000-8000-000000000001",
         },
+        {
+          id: "a0000000-0000-4000-8000-000000000004",
+          title: "Prepare Kolonaki rental offer summary",
+          description: "Share the rent, commission, and available move-in date with the tenant.",
+          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+          priority: "normal",
+          status: "open",
+          assigneeId: MEMBER_ID,
+          createdById: ADMIN_ID,
+          listingId: RENT_LISTING_ID,
+        },
       ])
       .onConflictDoNothing();
 
     await tx.execute(sql`select 1`);
   });
+
+  await writeSeedListingPhotos();
 
   console.log("Seed complete.");
   console.log("Admin: admin@opencrm.local / AdminPassword123!");

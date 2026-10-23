@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetDatabase } from "./helpers";
-import { createCompany as factoryCompany, createTestPipeline, createUser } from "./factories";
+import {
+  createCompany as factoryCompany,
+  createListing,
+  createTestPipeline,
+  createUser,
+  createViewing,
+} from "./factories";
 import {
   createCompany,
   getCompany,
@@ -12,6 +18,7 @@ import {
 import {
   createContact,
   getContact,
+  getContactRelations,
   listContacts,
   setContactArchived,
 } from "@/lib/services/contacts";
@@ -70,9 +77,18 @@ describe("customer directory", () => {
 
   it("filters companies by any selected tag", async () => {
     const admin = await createUser({ role: "admin" });
-    await createCompany(companySchema.parse({ name: "VIP Co", ownerId: admin.id, tags: ["vip"] }), admin.id);
-    await createCompany(companySchema.parse({ name: "Renewal Co", ownerId: admin.id, tags: ["renewal"] }), admin.id);
-    await createCompany(companySchema.parse({ name: "Other Co", ownerId: admin.id, tags: ["other"] }), admin.id);
+    await createCompany(
+      companySchema.parse({ name: "VIP Co", ownerId: admin.id, tags: ["vip"] }),
+      admin.id,
+    );
+    await createCompany(
+      companySchema.parse({ name: "Renewal Co", ownerId: admin.id, tags: ["renewal"] }),
+      admin.id,
+    );
+    await createCompany(
+      companySchema.parse({ name: "Other Co", ownerId: admin.id, tags: ["other"] }),
+      admin.id,
+    );
 
     const anyTag = await listCompanies(companyListParamsSchema.parse({ tag: "vip,renewal" }));
     expect(anyTag.items.map((item) => item.name).sort()).toEqual(["Renewal Co", "VIP Co"]);
@@ -133,9 +149,7 @@ describe("customer directory", () => {
       admin.id,
     );
 
-    const filtered = await listContacts(
-      contactListParamsSchema.parse({ companyId: company.id }),
-    );
+    const filtered = await listContacts(contactListParamsSchema.parse({ companyId: company.id }));
     expect(filtered.items).toHaveLength(1);
     expect(filtered.items[0].firstName).toBe("Jordan");
 
@@ -230,5 +244,72 @@ describe("customer directory", () => {
     expect(updated.name).toBe("New Name");
     expect(updated.ownerId).toBe(owner.id);
     expect((await getCompany(company.id))?.tagNames).toEqual(["vip"]);
+  });
+
+  it("shows selling listings, buying deals, and viewings on directory records", async () => {
+    const admin = await createUser({ role: "admin" });
+    const company = await factoryCompany(admin.id);
+    const seller = await createContact(
+      contactSchema.parse({
+        firstName: "Sofia",
+        lastName: "Seller",
+        email: "sofia@directory.test",
+        companyId: company.id,
+        ownerId: admin.id,
+      }),
+      admin.id,
+    );
+    const buyer = await createContact(
+      contactSchema.parse({
+        firstName: "Ben",
+        lastName: "Buyer",
+        email: "ben@directory.test",
+        ownerId: admin.id,
+      }),
+      admin.id,
+    );
+    const listing = await createListing(seller.id, admin.id, {
+      reference: "RE-DIR-1",
+      title: "Garden flat",
+      price: "200000.00",
+      currency: "EUR",
+      commissionAmount: "2000.00",
+    });
+    const { pipeline, openStage } = await createTestPipeline();
+    await createDeal(
+      dealSchema.parse({
+        name: "Sofia buys",
+        contactId: seller.id,
+        listingId: listing.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "1500",
+        currency: "EUR",
+      }),
+      admin.id,
+    );
+    await createViewing(listing.id, buyer.id, admin.id);
+
+    const sellerRelations = await getContactRelations(seller.id);
+    expect(sellerRelations.sellingListings).toHaveLength(1);
+    expect(sellerRelations.sellingListings[0].id).toBe(listing.id);
+    expect(sellerRelations.deals).toHaveLength(1);
+    expect(sellerRelations.deals[0].currency).toBe("EUR");
+
+    const buyerRelations = await getContactRelations(buyer.id);
+    expect(buyerRelations.viewings).toHaveLength(1);
+    expect(buyerRelations.viewings[0].listingReference).toBe("RE-DIR-1");
+    expect(buyerRelations.viewings[0].agentName).toBe(admin.name);
+
+    const companyRelations = await getCompanyRelations(company.id);
+    expect(companyRelations.listings).toHaveLength(1);
+    expect(companyRelations.listings[0].sellerFirstName).toBe("Sofia");
+
+    await setContactArchived(seller.id, true);
+    const archivedCompanyRelations = await getCompanyRelations(company.id);
+    expect(archivedCompanyRelations.listings).toHaveLength(1);
+    expect(archivedCompanyRelations.listings[0].sellerArchivedAt).not.toBeNull();
+    expect((await getContactRelations(seller.id)).sellingListings).toHaveLength(1);
   });
 });

@@ -1,6 +1,13 @@
+import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { resetDatabase } from "./helpers";
-import { createCompany, createContact, createTestPipeline, createUser } from "./factories";
+import {
+  createCompany,
+  createContact,
+  createListing,
+  createTestPipeline,
+  createUser,
+} from "./factories";
 import {
   archivePipeline,
   createPipeline,
@@ -10,8 +17,16 @@ import {
   reorderStages,
   setDefaultPipeline,
 } from "@/lib/services/pipelines";
-import { createDeal, getDeal, getPipelineMetrics, moveDeal, updateDeal } from "@/lib/services/deals";
-import { dealSchema } from "@/lib/validation/deal";
+import {
+  createDeal,
+  getDeal,
+  getDealsForBoard,
+  getPipelineMetrics,
+  listDeals,
+  moveDeal,
+  updateDeal,
+} from "@/lib/services/deals";
+import { dealListParamsSchema, dealSchema } from "@/lib/validation/deal";
 import { companySchema } from "@/lib/validation/company";
 import { createCompany as createCompanyService } from "@/lib/services/companies";
 
@@ -64,13 +79,13 @@ describe("sales pipeline", () => {
   });
 
   it("rejects a stage that belongs to another pipeline", async () => {
-    const { admin, company, pipeline, wonStage } = await fixture();
+    const { admin, contact, pipeline, wonStage } = await fixture();
     const other = await createTestPipeline();
     await expect(
       createDeal(
         dealSchema.parse({
           name: "Mismatch",
-          companyId: company.id,
+          contactId: contact.id,
           pipelineId: pipeline.id,
           stageId: other.openStage.id,
           ownerId: admin.id,
@@ -99,6 +114,135 @@ describe("sales pipeline", () => {
         admin.id,
       ),
     ).rejects.toThrow("must belong to the selected company");
+  });
+
+  it("creates an individual buyer deal without a company", async () => {
+    const { admin, pipeline, openStage } = await fixture();
+    const individual = await createContact(admin.id, null, {
+      firstName: "Nora",
+      lastName: "Solo",
+    });
+    const deal = await createDeal(
+      dealSchema.parse({
+        name: "Individual buyer",
+        contactId: individual.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "1500",
+      }),
+      admin.id,
+    );
+
+    expect(deal.companyId).toBeNull();
+    expect(deal.contactId).toBe(individual.id);
+    expect(deal.currency).toBe("USD");
+
+    const loaded = await getDeal(deal.id);
+    expect(loaded?.companyName).toBeNull();
+    expect(loaded?.contactName).toBe("Nora Solo");
+
+    const board = await getDealsForBoard(pipeline.id);
+    const card = board.find((item) => item.id === deal.id);
+    expect(card?.companyName).toBeNull();
+    expect(card?.contactName).toBe("Nora Solo");
+  });
+
+  it("applies listing defaults to a linked deal", async () => {
+    const { admin, contact, pipeline, openStage } = await fixture();
+    const listing = await createListing(contact.id, admin.id, {
+      reference: "RE-SEA-1",
+      title: "Seafront apartment",
+      price: "250000.00",
+      currency: "EUR",
+      commissionAmount: "3000.00",
+    });
+
+    const deal = await createDeal(
+      dealSchema.parse({
+        name: "Seafront offer",
+        contactId: contact.id,
+        listingId: listing.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+      }),
+      admin.id,
+    );
+
+    expect(deal.listingId).toBe(listing.id);
+    expect(deal.currency).toBe("EUR");
+    expect(deal.propertyPrice).toBe("250000.00");
+    expect(deal.amount).toBe("3000.00");
+
+    const loaded = await getDeal(deal.id);
+    expect(loaded?.listingTitle).toBe("Seafront apartment");
+    expect(loaded?.listingReference).toBe("RE-SEA-1");
+    expect(loaded?.contactName).toBe("Jordan Lee");
+  });
+
+  it("validates contact, money, and currency input", () => {
+    const base = {
+      name: "Validation",
+      pipelineId: randomUUID(),
+      stageId: randomUUID(),
+      contactId: randomUUID(),
+    };
+    expect(() => dealSchema.parse({ ...base, contactId: undefined })).toThrow(
+      "validation.selectContact",
+    );
+    expect(() => dealSchema.parse({ ...base, amount: -1 })).toThrow();
+    expect(() => dealSchema.parse({ ...base, amount: 1.234 })).toThrow();
+    expect(() => dealSchema.parse({ ...base, propertyPrice: -1 })).toThrow();
+    expect(() => dealSchema.parse({ ...base, currency: "US" })).toThrow();
+    expect(dealSchema.parse({ ...base, currency: "eur" }).currency).toBe("EUR");
+    expect(dealSchema.parse(base).propertyPrice).toBeNull();
+  });
+
+  it("filters deals by contact name and currency", async () => {
+    const { admin, company, contact, pipeline, openStage } = await fixture();
+    const individual = await createContact(admin.id, null, {
+      firstName: "Elena",
+      lastName: "Euro",
+    });
+    await createDeal(
+      dealSchema.parse({
+        name: "Individual EUR deal",
+        contactId: individual.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "900",
+        currency: "EUR",
+      }),
+      admin.id,
+    );
+    await createDeal(
+      dealSchema.parse({
+        name: "Company USD deal",
+        companyId: company.id,
+        contactId: contact.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "1200",
+      }),
+      admin.id,
+    );
+
+    const byContact = await listDeals(dealListParamsSchema.parse({ q: "Elena" }));
+    expect(byContact.items).toHaveLength(1);
+    expect(byContact.items[0].contactName).toBe("Elena Euro");
+    expect(byContact.items[0].companyName).toBeNull();
+
+    const byCurrency = await listDeals(dealListParamsSchema.parse({ currency: "EUR" }));
+    expect(byCurrency.items).toHaveLength(1);
+    expect(byCurrency.items[0].currency).toBe("EUR");
+
+    const sorted = await listDeals(
+      dealListParamsSchema.parse({ currency: "USD", sort: "amount_desc" }),
+    );
+    expect(sorted.items[0].amount).toBe("1200.00");
   });
 
   it("moves a deal through won and reopens it", async () => {
@@ -141,11 +285,12 @@ describe("sales pipeline", () => {
   });
 
   it("requires a reason when moving to lost", async () => {
-    const { admin, company, pipeline, openStage, lostStage } = await fixture();
+    const { admin, company, contact, pipeline, openStage, lostStage } = await fixture();
     const deal = await createDeal(
       dealSchema.parse({
         name: "Lost deal",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -179,11 +324,12 @@ describe("sales pipeline", () => {
   });
 
   it("rejects a stale deal move", async () => {
-    const { admin, company, pipeline, openStage, wonStage } = await fixture();
+    const { admin, company, contact, pipeline, openStage, wonStage } = await fixture();
     const deal = await createDeal(
       dealSchema.parse({
         name: "Concurrent deal",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -198,12 +344,15 @@ describe("sales pipeline", () => {
     ).rejects.toThrow("changed since you loaded");
   });
 
-  it("records a stage-change activity", async () => {
-    const { admin, company, pipeline, openStage, wonStage } = await fixture();
+  it("records a stage-change activity with deal links", async () => {
+    const { admin, company, contact, pipeline, openStage, wonStage } = await fixture();
+    const listing = await createListing(contact.id, admin.id);
     const deal = await createDeal(
       dealSchema.parse({
         name: "Activity deal",
         companyId: company.id,
+        contactId: contact.id,
+        listingId: listing.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -222,14 +371,16 @@ describe("sales pipeline", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].type).toBe("stage_change");
     expect(rows[0].metadata?.toStageName).toBe("Won");
+    expect(rows[0].contactId).toBe(contact.id);
+    expect(rows[0].listingId).toBe(listing.id);
   });
 
   it("guards occupied stages and pipelines", async () => {
-    const { admin, company, pipeline, openStage } = await fixture();
+    const { admin, contact, pipeline, openStage } = await fixture();
     await createDeal(
       dealSchema.parse({
         name: "Occupied",
-        companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -249,12 +400,14 @@ describe("sales pipeline", () => {
     expect(reordered.map((stage) => stage.id)).toEqual(reversed);
   });
 
-  it("calculates per-stage metrics", async () => {
-    const { admin, company, pipeline, openStage, wonStage } = await fixture();
+  it("calculates per-stage metrics by currency", async () => {
+    const { admin, company, contact, pipeline, openStage, wonStage } = await fixture();
+    const individual = await createContact(admin.id, null);
     await createDeal(
       dealSchema.parse({
-        name: "Open",
+        name: "Open USD",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -264,8 +417,21 @@ describe("sales pipeline", () => {
     );
     await createDeal(
       dealSchema.parse({
+        name: "Open EUR",
+        contactId: individual.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "5000",
+        currency: "EUR",
+      }),
+      admin.id,
+    );
+    await createDeal(
+      dealSchema.parse({
         name: "Won",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: wonStage.id,
         ownerId: admin.id,
@@ -273,9 +439,18 @@ describe("sales pipeline", () => {
       }),
       admin.id,
     );
+
     const metrics = await getPipelineMetrics(pipeline.id);
-    expect(metrics.find((stage) => stage.id === openStage.id)?.dealCount).toBe(1);
-    expect(metrics.find((stage) => stage.id === openStage.id)?.totalValue).toBe(10000);
+    const open = metrics.find((stage) => stage.id === openStage.id)!;
+    expect(open.dealCount).toBe(2);
+    expect(open.totalValueByCurrency).toEqual([
+      { currency: "EUR", total: 5000 },
+      { currency: "USD", total: 10000 },
+    ]);
+    expect(open.weightedValueByCurrency).toEqual([
+      { currency: "EUR", total: 1000 },
+      { currency: "USD", total: 2000 },
+    ]);
     expect(metrics.find((stage) => stage.id === wonStage.id)?.dealCount).toBe(0);
   });
 
@@ -285,6 +460,7 @@ describe("sales pipeline", () => {
       companySchema.parse({ name: "Archived Co", ownerId: admin.id }),
       admin.id,
     );
+    const contact = await createContact(admin.id, company.id);
     const { setCompanyArchived } = await import("@/lib/services/companies");
     await setCompanyArchived(company.id, true);
     const { pipeline, openStage } = await createTestPipeline();
@@ -293,6 +469,7 @@ describe("sales pipeline", () => {
         dealSchema.parse({
           name: "Archived deal",
           companyId: company.id,
+          contactId: contact.id,
           pipelineId: pipeline.id,
           stageId: openStage.id,
           ownerId: admin.id,
@@ -303,12 +480,66 @@ describe("sales pipeline", () => {
     ).rejects.toThrow("active company");
   });
 
+  it("keeps an archived company on an unchanged deal", async () => {
+    const { admin, company, contact, pipeline, openStage } = await fixture();
+    const deal = await createDeal(
+      dealSchema.parse({
+        name: "Archived later",
+        companyId: company.id,
+        contactId: contact.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "1000",
+      }),
+      admin.id,
+    );
+    const { setCompanyArchived } = await import("@/lib/services/companies");
+    await setCompanyArchived(company.id, true);
+
+    const updated = await updateDeal(
+      deal.id,
+      dealSchema.parse({
+        name: "Still archived",
+        companyId: company.id,
+        contactId: contact.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "1200",
+      }),
+      admin.id,
+      deal.updatedAt.toISOString(),
+    );
+    expect(updated.companyId).toBe(company.id);
+
+    const other = await createCompany(admin.id, { name: "Other archived" });
+    await setCompanyArchived(other.id, true);
+    await expect(
+      updateDeal(
+        deal.id,
+        dealSchema.parse({
+          name: "Switch company",
+          companyId: other.id,
+          contactId: contact.id,
+          pipelineId: pipeline.id,
+          stageId: openStage.id,
+          ownerId: admin.id,
+          amount: "1200",
+        }),
+        admin.id,
+        updated.updatedAt.toISOString(),
+      ),
+    ).rejects.toThrow("active company");
+  });
+
   it("updates deal fields and records a stage change", async () => {
-    const { admin, company, pipeline, openStage, wonStage } = await fixture();
+    const { admin, company, contact, pipeline, openStage, wonStage } = await fixture();
     const deal = await createDeal(
       dealSchema.parse({
         name: "Update me",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -321,6 +552,7 @@ describe("sales pipeline", () => {
       dealSchema.parse({
         name: "Updated",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: wonStage.id,
         ownerId: admin.id,

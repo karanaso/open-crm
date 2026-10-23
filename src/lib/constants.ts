@@ -4,6 +4,7 @@ export const NAV_ITEMS = [
   { href: "/dashboard", labelKey: "dashboard" },
   { href: "/companies", labelKey: "companies" },
   { href: "/contacts", labelKey: "contacts" },
+  { href: "/listings", labelKey: "listings" },
   { href: "/deals", labelKey: "deals" },
   { href: "/tickets", labelKey: "tickets" },
   { href: "/campaigns", labelKey: "campaigns" },

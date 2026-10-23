@@ -3,7 +3,14 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { tickets, tasks } from "@/db/schema";
 import { resetDatabase } from "./helpers";
-import { createCompany, createContact, createTestPipeline, createUser } from "./factories";
+import {
+  createCompany,
+  createContact,
+  createListing,
+  createTestPipeline,
+  createUser,
+  createViewing,
+} from "./factories";
 import { createDeal } from "@/lib/services/deals";
 import { dealSchema } from "@/lib/validation/deal";
 import { createTicket, addTicketComment, changeTicketStatus } from "@/lib/services/tickets";
@@ -16,12 +23,14 @@ import { createContact as createContactService } from "@/lib/services/contacts";
 import { contactSchema } from "@/lib/validation/contact";
 import {
   getCampaignEngagementChart,
+  getDashboardData,
   getMarketingDashboard,
   getPipelineChart,
   getSalesDashboard,
   getSupportDashboard,
   getTicketStatusChart,
 } from "@/lib/services/dashboard";
+import { getDefaultPipeline } from "@/lib/services/pipelines";
 import { getTaskStats } from "@/lib/services/tasks";
 import { todayUtc, addDays } from "@/lib/dates";
 
@@ -33,12 +42,14 @@ describe("dashboard aggregates", () => {
   it("calculates sales metrics for open, won, and lost deals", async () => {
     const admin = await createUser({ role: "admin" });
     const company = await createCompany(admin.id);
+    const contact = await createContact(admin.id, company.id);
     const { pipeline, openStage, wonStage, lostStage } = await createTestPipeline();
 
     await createDeal(
       dealSchema.parse({
         name: "Open 1",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -50,6 +61,7 @@ describe("dashboard aggregates", () => {
       dealSchema.parse({
         name: "Open 2",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: openStage.id,
         ownerId: admin.id,
@@ -61,6 +73,7 @@ describe("dashboard aggregates", () => {
       dealSchema.parse({
         name: "Won",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: wonStage.id,
         ownerId: admin.id,
@@ -73,6 +86,7 @@ describe("dashboard aggregates", () => {
       dealSchema.parse({
         name: "Lost",
         companyId: company.id,
+        contactId: contact.id,
         pipelineId: pipeline.id,
         stageId: lostStage.id,
         ownerId: admin.id,
@@ -84,10 +98,82 @@ describe("dashboard aggregates", () => {
 
     const sales = await getSalesDashboard();
     expect(sales.openCount).toBe(2);
-    expect(sales.openValue).toBe(15000);
-    expect(sales.weightedValue).toBe(3000);
+    expect(sales.openValueByCurrency).toEqual([{ currency: "USD", total: 15000 }]);
+    expect(sales.weightedValueByCurrency).toEqual([{ currency: "USD", total: 3000 }]);
     expect(sales.wonThisMonthCount).toBe(1);
+    expect(sales.wonThisMonthByCurrency).toEqual([{ currency: "USD", total: 20000 }]);
     expect(sales.winRate).toBe(50);
+    expect(sales.closingSoonCount).toBe(0);
+    expect(sales).not.toHaveProperty("openValue");
+    expect(sales).not.toHaveProperty("weightedValue");
+    expect(sales).not.toHaveProperty("wonThisMonthValue");
+  });
+
+  it("groups sales money by currency without cross-currency totals", async () => {
+    const admin = await createUser({ role: "admin" });
+    const company = await createCompany(admin.id);
+    const contact = await createContact(admin.id, company.id);
+    const individual = await createContact(admin.id, null);
+    const { pipeline, openStage, wonStage } = await createTestPipeline();
+
+    await createDeal(
+      dealSchema.parse({
+        name: "USD open",
+        companyId: company.id,
+        contactId: contact.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "10000",
+      }),
+      admin.id,
+    );
+    await createDeal(
+      dealSchema.parse({
+        name: "EUR open",
+        contactId: individual.id,
+        pipelineId: pipeline.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "5000",
+        currency: "EUR",
+      }),
+      admin.id,
+    );
+    await createDeal(
+      dealSchema.parse({
+        name: "EUR won",
+        contactId: individual.id,
+        pipelineId: pipeline.id,
+        stageId: wonStage.id,
+        ownerId: admin.id,
+        amount: "4000",
+        currency: "EUR",
+      }),
+      admin.id,
+    );
+
+    const sales = await getSalesDashboard();
+    expect(sales.openCount).toBe(2);
+    expect(sales.openValueByCurrency).toEqual([
+      { currency: "EUR", total: 5000 },
+      { currency: "USD", total: 10000 },
+    ]);
+    expect(sales.weightedValueByCurrency).toEqual([
+      { currency: "EUR", total: 1000 },
+      { currency: "USD", total: 2000 },
+    ]);
+    expect(sales.wonThisMonthByCurrency).toEqual([{ currency: "EUR", total: 4000 }]);
+  });
+
+  it("returns zero sales metrics and empty groups when no deals exist", async () => {
+    const sales = await getSalesDashboard();
+    expect(sales.openCount).toBe(0);
+    expect(sales.openValueByCurrency).toEqual([]);
+    expect(sales.weightedValueByCurrency).toEqual([]);
+    expect(sales.wonThisMonthCount).toBe(0);
+    expect(sales.wonThisMonthByCurrency).toEqual([]);
+    expect(sales.winRate).toBe(0);
     expect(sales.closingSoonCount).toBe(0);
   });
 
@@ -118,11 +204,7 @@ describe("dashboard aggregates", () => {
       }),
       admin.id,
     );
-    await addTicketComment(
-      resolved.id,
-      { body: "Reply", visibility: "reply" },
-      admin,
-    );
+    await addTicketComment(resolved.id, { body: "Reply", visibility: "reply" }, admin);
     await changeTicketStatus(resolved.id, "resolved");
 
     const support = await getSupportDashboard();
@@ -199,19 +281,34 @@ describe("dashboard aggregates", () => {
     expect(stats.upcoming).toBe(1);
   });
 
-  it("builds chart datasets", async () => {
+  it("builds chart datasets per stage and currency", async () => {
     const admin = await createUser({ role: "admin" });
     const company = await createCompany(admin.id);
     const contact = await createContact(admin.id, company.id);
-    const { pipeline, openStage } = await createTestPipeline();
+    const individual = await createContact(admin.id, null);
+    const pipeline = await getDefaultPipeline();
+    const openStage = pipeline!.stages.find((stage) => stage.outcome === "open")!;
     await createDeal(
       dealSchema.parse({
-        name: "Chart deal",
+        name: "Chart USD deal",
         companyId: company.id,
-        pipelineId: pipeline.id,
+        contactId: contact.id,
+        pipelineId: pipeline!.id,
         stageId: openStage.id,
         ownerId: admin.id,
         amount: "1000",
+      }),
+      admin.id,
+    );
+    await createDeal(
+      dealSchema.parse({
+        name: "Chart EUR deal",
+        contactId: individual.id,
+        pipelineId: pipeline!.id,
+        stageId: openStage.id,
+        ownerId: admin.id,
+        amount: "2000",
+        currency: "EUR",
       }),
       admin.id,
     );
@@ -224,7 +321,51 @@ describe("dashboard aggregates", () => {
       admin.id,
     );
 
-    expect((await getPipelineChart()).length).toBeGreaterThan(0);
+    const chart = await getPipelineChart();
+    expect(chart).toEqual(
+      expect.arrayContaining([
+        { stage: openStage.name, currency: "EUR", value: 2000 },
+        { stage: openStage.name, currency: "USD", value: 1000 },
+      ]),
+    );
     expect((await getTicketStatusChart()).some((row) => row.count > 0)).toBe(true);
+  });
+
+  it("includes the listings overview in dashboard data", async () => {
+    const admin = await createUser({ role: "admin" });
+    const seller = await createContact(admin.id, null);
+    const buyer = await createContact(admin.id, null);
+    const sale = await createListing(seller.id, admin.id, {
+      transaction: "sale",
+      price: "300000.00",
+      currency: "EUR",
+    });
+    const rent = await createListing(seller.id, admin.id, {
+      transaction: "rent",
+      price: "1200.00",
+      pricePeriod: "month",
+      currency: "EUR",
+    });
+    await createViewing(sale.id, buyer.id, admin.id);
+    await createViewing(rent.id, buyer.id, admin.id);
+
+    const data = await getDashboardData(admin.id);
+    expect(data.listings.activeTotal).toBe(2);
+    expect(data.listings.activeByTransaction).toEqual([
+      { transaction: "sale", count: 1 },
+      { transaction: "rent", count: 1 },
+    ]);
+    expect(data.listings.askingSaleValue).toEqual([{ currency: "EUR", total: 300000 }]);
+    expect(data.listings.monthlyRentRoll).toEqual([{ currency: "EUR", total: 1200 }]);
+    expect(data.listings.upcomingViewings).toBe(2);
+  });
+
+  it("returns an empty listings overview state", async () => {
+    const admin = await createUser({ role: "admin" });
+    const data = await getDashboardData(admin.id);
+    expect(data.listings.activeTotal).toBe(0);
+    expect(data.listings.askingSaleValue).toEqual([]);
+    expect(data.listings.monthlyRentRoll).toEqual([]);
+    expect(data.sales.openValueByCurrency).toEqual([]);
   });
 });

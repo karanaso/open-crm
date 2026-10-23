@@ -15,22 +15,31 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, formatNumber } from "@/lib/utils";
-import { formatCurrencyUsd } from "@/i18n/format";
+import { formatCurrency, formatNumber } from "@/i18n/format";
 
 const COLORS = ["#4f6bed", "#2aa7a1", "#e0a43b", "#a855f7", "#ef4444", "#64748b"];
+
+type PipelinePoint = {
+  stage: string;
+  currency: string;
+  value: number;
+};
 
 export function DashboardCharts({
   pipeline,
   tickets,
   campaigns,
 }: {
-  pipeline: Array<{ stage: string; value: number }>;
+  pipeline: PipelinePoint[];
   tickets: Array<{ status: string; count: number }>;
   campaigns: Array<{ status: string; count: number }>;
 }) {
   const t = useTranslations("dashboard");
   const tEnums = useTranslations("enums");
+  const tSales = useTranslations("sales") as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
   const locale = useLocale();
   const ticketStatusLabels = {
     open: tEnums("ticketStatus.open"),
@@ -48,43 +57,99 @@ export function DashboardCharts({
     converted: tEnums("recipientStatus.converted"),
   };
 
+  const pipelineStages = [...new Set(pipeline.map((item) => item.stage))];
+  const pipelineCurrencies = [...new Set(pipeline.map((item) => item.currency))].sort();
+  const pipelineValues = new Map(
+    pipeline.map((item) => [`${item.stage}:${item.currency}`, item.value]),
+  );
+  const pipelineChartData = pipelineStages.map((stage) => {
+    const row: Record<string, string | number> = { stage };
+    for (const currency of pipelineCurrencies) {
+      row[currency] = pipelineValues.get(`${stage}:${currency}`) ?? 0;
+    }
+    return row;
+  });
+
   return (
     <div className="grid gap-6 xl:grid-cols-3">
       <Card className="xl:col-span-2">
         <CardHeader>
           <CardTitle>{t("openDealValueByStage")}</CardTitle>
         </CardHeader>
-        <CardContent className="h-72">
-          {pipeline.length === 0 ? (
-            <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              {t("noPipelineData")}
-            </p>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pipeline} margin={{ top: 4, right: 8, left: 8, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="stage" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis
-                  tickFormatter={(value) =>
-                    formatCurrencyUsd(Number(value), locale, {
-                      notation: "compact",
-                      maximumFractionDigits: 1,
-                    })
-                  }
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={12}
-                />
-                <Tooltip formatter={(value) => formatCurrency(Number(value), locale)} />
-                <Bar
-                  dataKey="value"
-                  name={t("seriesDealValue")}
-                  fill="#4f6bed"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+        <CardContent className="space-y-4">
+          <div className="h-64">
+            {pipeline.length === 0 ? (
+              <p className="text-muted-foreground flex h-full items-center justify-center text-sm">
+                {t("noPipelineData")}
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={pipelineChartData}
+                  margin={{ top: 4, right: 8, left: 8, bottom: 4 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="stage" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis
+                    tickFormatter={(value) =>
+                      formatNumber(Number(value), locale, {
+                        notation: "compact",
+                        maximumFractionDigits: 1,
+                      })
+                    }
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                  />
+                  <Tooltip
+                    formatter={(value, name) => [
+                      formatCurrency(Number(value), locale, String(name)),
+                      String(name),
+                    ]}
+                  />
+                  <Legend />
+                  {pipelineCurrencies.map((currency, index) => (
+                    <Bar
+                      key={currency}
+                      dataKey={currency}
+                      name={currency}
+                      stackId="commission"
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          {pipeline.length > 0 ? (
+            <table className="sr-only">
+              <caption>{t("openDealValueByStage")}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{tSales("stage")}</th>
+                  <th scope="col">{tSales("currency")}</th>
+                  <th scope="col">{tSales("commission")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pipelineStages.flatMap((stage) =>
+                  pipelineCurrencies.map((currency) => (
+                    <tr key={`${stage}:${currency}`}>
+                      <td>{stage}</td>
+                      <td>{currency}</td>
+                      <td>
+                        {formatCurrency(
+                          pipelineValues.get(`${stage}:${currency}`) ?? 0,
+                          locale,
+                          currency,
+                        )}
+                      </td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -94,7 +159,7 @@ export function DashboardCharts({
         </CardHeader>
         <CardContent className="h-72">
           {tickets.length === 0 ? (
-            <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground flex h-full items-center justify-center text-sm">
               {t("noTickets")}
             </p>
           ) : (
@@ -129,7 +194,7 @@ export function DashboardCharts({
         </CardHeader>
         <CardContent className="h-64">
           {campaigns.length === 0 ? (
-            <p className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground flex h-full items-center justify-center text-sm">
               {t("noCampaignRecipients")}
             </p>
           ) : (
@@ -137,9 +202,7 @@ export function DashboardCharts({
               <BarChart
                 data={campaigns.map((item) => ({
                   ...item,
-                  name: recipientStatusLabels[
-                    item.status as keyof typeof recipientStatusLabels
-                  ],
+                  name: recipientStatusLabels[item.status as keyof typeof recipientStatusLabels],
                 }))}
                 margin={{ top: 4, right: 8, left: 8, bottom: 4 }}
               >

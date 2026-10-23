@@ -6,20 +6,17 @@ import { requireUserForAction } from "@/lib/auth/guards";
 import { fieldErrorsFromZod, type ActionState } from "@/lib/action-state";
 import { errorDescriptor } from "@/lib/errors";
 import { activitySchema, taskSchema } from "@/lib/validation/engagement";
-import {
-  createActivity,
-  deleteActivity,
-  updateActivity,
-} from "@/lib/services/timeline";
-import {
-  completeTask,
-  createTask,
-  deleteTask,
-  reopenTask,
-  updateTask,
-} from "@/lib/services/tasks";
+import { createActivity, deleteActivity, updateActivity } from "@/lib/services/timeline";
+import { completeTask, createTask, deleteTask, reopenTask, updateTask } from "@/lib/services/tasks";
 
-const linkFields = ["companyId", "contactId", "dealId", "ticketId", "campaignId"] as const;
+const linkFields = [
+  "companyId",
+  "contactId",
+  "dealId",
+  "listingId",
+  "ticketId",
+  "campaignId",
+] as const;
 
 function linksFromFormData(formData: FormData) {
   return Object.fromEntries(
@@ -57,6 +54,7 @@ function revalidateRecordPaths(links: Record<string, string | null>) {
   if (links.companyId) revalidatePath(`/companies/${links.companyId}`);
   if (links.contactId) revalidatePath(`/contacts/${links.contactId}`);
   if (links.dealId) revalidatePath(`/deals/${links.dealId}`);
+  if (links.listingId) revalidatePath(`/listings/${links.listingId}`);
   if (links.ticketId) revalidatePath(`/tickets/${links.ticketId}`);
   if (links.campaignId) revalidatePath(`/campaigns/${links.campaignId}`);
 }

@@ -1,18 +1,24 @@
-import { and, count, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, count, eq, gte, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
-import {
-  campaigns,
-  campaignRecipients,
-  deals,
-  stages,
-  tickets,
-} from "@/db/schema";
+import { campaigns, campaignRecipients, deals, stages, tickets } from "@/db/schema";
 import { getTaskStats } from "@/lib/services/tasks";
 import { getRecentActivities } from "@/lib/services/timeline";
 import { getDefaultPipeline } from "@/lib/services/pipelines";
+import { getListingsDashboard } from "@/lib/services/listings-dashboard";
 import { getTicketSla } from "@/lib/sla";
 import { addDays, todayUtc } from "@/lib/dates";
 import { ACTIVE_TICKET_STATUSES } from "@/lib/constants";
+
+export type CurrencyTotal = {
+  currency: string;
+  total: number;
+};
+
+function currencyTotals(rows: Array<{ currency: string; value: string | number | null }>) {
+  return rows
+    .map((row) => ({ currency: row.currency, total: Number(row.value ?? 0) }))
+    .sort((left, right) => left.currency.localeCompare(right.currency));
+}
 
 export async function getSalesDashboard() {
   const now = new Date();
@@ -20,28 +26,37 @@ export async function getSalesDashboard() {
   const today = todayUtc(now);
   const inThirtyDays = addDays(now, 30).toISOString().slice(0, 10);
 
-  const [openRow, weightedRow, wonRow, wonLostRows, closingRow] = await Promise.all([
+  const [openRows, weightedRows, wonRows, wonLostRows, closingRow] = await Promise.all([
     db
       .select({
+        currency: deals.currency,
         count: count(),
         value: sql<string>`coalesce(sum(${deals.amount}), 0)`,
       })
       .from(deals)
-      .where(eq(deals.status, "open")),
+      .where(eq(deals.status, "open"))
+      .groupBy(deals.currency)
+      .orderBy(asc(deals.currency)),
     db
       .select({
+        currency: deals.currency,
         value: sql<string>`coalesce(sum(${deals.amount} * ${stages.probability} / 100.0), 0)`,
       })
       .from(deals)
       .innerJoin(stages, eq(deals.stageId, stages.id))
-      .where(eq(deals.status, "open")),
+      .where(eq(deals.status, "open"))
+      .groupBy(deals.currency)
+      .orderBy(asc(deals.currency)),
     db
       .select({
+        currency: deals.currency,
         count: count(),
         value: sql<string>`coalesce(sum(${deals.amount}), 0)`,
       })
       .from(deals)
-      .where(and(eq(deals.status, "won"), gte(deals.closedAt, monthStart))),
+      .where(and(eq(deals.status, "won"), gte(deals.closedAt, monthStart)))
+      .groupBy(deals.currency)
+      .orderBy(asc(deals.currency)),
     db
       .select({ status: deals.status, count: count() })
       .from(deals)
@@ -64,11 +79,11 @@ export async function getSalesDashboard() {
   const winRate = won + lost > 0 ? (won / (won + lost)) * 100 : 0;
 
   return {
-    openCount: Number(openRow[0]?.count ?? 0),
-    openValue: Number(openRow[0]?.value ?? 0),
-    weightedValue: Number(weightedRow[0]?.value ?? 0),
-    wonThisMonthCount: Number(wonRow[0]?.count ?? 0),
-    wonThisMonthValue: Number(wonRow[0]?.value ?? 0),
+    openCount: openRows.reduce((sum, row) => sum + Number(row.count), 0),
+    openValueByCurrency: currencyTotals(openRows),
+    weightedValueByCurrency: currencyTotals(weightedRows),
+    wonThisMonthCount: wonRows.reduce((sum, row) => sum + Number(row.count), 0),
+    wonThisMonthByCurrency: currencyTotals(wonRows),
     winRate,
     closingSoonCount: Number(closingRow[0]?.count ?? 0),
   };
@@ -154,33 +169,63 @@ export async function getCampaignEngagementChart() {
 export async function getPipelineChart() {
   const pipeline = await getDefaultPipeline();
   if (!pipeline) return [];
-  const rows = await db
-    .select({
-      stageId: stages.id,
-      stageName: stages.name,
-      position: stages.position,
-      value: sql<string>`coalesce(sum(case when ${deals.status} = 'open' then ${deals.amount} else 0 end), 0)`,
-    })
-    .from(stages)
-    .leftJoin(deals, eq(deals.stageId, stages.id))
-    .where(eq(stages.pipelineId, pipeline.id))
-    .groupBy(stages.id, stages.name, stages.position)
-    .orderBy(stages.position);
-  return rows.map((row) => ({ stage: row.stageName, value: Number(row.value) }));
+
+  const [stageRows, totals] = await Promise.all([
+    db
+      .select({ id: stages.id, name: stages.name, position: stages.position })
+      .from(stages)
+      .where(eq(stages.pipelineId, pipeline.id))
+      .orderBy(stages.position),
+    db
+      .select({
+        stageId: deals.stageId,
+        currency: deals.currency,
+        value: sql<string>`coalesce(sum(${deals.amount}), 0)`,
+      })
+      .from(deals)
+      .where(and(eq(deals.pipelineId, pipeline.id), eq(deals.status, "open")))
+      .groupBy(deals.stageId, deals.currency)
+      .orderBy(deals.currency),
+  ]);
+
+  const currencies = [...new Set(totals.map((row) => row.currency))].sort();
+  if (currencies.length === 0) return [];
+
+  const totalsByStageAndCurrency = new Map(
+    totals.map((row) => [`${row.stageId}:${row.currency}`, Number(row.value)]),
+  );
+
+  return stageRows.flatMap((stage) =>
+    currencies.map((currency) => ({
+      stage: stage.name,
+      currency,
+      value: totalsByStageAndCurrency.get(`${stage.id}:${currency}`) ?? 0,
+    })),
+  );
 }
 
 export async function getDashboardData(userId: string) {
-  const [sales, support, marketing, tasks, recentActivity, pipelineChart, ticketChart, campaignChart] =
-    await Promise.all([
-      getSalesDashboard(),
-      getSupportDashboard(),
-      getMarketingDashboard(),
-      getTaskStats(userId),
-      getRecentActivities(10),
-      getPipelineChart(),
-      getTicketStatusChart(),
-      getCampaignEngagementChart(),
-    ]);
+  const [
+    sales,
+    support,
+    marketing,
+    tasks,
+    recentActivity,
+    listings,
+    pipelineChart,
+    ticketChart,
+    campaignChart,
+  ] = await Promise.all([
+    getSalesDashboard(),
+    getSupportDashboard(),
+    getMarketingDashboard(),
+    getTaskStats(userId),
+    getRecentActivities(10),
+    getListingsDashboard(),
+    getPipelineChart(),
+    getTicketStatusChart(),
+    getCampaignEngagementChart(),
+  ]);
 
   return {
     sales,
@@ -188,6 +233,7 @@ export async function getDashboardData(userId: string) {
     marketing,
     tasks,
     recentActivity,
+    listings,
     charts: {
       pipeline: pipelineChart,
       tickets: ticketChart,

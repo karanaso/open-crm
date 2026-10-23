@@ -61,7 +61,11 @@ export default async function TasksPage({
   const upcomingLimit = addDays(new Date(), 7).toISOString().slice(0, 10);
 
   const groups = [
-    { key: "overdue", label: tCommon("overdue"), items: open.filter((task) => task.dueDate < today) },
+    {
+      key: "overdue",
+      label: tCommon("overdue"),
+      items: open.filter((task) => task.dueDate < today),
+    },
     { key: "today", label: t("dueToday"), items: open.filter((task) => task.dueDate === today) },
     {
       key: "upcoming",
@@ -82,10 +86,7 @@ export default async function TasksPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={t("tasks")}
-        description={t("tasksDescription")}
-      />
+      <PageHeader title={t("tasks")} description={t("tasksDescription")} />
 
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild variant={params.view === "mine" ? "default" : "outline"} size="sm">
@@ -104,7 +105,7 @@ export default async function TasksPage({
               name="assigneeId"
               defaultValue={params.assigneeId ?? ""}
               aria-label={tCommon("filterByAssignee")}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="border-input bg-background h-9 rounded-md border px-3 text-sm"
             >
               <option value="">{tCommon("allAssignees")}</option>
               {activeMembers.map((member) => (
@@ -117,7 +118,7 @@ export default async function TasksPage({
               name="priority"
               defaultValue={params.priority ?? ""}
               aria-label={tCommon("filterByPriority")}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="border-input bg-background h-9 rounded-md border px-3 text-sm"
             >
               <option value="">{tCommon("allPriorities")}</option>
               <option value="high">{tEnums("taskPriority.high")}</option>
@@ -128,7 +129,7 @@ export default async function TasksPage({
               name="status"
               defaultValue={params.status ?? ""}
               aria-label={tCommon("filterByStatus")}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="border-input bg-background h-9 rounded-md border px-3 text-sm"
             >
               <option value="">{t("allTaskStatuses")}</option>
               <option value="open">{tEnums("taskStatus.open")}</option>
@@ -138,12 +139,13 @@ export default async function TasksPage({
               name="recordType"
               defaultValue={params.recordType ?? ""}
               aria-label={t("filterByLinkedRecord")}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="border-input bg-background h-9 rounded-md border px-3 text-sm"
             >
               <option value="">{t("anyRecord")}</option>
               <option value="company">{t("recordCompany")}</option>
               <option value="contact">{t("recordContact")}</option>
               <option value="deal">{t("recordDeal")}</option>
+              <option value="listing">{t("recordListing")}</option>
               <option value="ticket">{t("recordTicket")}</option>
               <option value="campaign">{t("recordCampaign")}</option>
             </select>
@@ -166,13 +168,17 @@ export default async function TasksPage({
             <Card key={group.key}>
               <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>{group.label}</CardTitle>
-                <Badge variant={group.key === "overdue" && group.items.length > 0 ? "destructive" : "outline"}>
+                <Badge
+                  variant={
+                    group.key === "overdue" && group.items.length > 0 ? "destructive" : "outline"
+                  }
+                >
                   {group.items.length}
                 </Badge>
               </CardHeader>
               <CardContent>
                 {group.items.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t("nothingHere")}</p>
+                  <p className="text-muted-foreground text-sm">{t("nothingHere")}</p>
                 ) : (
                   <ul className="space-y-2">
                     {group.items.map((task) => (

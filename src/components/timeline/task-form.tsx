@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { todayUtc } from "@/lib/dates";
 
-const linkFields = ["companyId", "contactId", "dealId", "ticketId", "campaignId"] as const;
+const linkFields = ["companyId", "contactId", "dealId", "listingId", "ticketId", "campaignId"] as const;
 
 type TaskInitial = {
   id: string;
@@ -22,6 +22,7 @@ type TaskInitial = {
   companyId?: string | null;
   contactId?: string | null;
   dealId?: string | null;
+  listingId?: string | null;
   ticketId?: string | null;
   campaignId?: string | null;
 };

@@ -7,16 +7,27 @@ import { requireUser } from "@/lib/auth/guards";
 import { getPipelineOptions } from "@/lib/services/pipelines";
 import { getCompanyPickerOptions } from "@/lib/services/companies";
 import { getContactPickerOptions } from "@/lib/services/contacts";
+import { getListingOptions } from "@/lib/services/listings";
 import { listTeamMembers } from "@/lib/services/users";
+import { getWorkspaceDefaults } from "@/lib/services/workspace-settings";
+import { getParam } from "@/lib/search-params";
 
-export default async function NewDealPage() {
+export default async function NewDealPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const raw = await searchParams;
+  const listingId = getParam(raw, "listingId") || undefined;
   const user = await requireUser();
   const t = await getTranslations("sales");
-  const [pipelines, companies, contacts, team] = await Promise.all([
+  const [pipelines, companies, contacts, listings, team, workspace] = await Promise.all([
     getPipelineOptions(),
     getCompanyPickerOptions(),
     getContactPickerOptions(),
+    getListingOptions(),
     listTeamMembers(),
+    getWorkspaceDefaults(),
   ]);
 
   const owners = team
@@ -38,8 +49,11 @@ export default async function NewDealPage() {
               lastName: contact.lastName,
               companyId: contact.companyId,
             }))}
+            listings={listings}
             owners={owners}
             defaultOwnerId={user.id}
+            defaultCurrency={workspace.defaultCurrency}
+            defaultListingId={listingId}
             submitLabel={t("createDeal")}
             cancelHref="/deals"
           />
