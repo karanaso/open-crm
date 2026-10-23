@@ -95,6 +95,7 @@ Shared cross-cutting code: activity timeline, tasks, validation, auth guards, UI
 | `backend` | subagent | Schema, migrations, services, Server Actions, auth, validation, API routes |
 | `frontend` | subagent | Pages, layouts, forms, client components, accessibility, responsive behavior |
 | `qa` | subagent | Unit/integration/E2E tests, regression checks, accessibility verification |
+| `security` | subagent | Security review of auth/session, authorization, tokens, secrets, and sensitive flows; security tests/docs |
 | `librarian` | subagent | Dependencies, config, shared UI primitives, shared helpers, documentation |
 | `translator` | all | Greek message catalogs, glossary, terminology, pluralization, localization review |
 
@@ -114,6 +115,7 @@ Load the relevant module skill alongside the role agent; do not create per-modul
 
 - Delegation names both the role agent and the module skill, for example "backend + `crm-sales`".
 - Module skills carry file maps and invariants; role agents keep path permissions and shared rules.
+- Security-sensitive changes (auth, sessions, permissions, tokens, secrets) should include a `security` review before merge.
 - Workers return a summary, files changed, tests run, failures, and open questions.
 - Only the lead commits. Workers must not commit or push.
 - Use short-lived branches from `main`: `feat/<scope>`, `fix/<scope>`, `chore/<scope>`.

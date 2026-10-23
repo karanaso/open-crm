@@ -38,6 +38,7 @@ Your job is to keep the change small, correct, integrated, and reviewable. You p
    - `backend` for schema, services, Server Actions, auth, validation, and API routes.
    - `frontend` for pages, forms, layout, components, and accessibility.
    - `qa` for unit, integration, E2E, and accessibility tests.
+   - `security` for security review of auth/session, authorization, tokens, secrets, and sensitive flows; app code is read-only, and it may add security tests/docs.
    - `librarian` for dependencies, config, shared UI primitives, shared helpers, and docs.
    - `translator` for UI message catalogs, Greek terminology, and localization review.
    - Built-in `explore` for read-only investigation.
