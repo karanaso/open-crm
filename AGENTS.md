@@ -79,9 +79,17 @@ Shared cross-cutting code: activity timeline, tasks, validation, auth guards, UI
 
 ## Agent workflow
 
-- `lead` is the primary tech lead. It plans, delegates, reviews, and owns branches/commits/merges.
-- `translator` is the shared localization specialist. It edits only `messages/**` and `docs/i18n/**`.
-- Planned specialists: `backend`, `frontend`, `qa`, `librarian`.
+### Current roster
+
+| Agent | Mode | Owns |
+| --- | --- | --- |
+| `lead` | primary | Planning, delegation, review, integration, branch/commit/merge decisions |
+| `backend` | subagent | Schema, migrations, services, Server Actions, auth, validation, API routes |
+| `frontend` | subagent | Pages, layouts, forms, client components, accessibility, responsive behavior |
+| `qa` | subagent | Unit/integration/E2E tests, regression checks, accessibility verification |
+| `librarian` | subagent | Dependencies, config, shared UI primitives, shared helpers, documentation |
+| `translator` | all | Greek-first message catalogs, glossary, terminology, pluralization, localization review |
+
 - Module knowledge should live in skills such as `crm-directory`, `crm-sales`, `crm-support`, `crm-marketing`, `crm-dashboard`, and `crm-access`.
 - Workers return a summary, files changed, tests run, failures, and open questions.
 - Only the lead commits. Workers must not commit or push.
@@ -89,6 +97,7 @@ Shared cross-cutting code: activity timeline, tasks, validation, auth guards, UI
 - Make small Conventional Commits. One logical change per commit.
 - Use separate worktrees when parallel agents would edit the same working tree.
 - Merge back to `main` only after verification.
+- The lead resolves cross-cutting changes that span role boundaries.
 
 ## Security and repository hygiene
 
