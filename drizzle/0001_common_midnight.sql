@@ -1,0 +1,2 @@
+ALTER TABLE "campaign_recipients" ADD COLUMN "status_updated_by_id" uuid;--> statement-breakpoint
+ALTER TABLE "campaign_recipients" ADD CONSTRAINT "campaign_recipients_status_updated_by_id_users_id_fk" FOREIGN KEY ("status_updated_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
