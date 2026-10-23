@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Building2, Handshake, LifeBuoy, Megaphone, Users } from "lucide-react";
 import {
   CommandDialog,
@@ -11,6 +11,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { formatCurrency } from "@/lib/utils";
 import type { GlobalSearchResults, SearchResult } from "@/lib/services/search";
 
 const emptyResults: GlobalSearchResults = {
@@ -47,6 +48,21 @@ export function GlobalSearchDialog({
   const [loading, setLoading] = useState(false);
   const t = useTranslations("common");
   const tNav = useTranslations("nav");
+  const tEnums = useTranslations("enums");
+  const locale = useLocale();
+
+  function resultSubtitle(item: SearchResult, groupKey: keyof GlobalSearchResults) {
+    const parts: string[] = [];
+    if (groupKey === "campaigns") parts.push(t("campaign"));
+    if (item.subtitle) parts.push(item.subtitle);
+    if (item.amount) parts.push(formatCurrency(item.amount, locale));
+    if (item.status) {
+      const group = groupKey === "tickets" ? "ticketStatus" : "campaignStatus";
+      parts.push(tEnums(`${group}.${item.status}` as never));
+    }
+    if (groupKey === "companies" && !item.subtitle) parts.push(t("company"));
+    return parts.join(" · ");
+  }
 
   useEffect(() => {
     if (!open) {
@@ -110,19 +126,22 @@ export function GlobalSearchDialog({
           const Icon = group.icon;
           return (
             <CommandGroup key={group.key} heading={tNav(group.labelKey)}>
-              {items.map((item: SearchResult) => (
-                <CommandItem
-                  key={item.id}
-                  value={`${tNav(group.labelKey)} ${item.title} ${item.subtitle}`}
-                  onSelect={() => onSelect(item.href)}
-                >
-                  <Icon className="size-4 text-muted-foreground" />
-                  <div className="min-w-0">
-                    <p className="truncate">{item.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>
-                  </div>
-                </CommandItem>
-              ))}
+              {items.map((item: SearchResult) => {
+                const subtitle = resultSubtitle(item, group.key);
+                return (
+                  <CommandItem
+                    key={item.id}
+                    value={`${tNav(group.labelKey)} ${item.title} ${subtitle}`}
+                    onSelect={() => onSelect(item.href)}
+                  >
+                    <Icon className="size-4 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <p className="truncate">{item.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+                    </div>
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           );
         })}

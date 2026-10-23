@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CsvImportForm } from "@/components/directory/csv-import-form";
@@ -12,13 +13,11 @@ export default async function ImportPage({
   await requireUser();
   const raw = await searchParams;
   const target = getParam(raw, "target") === "contacts" ? "contacts" : "companies";
+  const t = await getTranslations("directory");
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader
-        title="Import CSV"
-        description="Bulk-add companies or contacts. Map columns, preview the rows, then confirm."
-      />
+      <PageHeader title={t("import")} description={t("importDescription")} />
       <Card>
         <CardContent className="pt-5">
           <CsvImportForm defaultTarget={target} />

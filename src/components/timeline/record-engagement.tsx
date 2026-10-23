@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { ActivityForm } from "@/components/timeline/activity-form";
 import { TaskSection } from "@/components/timeline/task-section";
 import { TimelineList } from "@/components/timeline/timeline-list";
@@ -6,7 +7,7 @@ import type { TaskListItem } from "@/lib/services/tasks";
 import type { TimelineItem } from "@/lib/services/timeline";
 import type { User } from "@/db/schema";
 
-export function RecordEngagement({
+export async function RecordEngagement({
   currentUser,
   links,
   returnTo,
@@ -25,6 +26,8 @@ export function RecordEngagement({
   tasks: TaskListItem[];
   assignees: Array<{ id: string; name: string; status: "active" | "inactive" }>;
 }) {
+  const t = await getTranslations("timeline");
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <TimelineList
@@ -38,7 +41,7 @@ export function RecordEngagement({
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Log activity</CardTitle>
+            <CardTitle>{t("logActivity")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ActivityForm links={links} returnTo={returnTo} />

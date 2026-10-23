@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Building2, CalendarDays, Pencil, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,9 @@ export default async function DealDetailPage({
   const currentUser = await requireUser();
   const filterType = getParam(raw, "activityType");
   const timelinePage = Math.max(1, Number(getParam(raw, "timelinePage") ?? 1) || 1);
+  const t = await getTranslations("sales");
+  const tCommon = await getTranslations("common");
+  const locale = await getLocale();
 
   const [pipeline, timeline, tasks, team] = await Promise.all([
     getPipeline(deal.pipelineId),
@@ -52,7 +56,7 @@ export default async function DealDetailPage({
         actions={
           <Button variant="outline" asChild>
             <Link href={`/deals/${deal.id}/edit`}>
-              <Pencil className="size-4" /> Edit
+              <Pencil className="size-4" /> {tCommon("edit")}
             </Link>
           </Button>
         }
@@ -62,26 +66,26 @@ export default async function DealDetailPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Deal overview</CardTitle>
+              <CardTitle>{t("dealOverview")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-sm text-muted-foreground">Amount</p>
-                <p className="text-2xl font-semibold">{formatCurrency(deal.amount)}</p>
+                <p className="text-sm text-muted-foreground">{t("amount")}</p>
+                <p className="text-2xl font-semibold">{formatCurrency(deal.amount, locale)}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="text-sm text-muted-foreground">{tCommon("status")}</p>
                 <DealStatusBadge status={deal.status} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Company</p>
+                <p className="text-sm text-muted-foreground">{tCommon("company")}</p>
                 <Link href={`/companies/${deal.companyId}`} className="flex items-center gap-2 font-medium hover:underline">
                   <Building2 className="size-4" /> {deal.companyName}
-                  {deal.companyArchivedAt ? <Badge variant="outline">Archived</Badge> : null}
+                  {deal.companyArchivedAt ? <Badge variant="outline">{tCommon("archived")}</Badge> : null}
                 </Link>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Primary contact</p>
+                <p className="text-sm text-muted-foreground">{t("primaryContact")}</p>
                 {deal.contactId ? (
                   <Link href={`/contacts/${deal.contactId}`} className="font-medium hover:underline">
                     {deal.contactName}
@@ -91,33 +95,33 @@ export default async function DealDetailPage({
                 )}
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Owner</p>
+                <p className="text-sm text-muted-foreground">{tCommon("owner")}</p>
                 <p className="flex items-center gap-2 font-medium">
                   <UserRound className="size-4" /> {deal.ownerName}
-                  {deal.ownerStatus === "inactive" ? <Badge variant="outline">Inactive</Badge> : null}
+                  {deal.ownerStatus === "inactive" ? <Badge variant="outline">{tCommon("inactive")}</Badge> : null}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Expected close</p>
+                <p className="text-sm text-muted-foreground">{t("expectedClose")}</p>
                 <p className="flex items-center gap-2">
                   <CalendarDays className="size-4" /> <DateDisplay value={deal.expectedCloseDate} />
                 </p>
               </div>
               {deal.closedAt ? (
                 <div>
-                  <p className="text-sm text-muted-foreground">Closed</p>
+                  <p className="text-sm text-muted-foreground">{t("closed")}</p>
                   <LocalTime value={deal.closedAt} />
                 </div>
               ) : null}
               {deal.lostReason ? (
                 <div className="sm:col-span-2">
-                  <p className="text-sm text-muted-foreground">Lost reason</p>
+                  <p className="text-sm text-muted-foreground">{t("lostReason")}</p>
                   <p>{deal.lostReason}</p>
                 </div>
               ) : null}
               {deal.description ? (
                 <div className="sm:col-span-2">
-                  <p className="text-sm text-muted-foreground">Description</p>
+                  <p className="text-sm text-muted-foreground">{tCommon("description")}</p>
                   <p className="whitespace-pre-wrap">{deal.description}</p>
                 </div>
               ) : null}
@@ -128,7 +132,7 @@ export default async function DealDetailPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Pipeline stage</CardTitle>
+              <CardTitle>{t("pipelineStage")}</CardTitle>
             </CardHeader>
             <CardContent>
               {pipeline ? (
@@ -139,7 +143,7 @@ export default async function DealDetailPage({
                   expectedUpdatedAt={deal.updatedAt.toISOString()}
                 />
               ) : (
-                <p className="text-sm text-muted-foreground">Pipeline not available.</p>
+                <p className="text-sm text-muted-foreground">{t("pipelineUnavailable")}</p>
               )}
             </CardContent>
           </Card>

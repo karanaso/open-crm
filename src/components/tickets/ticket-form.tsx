@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useActionState, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
 import { FormError, FormField } from "@/components/ui/form-field";
@@ -43,6 +44,9 @@ export function TicketForm({
   cancelHref: string;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
+  const t = useTranslations("support");
+  const tCommon = useTranslations("common");
+  const tEnums = useTranslations("enums");
   const [query, setQuery] = useState("");
   const [requesterId, setRequesterId] = useState(initial?.requesterContactId ?? "");
   const selectedContact = contacts.find((contact) => contact.id === requesterId);
@@ -64,13 +68,13 @@ export function TicketForm({
       {initial ? <input type="hidden" name="expectedUpdatedAt" value={initial.updatedAt} /> : null}
       <FormError message={state?.error} />
 
-      <FormField label="Subject" htmlFor="subject" error={state?.fieldErrors?.subject?.[0]} required>
+      <FormField label={tCommon("subject")} htmlFor="subject" error={state?.fieldErrors?.subject?.[0]} required>
         <Input id="subject" name="subject" defaultValue={initial?.subject ?? ""} required autoFocus />
       </FormField>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
-          label="Requester"
+          label={tCommon("requester")}
           htmlFor="requesterContactId"
           error={state?.fieldErrors?.requesterContactId?.[0]}
           className="sm:col-span-2"
@@ -80,8 +84,8 @@ export function TicketForm({
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search contacts by name, email, or company…"
-              aria-label="Search requesters"
+              placeholder={t("searchRequestersPlaceholder")}
+              aria-label={t("searchRequesters")}
             />
             <select
               id="requesterContactId"
@@ -91,7 +95,7 @@ export function TicketForm({
               required
               className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">Select a requester</option>
+              <option value="">{t("selectRequester")}</option>
               {filteredContacts.map((contact) => (
                 <option key={contact.id} value={contact.id}>
                   {contact.firstName} {contact.lastName} · {contact.email}
@@ -100,53 +104,55 @@ export function TicketForm({
               ))}
             </select>
             <p className="text-xs text-muted-foreground">
-              Company: {selectedContact?.companyName ?? "No company linked to this contact"}
+              {selectedContact?.companyName
+                ? t("contactCompany", { company: selectedContact.companyName })
+                : t("noCompanyLinked")}
             </p>
           </div>
         </FormField>
 
-        <FormField label="Priority" htmlFor="priority" error={state?.fieldErrors?.priority?.[0]} required>
+        <FormField label={tCommon("priority")} htmlFor="priority" error={state?.fieldErrors?.priority?.[0]} required>
           <select
             id="priority"
             name="priority"
             defaultValue={initial?.priority ?? "normal"}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="normal">Normal</option>
-            <option value="low">Low</option>
+            <option value="urgent">{tEnums("ticketPriority.urgent")}</option>
+            <option value="high">{tEnums("ticketPriority.high")}</option>
+            <option value="normal">{tEnums("ticketPriority.normal")}</option>
+            <option value="low">{tEnums("ticketPriority.low")}</option>
           </select>
         </FormField>
 
-        <FormField label="Assignee" htmlFor="assigneeId" error={state?.fieldErrors?.assigneeId?.[0]}>
+        <FormField label={tCommon("assignee")} htmlFor="assigneeId" error={state?.fieldErrors?.assigneeId?.[0]}>
           <select
             id="assigneeId"
             name="assigneeId"
             defaultValue={initial?.assigneeId ?? "none"}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="none">Unassigned</option>
+            <option value="none">{tCommon("unassigned")}</option>
             {assignees.map((assignee) => (
               <option key={assignee.id} value={assignee.id}>
                 {assignee.name}
-                {assignee.status === "inactive" ? " (inactive)" : ""}
+                {assignee.status === "inactive" ? tCommon("inactiveSuffix") : ""}
               </option>
             ))}
           </select>
         </FormField>
       </div>
 
-      <FormField label="Description" htmlFor="description" error={state?.fieldErrors?.description?.[0]} required>
+      <FormField label={tCommon("description")} htmlFor="description" error={state?.fieldErrors?.description?.[0]} required>
         <Textarea id="description" name="description" defaultValue={initial?.description ?? ""} className="min-h-40" required />
       </FormField>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild>
-          <Link href={cancelHref as Route}>Cancel</Link>
+          <Link href={cancelHref as Route}>{tCommon("cancel")}</Link>
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? tCommon("saving") : submitLabel}
         </Button>
       </div>
     </form>

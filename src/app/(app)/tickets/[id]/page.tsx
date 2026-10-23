@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Building2, Pencil, ShieldAlert, Timer } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageError } from "@/components/ui/page-error";
@@ -16,6 +17,8 @@ import { getTicket, getTicketComments } from "@/lib/services/tickets";
 import { getTimeline } from "@/lib/services/timeline";
 import { getTasksForRecord } from "@/lib/services/tasks";
 import { listTeamMembers } from "@/lib/services/users";
+import { SLA_HOURS } from "@/lib/constants";
+import { formatDurationHours } from "@/lib/dates";
 import { TICKET_TRANSITIONS } from "@/lib/ticket-status";
 import {
   assignTicketAction,
@@ -35,6 +38,10 @@ export default async function TicketDetailPage({
   if (!ticket) notFound();
 
   const currentUser = await requireUser();
+  const t = await getTranslations("support");
+  const tCommon = await getTranslations("common");
+  const tEnums = await getTranslations("enums");
+  const locale = await getLocale();
   const filterType = getParam(raw, "activityType");
   const timelinePage = Math.max(1, Number(getParam(raw, "timelinePage") ?? 1) || 1);
   const error = getParam(raw, "error");
@@ -52,16 +59,23 @@ export default async function TicketDetailPage({
     .map((member) => ({ id: member.id, name: member.name, status: member.status }));
 
   const allowedStatuses = TICKET_TRANSITIONS[ticket.status].filter((status) => status !== ticket.status);
+  const slaTargets = (targets: { urgent: number; high: number; normal: number; low: number }) =>
+    t("slaTarget", {
+      urgent: `${tEnums("ticketPriority.urgent")} ${formatDurationHours(targets.urgent, locale)}`,
+      high: `${tEnums("ticketPriority.high")} ${formatDurationHours(targets.high, locale)}`,
+      normal: `${tEnums("ticketPriority.normal")} ${formatDurationHours(targets.normal, locale)}`,
+      low: `${tEnums("ticketPriority.low")} ${formatDurationHours(targets.low, locale)}`,
+    });
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={ticket.subject}
-        description={`Requester: ${ticket.requesterName}${ticket.companyName ? ` · ${ticket.companyName}` : ""}`}
+        description={`${t("requesterDescription", { name: ticket.requesterName })}${ticket.companyName ? ` · ${ticket.companyName}` : ""}`}
         actions={
           <Button variant="outline" asChild>
             <Link href={`/tickets/${ticket.id}/edit`}>
-              <Pencil className="size-4" /> Edit
+              <Pencil className="size-4" /> {tCommon("edit")}
             </Link>
           </Button>
         }
@@ -72,14 +86,14 @@ export default async function TicketDetailPage({
       <div className="flex flex-wrap items-center gap-2">
         <TicketStatusBadge status={ticket.status} />
         <PriorityBadge priority={ticket.priority} />
-        {ticket.sla.isOverdue ? <Badge variant="destructive">SLA overdue</Badge> : null}
+        {ticket.sla.isOverdue ? <Badge variant="destructive">{t("slaOverdue")}</Badge> : null}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Description</CardTitle>
+              <CardTitle>{tCommon("description")}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm whitespace-pre-wrap">{ticket.description}</p>
@@ -90,50 +104,60 @@ export default async function TicketDetailPage({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
-                  <Timer className="size-4" /> First response
+                  <Timer className="size-4" /> {t("firstResponse")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  Target: urgent 1h · high 4h · normal 8h · low 24h
+                  {slaTargets({
+                    urgent: SLA_HOURS.urgent.firstResponse,
+                    high: SLA_HOURS.high.firstResponse,
+                    normal: SLA_HOURS.normal.firstResponse,
+                    low: SLA_HOURS.low.firstResponse,
+                  })}
                 </p>
                 <p>
-                  Due <LocalTime value={ticket.sla.firstResponseDue} />
+                  {t("due")} <LocalTime value={ticket.sla.firstResponseDue} />
                 </p>
                 {ticket.firstResponseAt ? (
                   <Badge variant={ticket.sla.firstResponseMet ? "success" : "warning"}>
-                    {ticket.sla.firstResponseMet ? "Met" : "Breached"} ·{" "}
+                    {ticket.sla.firstResponseMet ? t("met") : t("breached")} ·{" "}
                     <LocalTime value={ticket.firstResponseAt} />
                   </Badge>
                 ) : ticket.sla.firstResponseOverdue ? (
-                  <Badge variant="destructive">Overdue</Badge>
+                  <Badge variant="destructive">{tCommon("overdue")}</Badge>
                 ) : (
-                  <Badge variant="info">Waiting for reply</Badge>
+                  <Badge variant="info">{t("waitingForReply")}</Badge>
                 )}
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sm">
-                  <ShieldAlert className="size-4" /> Resolution
+                  <ShieldAlert className="size-4" /> {t("resolution")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
                 <p className="text-muted-foreground">
-                  Target: urgent 8h · high 24h · normal 48h · low 72h
+                  {slaTargets({
+                    urgent: SLA_HOURS.urgent.resolution,
+                    high: SLA_HOURS.high.resolution,
+                    normal: SLA_HOURS.normal.resolution,
+                    low: SLA_HOURS.low.resolution,
+                  })}
                 </p>
                 <p>
-                  Due <LocalTime value={ticket.sla.resolutionDue} />
+                  {t("due")} <LocalTime value={ticket.sla.resolutionDue} />
                 </p>
                 {ticket.resolvedAt ? (
                   <Badge variant={ticket.sla.resolutionMet ? "success" : "warning"}>
-                    {ticket.sla.resolutionMet ? "Met" : "Breached"} ·{" "}
+                    {ticket.sla.resolutionMet ? t("met") : t("breached")} ·{" "}
                     <LocalTime value={ticket.resolvedAt} />
                   </Badge>
                 ) : ticket.sla.resolutionOverdue ? (
-                  <Badge variant="destructive">Overdue</Badge>
+                  <Badge variant="destructive">{tCommon("overdue")}</Badge>
                 ) : (
-                  <Badge variant="info">In progress</Badge>
+                  <Badge variant="info">{tEnums("ticketStatus.in_progress")}</Badge>
                 )}
               </CardContent>
             </Card>
@@ -141,11 +165,11 @@ export default async function TicketDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Conversation</CardTitle>
+              <CardTitle>{t("conversation")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {comments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No comments yet.</p>
+                <p className="text-sm text-muted-foreground">{t("noComments")}</p>
               ) : (
                 <ul className="space-y-3">
                   {comments.map((comment) => (
@@ -172,18 +196,18 @@ export default async function TicketDetailPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Ticket details</CardTitle>
+              <CardTitle>{t("ticketDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Requester</p>
+                <p className="text-muted-foreground">{tCommon("requester")}</p>
                 <Link href={`/contacts/${ticket.requesterContactId}`} className="font-medium hover:underline">
                   {ticket.requesterName}
                 </Link>
                 <p className="text-xs text-muted-foreground">{ticket.requesterEmail}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Company</p>
+                <p className="text-muted-foreground">{tCommon("company")}</p>
                 {ticket.companyId ? (
                   <Link href={`/companies/${ticket.companyId}`} className="flex items-center gap-2 hover:underline">
                     <Building2 className="size-3.5" /> {ticket.companyName}
@@ -193,16 +217,16 @@ export default async function TicketDetailPage({
                 )}
               </div>
               <div>
-                <p className="text-muted-foreground">Created</p>
+                <p className="text-muted-foreground">{tCommon("created")}</p>
                 <LocalTime value={ticket.createdAt} />
               </div>
               <div className="space-y-2 border-t pt-3">
-                <p className="font-medium">Status</p>
+                <p className="font-medium">{tCommon("status")}</p>
                 <div className="flex flex-wrap gap-1">
                   {allowedStatuses.map((status) => (
                     <form key={status} action={changeTicketStatusAction.bind(null, ticket.id, status, returnTo)}>
                       <Button type="submit" variant="outline" size="sm">
-                        {status.replaceAll("_", " ")}
+                        {tEnums(`ticketStatus.${status}`)}
                       </Button>
                     </form>
                   ))}
@@ -213,7 +237,7 @@ export default async function TicketDetailPage({
                 className="space-y-2 border-t pt-3"
               >
                 <label htmlFor="ticket-assignee" className="font-medium">
-                  Assignee
+                  {tCommon("assignee")}
                 </label>
                 <select
                   id="ticket-assignee"
@@ -221,16 +245,16 @@ export default async function TicketDetailPage({
                   defaultValue={ticket.assigneeId ?? "none"}
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="none">Unassigned</option>
+                  <option value="none">{tCommon("unassigned")}</option>
                   {assignees.map((assignee) => (
                     <option key={assignee.id} value={assignee.id}>
                       {assignee.name}
-                      {assignee.status === "inactive" ? " (inactive)" : ""}
+                      {assignee.status === "inactive" ? tCommon("inactiveSuffix") : ""}
                     </option>
                   ))}
                 </select>
                 <Button type="submit" variant="secondary" size="sm">
-                  Save assignee
+                  {t("saveAssignee")}
                 </Button>
               </form>
               <form
@@ -238,7 +262,7 @@ export default async function TicketDetailPage({
                 className="space-y-2 border-t pt-3"
               >
                 <label htmlFor="ticket-priority" className="font-medium">
-                  Priority
+                  {tCommon("priority")}
                 </label>
                 <select
                   id="ticket-priority"
@@ -246,13 +270,13 @@ export default async function TicketDetailPage({
                   defaultValue={ticket.priority}
                   className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="urgent">Urgent</option>
-                  <option value="high">High</option>
-                  <option value="normal">Normal</option>
-                  <option value="low">Low</option>
+                  <option value="urgent">{tEnums("ticketPriority.urgent")}</option>
+                  <option value="high">{tEnums("ticketPriority.high")}</option>
+                  <option value="normal">{tEnums("ticketPriority.normal")}</option>
+                  <option value="low">{tEnums("ticketPriority.low")}</option>
                 </select>
                 <Button type="submit" variant="secondary" size="sm">
-                  Update priority
+                  {t("updatePriority")}
                 </Button>
               </form>
             </CardContent>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
 import { FormError, FormField } from "@/components/ui/form-field";
@@ -42,6 +43,8 @@ export function CompanyForm({
   submitLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
+  const t = useTranslations("directory");
+  const tCommon = useTranslations("common");
 
   return (
     <form action={formAction} className="space-y-6">
@@ -49,7 +52,7 @@ export function CompanyForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
-          label="Company name"
+          label={t("companyName")}
           htmlFor="name"
           error={state?.fieldErrors?.name?.[0]}
           className="sm:col-span-2"
@@ -57,13 +60,18 @@ export function CompanyForm({
         >
           <Input id="name" name="name" defaultValue={initial?.name ?? ""} required autoFocus />
         </FormField>
-        <FormField label="Domain" htmlFor="domain" error={state?.fieldErrors?.domain?.[0]}>
-          <Input id="domain" name="domain" defaultValue={initial?.domain ?? ""} placeholder="acme.com" />
+        <FormField label={t("domain")} htmlFor="domain" error={state?.fieldErrors?.domain?.[0]}>
+          <Input
+            id="domain"
+            name="domain"
+            defaultValue={initial?.domain ?? ""}
+            placeholder={t("domainPlaceholder")}
+          />
         </FormField>
-        <FormField label="Industry" htmlFor="industry" error={state?.fieldErrors?.industry?.[0]}>
+        <FormField label={t("industry")} htmlFor="industry" error={state?.fieldErrors?.industry?.[0]}>
           <Input id="industry" name="industry" defaultValue={initial?.industry ?? ""} />
         </FormField>
-        <FormField label="Employee count" htmlFor="employeeCount" error={state?.fieldErrors?.employeeCount?.[0]}>
+        <FormField label={t("employeeCount")} htmlFor="employeeCount" error={state?.fieldErrors?.employeeCount?.[0]}>
           <Input
             id="employeeCount"
             name="employeeCount"
@@ -72,13 +80,18 @@ export function CompanyForm({
             defaultValue={initial?.employeeCount ?? ""}
           />
         </FormField>
-        <FormField label="Phone" htmlFor="phone" error={state?.fieldErrors?.phone?.[0]}>
+        <FormField label={tCommon("phone")} htmlFor="phone" error={state?.fieldErrors?.phone?.[0]}>
           <Input id="phone" name="phone" type="tel" defaultValue={initial?.phone ?? ""} />
         </FormField>
-        <FormField label="Website" htmlFor="website" error={state?.fieldErrors?.website?.[0]}>
-          <Input id="website" name="website" defaultValue={initial?.website ?? ""} placeholder="https://" />
+        <FormField label={t("website")} htmlFor="website" error={state?.fieldErrors?.website?.[0]}>
+          <Input
+            id="website"
+            name="website"
+            defaultValue={initial?.website ?? ""}
+            placeholder={t("websitePlaceholder")}
+          />
         </FormField>
-        <FormField label="Owner" htmlFor="ownerId" error={state?.fieldErrors?.ownerId?.[0]} required>
+        <FormField label={tCommon("owner")} htmlFor="ownerId" error={state?.fieldErrors?.ownerId?.[0]} required>
           <select
             id="ownerId"
             name="ownerId"
@@ -88,7 +101,7 @@ export function CompanyForm({
             {owners.map((owner) => (
               <option key={owner.id} value={owner.id}>
                 {owner.name}
-                {owner.status === "inactive" ? " (inactive)" : ""}
+                {owner.status === "inactive" ? tCommon("inactiveSuffix") : ""}
               </option>
             ))}
           </select>
@@ -96,44 +109,45 @@ export function CompanyForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Address line 1" htmlFor="addressLine1">
+        <FormField label={t("addressLine1")} htmlFor="addressLine1">
           <Input id="addressLine1" name="addressLine1" defaultValue={initial?.addressLine1 ?? ""} />
         </FormField>
-        <FormField label="Address line 2" htmlFor="addressLine2">
+        <FormField label={t("addressLine2")} htmlFor="addressLine2">
           <Input id="addressLine2" name="addressLine2" defaultValue={initial?.addressLine2 ?? ""} />
         </FormField>
-        <FormField label="City" htmlFor="city">
+        <FormField label={t("city")} htmlFor="city">
           <Input id="city" name="city" defaultValue={initial?.city ?? ""} />
         </FormField>
-        <FormField label="State / region" htmlFor="region">
+        <FormField label={t("region")} htmlFor="region">
           <Input id="region" name="region" defaultValue={initial?.region ?? ""} />
         </FormField>
-        <FormField label="Postal code" htmlFor="postalCode">
+        <FormField label={t("postalCode")} htmlFor="postalCode">
           <Input id="postalCode" name="postalCode" defaultValue={initial?.postalCode ?? ""} />
         </FormField>
-        <FormField label="Country" htmlFor="country">
+        <FormField label={t("country")} htmlFor="country">
           <Input id="country" name="country" defaultValue={initial?.country ?? ""} />
         </FormField>
       </div>
 
-      <FormField
-        label="Tags"
-        htmlFor="tags"
-        hint="Comma-separated, up to 20 tags. Tags are lowercased automatically."
-      >
-        <Input id="tags" name="tags" defaultValue={initial?.tagNames?.join(", ") ?? ""} placeholder="vip, enterprise" />
+      <FormField label={tCommon("tags")} htmlFor="tags" hint={t("tagsHint")}>
+        <Input
+          id="tags"
+          name="tags"
+          defaultValue={initial?.tagNames?.join(", ") ?? ""}
+          placeholder={t("companyTagsPlaceholder")}
+        />
       </FormField>
 
-      <FormField label="Description" htmlFor="description" error={state?.fieldErrors?.description?.[0]}>
+      <FormField label={tCommon("description")} htmlFor="description" error={state?.fieldErrors?.description?.[0]}>
         <Textarea id="description" name="description" defaultValue={initial?.description ?? ""} />
       </FormField>
 
       <div className="flex items-center justify-end gap-2">
         <Button variant="outline" asChild>
-          <Link href="/companies">Cancel</Link>
+          <Link href="/companies">{tCommon("cancel")}</Link>
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? tCommon("saving") : submitLabel}
         </Button>
       </div>
     </form>

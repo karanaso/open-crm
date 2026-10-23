@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   ArrowRightLeft,
   CalendarDays,
@@ -13,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LocalTime } from "@/components/ui/local-time";
 import { buildHref } from "@/lib/search-params";
-import { cn, titleCase } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { TimelineItem } from "@/lib/services/timeline";
 import type { User } from "@/db/schema";
 
@@ -27,12 +30,12 @@ const typeIcons = {
 } as const;
 
 const filters = [
-  { key: "", label: "All" },
-  { key: "note", label: "Notes" },
-  { key: "call", label: "Calls" },
-  { key: "email", label: "Emails" },
-  { key: "meeting", label: "Meetings" },
-];
+  { key: "", labelKey: "all" },
+  { key: "note", labelKey: "filterNotes" },
+  { key: "call", labelKey: "filterCalls" },
+  { key: "email", labelKey: "filterEmails" },
+  { key: "meeting", labelKey: "filterMeetings" },
+] as const;
 
 export function TimelineList({
   items,
@@ -49,10 +52,22 @@ export function TimelineList({
   pageCount: number;
   currentUser: Pick<User, "id" | "role">;
 }) {
+  const t = useTranslations("timeline");
+  const tCommon = useTranslations("common");
+  const tEnums = useTranslations("enums");
+  const typeLabels: Record<string, string> = {
+    note: tEnums("activityType.note"),
+    call: tEnums("activityType.call"),
+    email: tEnums("activityType.email"),
+    meeting: tEnums("activityType.meeting"),
+    stage_change: tEnums("activityType.stage_change"),
+    task: t("taskType"),
+  };
+
   return (
     <Card>
       <CardHeader className="flex-row flex-wrap items-center justify-between gap-2">
-        <CardTitle>Timeline</CardTitle>
+        <CardTitle>{t("timeline")}</CardTitle>
         <div className="flex flex-wrap gap-1">
           {filters.map((filter) => (
             <Link
@@ -65,7 +80,7 @@ export function TimelineList({
                   : "bg-muted text-muted-foreground hover:bg-accent",
               )}
             >
-              {filter.label}
+              {filter.labelKey === "all" ? tCommon("all") : t(filter.labelKey)}
             </Link>
           ))}
         </div>
@@ -74,13 +89,14 @@ export function TimelineList({
         {items.length === 0 ? (
           <EmptyState
             icon={StickyNote}
-            title="Nothing on the timeline yet"
-            description="Log a note, call, email, or meeting to start the history."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
           />
         ) : (
           <ol className="space-y-4">
             {items.map((item) => {
               const Icon = typeIcons[item.type as keyof typeof typeIcons] ?? StickyNote;
+              const typeLabel = typeLabels[item.type] ?? item.type;
               const canEdit =
                 item.kind === "activity" &&
                 item.type !== "stage_change" &&
@@ -99,11 +115,11 @@ export function TimelineList({
                       <div>
                         <p className="font-medium">{item.subject}</p>
                         <p className="text-xs text-muted-foreground">
-                          {titleCase(item.type)} · {item.authorName} ·{" "}
+                          {typeLabel} · {item.authorName} ·{" "}
                           <LocalTime value={item.occurredAt} />
                         </p>
                       </div>
-                      {item.kind === "task" ? <Badge variant="success">Completed task</Badge> : null}
+                      {item.kind === "task" ? <Badge variant="success">{t("completedTask")}</Badge> : null}
                     </div>
                     {item.type === "stage_change" && item.metadata?.fromStageName ? (
                       <p className="mt-2 text-sm text-muted-foreground">
@@ -161,7 +177,7 @@ export function TimelineList({
               href={buildHref(returnTo, {}, { activityType: filterType, timelinePage: String(page + 1) })}
               className="text-sm font-medium text-primary hover:underline"
             >
-              Load older entries
+              {t("loadOlder")}
             </Link>
           </div>
         ) : null}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Plus, Upload, Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -35,22 +36,24 @@ export default async function ContactsPage({
     ? parsed.data
     : { q: "", archived: "active" as const, page: 1, pageSize: 20 };
   const [data, options] = await Promise.all([listContacts(params), getContactFilterOptions()]);
+  const t = await getTranslations("directory");
+  const tCommon = await getTranslations("common");
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Contacts"
-        description="The people behind your customer relationships, linked to companies and activity."
+        title={t("contacts")}
+        description={t("contactsDescription")}
         actions={
           <>
             <Button asChild variant="outline">
               <Link href="/import?target=contacts">
-                <Upload className="size-4" /> Import CSV
+                <Upload className="size-4" /> {t("import")}
               </Link>
             </Button>
             <Button asChild>
               <Link href="/contacts/new">
-                <Plus className="size-4" /> New contact
+                <Plus className="size-4" /> {t("newContact")}
               </Link>
             </Button>
           </>
@@ -60,14 +63,19 @@ export default async function ContactsPage({
       <Card>
         <CardContent className="pt-5">
           <form method="get" className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
-            <Input name="q" defaultValue={params.q} placeholder="Search name or email…" aria-label="Search contacts" />
+            <Input
+              name="q"
+              defaultValue={params.q}
+              placeholder={t("searchContactsPlaceholder")}
+              aria-label={t("searchContacts")}
+            />
             <select
               name="ownerId"
               defaultValue={params.ownerId ?? ""}
-              aria-label="Filter by owner"
+              aria-label={tCommon("filterByOwner")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">All owners</option>
+              <option value="">{tCommon("allOwners")}</option>
               {options.owners.map((owner) => (
                 <option key={owner.id} value={owner.id}>
                   {owner.name}
@@ -77,10 +85,10 @@ export default async function ContactsPage({
             <select
               name="companyId"
               defaultValue={params.companyId ?? ""}
-              aria-label="Filter by company"
+              aria-label={t("filterByCompany")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">All companies</option>
+              <option value="">{t("allCompanies")}</option>
               {options.companies.map((company) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
@@ -90,8 +98,8 @@ export default async function ContactsPage({
             <Input
               name="tag"
               defaultValue={params.tag ?? ""}
-              placeholder="Tag or tags, comma-separated"
-              aria-label="Filter by tags"
+              placeholder={t("tagsFilterPlaceholder")}
+              aria-label={t("filterByTags")}
               list="contact-tag-options"
             />
             <datalist id="contact-tag-options">
@@ -103,15 +111,15 @@ export default async function ContactsPage({
               <select
                 name="archived"
                 defaultValue={params.archived}
-                aria-label="Archive filter"
+                aria-label={t("archiveFilter")}
                 className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="active">Active</option>
-                <option value="archived">Archived</option>
-                <option value="all">All</option>
+                <option value="active">{tCommon("active")}</option>
+                <option value="archived">{tCommon("archived")}</option>
+                <option value="all">{tCommon("all")}</option>
               </select>
               <Button type="submit" variant="secondary">
-                Filter
+                {tCommon("filter")}
               </Button>
             </div>
           </form>
@@ -121,15 +129,19 @@ export default async function ContactsPage({
       {data.items.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={params.q || params.ownerId || params.tag ? "No contacts match those filters" : "No contacts yet"}
+          title={
+            params.q || params.ownerId || params.tag
+              ? t("contactsNoMatchTitle")
+              : t("contactsEmptyTitle")
+          }
           description={
             params.q || params.ownerId || params.tag
-              ? "Try clearing a filter or searching for a different term."
-              : "Add your first contact to start tracking relationships."
+              ? tCommon("tryClearingFilters")
+              : t("contactsEmptyDescription")
           }
           action={
             <Button asChild>
-              <Link href="/contacts/new">New contact</Link>
+              <Link href="/contacts/new">{t("newContact")}</Link>
             </Button>
           }
         />
@@ -138,12 +150,12 @@ export default async function ContactsPage({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Tags</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead>{tCommon("name")}</TableHead>
+                <TableHead>{tCommon("company")}</TableHead>
+                <TableHead>{tCommon("email")}</TableHead>
+                <TableHead>{tCommon("owner")}</TableHead>
+                <TableHead>{tCommon("tags")}</TableHead>
+                <TableHead>{tCommon("updated")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -156,7 +168,7 @@ export default async function ContactsPage({
                     <p className="text-xs text-muted-foreground">{contact.jobTitle ?? "—"}</p>
                     {contact.archivedAt ? (
                       <Badge variant="outline" className="mt-1">
-                        Archived
+                        {tCommon("archived")}
                       </Badge>
                     ) : null}
                   </TableCell>
@@ -174,7 +186,7 @@ export default async function ContactsPage({
                     {contact.ownerName}
                     {contact.ownerStatus === "inactive" ? (
                       <Badge variant="outline" className="ml-2">
-                        Inactive
+                        {tCommon("inactive")}
                       </Badge>
                     ) : null}
                   </TableCell>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Pencil, Trash2 } from "lucide-react";
 import { ActivityForm } from "@/components/timeline/activity-form";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
@@ -31,6 +32,8 @@ export function ActivityActions({
   canDelete: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("timeline");
+  const tCommon = useTranslations("common");
 
   return (
     <div className="flex items-center gap-1">
@@ -38,13 +41,13 @@ export function ActivityActions({
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm">
-              <Pencil className="size-3.5" /> Edit
+              <Pencil className="size-3.5" /> {tCommon("edit")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit activity</DialogTitle>
-              <DialogDescription>Update the timestamp, subject, or details.</DialogDescription>
+              <DialogTitle>{t("editActivity")}</DialogTitle>
+              <DialogDescription>{t("editActivityDescription")}</DialogDescription>
             </DialogHeader>
             <ActivityForm
               links={links}
@@ -65,10 +68,10 @@ export function ActivityActions({
       {canDelete ? (
         <form action={deleteActivityAction.bind(null, activity.id, returnTo)}>
           <ConfirmSubmit
-            message="Delete this activity? This cannot be undone."
+            message={t("deleteActivityConfirm")}
             className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-destructive")}
           >
-            <Trash2 className="size-3.5" /> Delete
+            <Trash2 className="size-3.5" /> {tCommon("delete")}
           </ConfirmSubmit>
         </form>
       ) : null}

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { TicketForm } from "@/components/tickets/ticket-form";
@@ -8,6 +9,7 @@ import { listTeamMembers } from "@/lib/services/users";
 
 export default async function NewTicketPage() {
   await requireUser();
+  const t = await getTranslations("support");
   const [contacts, team] = await Promise.all([getContactPickerOptions(), listTeamMembers()]);
   const assignees = team
     .filter((member) => member.status === "active")
@@ -15,14 +17,14 @@ export default async function NewTicketPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="New ticket" description="Log a support request and set its priority." />
+      <PageHeader title={t("newTicket")} description={t("newTicketDescription")} />
       <Card>
         <CardContent className="pt-5">
           <TicketForm
             action={createTicketAction}
             contacts={contacts}
             assignees={assignees}
-            submitLabel="Create ticket"
+            submitLabel={t("createTicket")}
             cancelHref="/tickets"
           />
         </CardContent>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Pencil, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageError } from "@/components/ui/page-error";
@@ -29,6 +30,8 @@ export default async function SegmentDetailPage({
   if (!segment) notFound();
   const audience = await getSegmentAudience(segment.criteria);
   const error = getParam(raw, "error");
+  const t = await getTranslations("marketing");
+  const tCommon = await getTranslations("common");
 
   return (
     <div className="space-y-6">
@@ -39,16 +42,16 @@ export default async function SegmentDetailPage({
           <>
             <Button variant="outline" asChild>
               <Link href={`/segments/${segment.id}/edit`}>
-                <Pencil className="size-4" /> Edit
+                <Pencil className="size-4" /> {tCommon("edit")}
               </Link>
             </Button>
             {!segment.archivedAt ? (
               <form action={archiveSegmentAction.bind(null, segment.id)}>
                 <ConfirmSubmit
-                  message="Archive this segment? Existing campaigns keep their audience snapshot."
+                  message={t("archiveSegmentConfirm")}
                   className={cn(buttonVariants({ variant: "outline" }), "text-destructive")}
                 >
-                  <Trash2 className="size-4" /> Archive
+                  <Trash2 className="size-4" /> {tCommon("archive")}
                 </ConfirmSubmit>
               </form>
             ) : null}
@@ -61,18 +64,18 @@ export default async function SegmentDetailPage({
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardHeader>
-            <CardTitle>Matching contacts ({segment.audienceCount})</CardTitle>
+            <CardTitle>{t("matchingContacts", { count: segment.audienceCount })}</CardTitle>
           </CardHeader>
           <CardContent>
             {audience.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No contacts match this segment right now.</p>
+              <p className="text-sm text-muted-foreground">{t("noMatchingContacts")}</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>{tCommon("name")}</TableHead>
+                    <TableHead>{tCommon("company")}</TableHead>
+                    <TableHead>{tCommon("email")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -96,34 +99,34 @@ export default async function SegmentDetailPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Criteria</CardTitle>
+              <CardTitle>{t("criteria")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              {segment.archivedAt ? <Badge variant="outline">Archived</Badge> : null}
+              {segment.archivedAt ? <Badge variant="outline">{tCommon("archived")}</Badge> : null}
               <div>
-                <p className="text-muted-foreground">Tags</p>
-                {segment.criteria.tags?.length ? <TagList tags={segment.criteria.tags} /> : <p>Any</p>}
+                <p className="text-muted-foreground">{tCommon("tags")}</p>
+                {segment.criteria.tags?.length ? <TagList tags={segment.criteria.tags} /> : <p>{t("any")}</p>}
               </div>
               <div>
-                <p className="text-muted-foreground">Industry</p>
-                <p>{segment.criteria.industry ?? "Any"}</p>
+                <p className="text-muted-foreground">{t("industry")}</p>
+                <p>{segment.criteria.industry ?? t("any")}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Job title contains</p>
-                <p>{segment.criteria.jobTitle ?? "Any"}</p>
+                <p className="text-muted-foreground">{t("jobTitleContains")}</p>
+                <p>{segment.criteria.jobTitle ?? t("any")}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Created between</p>
+                <p className="text-muted-foreground">{t("createdBetween")}</p>
                 <p>
-                  {segment.criteria.createdFrom ?? "Any"} – {segment.criteria.createdTo ?? "Any"}
+                  {segment.criteria.createdFrom ?? t("any")} – {segment.criteria.createdTo ?? t("any")}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Created by</p>
+                <p className="text-muted-foreground">{t("createdBy")}</p>
                 <p>{segment.creatorName}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Updated</p>
+                <p className="text-muted-foreground">{tCommon("updated")}</p>
                 <LocalTime value={segment.updatedAt} />
               </div>
             </CardContent>

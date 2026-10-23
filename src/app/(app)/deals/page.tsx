@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Handshake, LayoutGrid, List, Plus } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,10 @@ export default async function DealsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const raw = await searchParams;
+  const t = await getTranslations("sales");
+  const tCommon = await getTranslations("common");
+  const tEnums = await getTranslations("enums");
+  const locale = await getLocale();
   const view = param(raw, "view") === "list" ? "list" : "board";
   const pipelineId = param(raw, "pipelineId");
   const pipelines = await getPipelineOptions();
@@ -71,18 +76,18 @@ export default async function DealsPage({
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Deals"
-          description="Every opportunity, its stage, owner, and expected close date."
+          title={t("deals")}
+          description={t("dealsDescription")}
           actions={
             <>
               <Button variant="outline" asChild>
                 <Link href={buildHref("/deals", raw, { view: "board" })}>
-                  <LayoutGrid className="size-4" /> Board
+                  <LayoutGrid className="size-4" /> {t("boardView")}
                 </Link>
               </Button>
               <Button asChild>
                 <Link href="/deals/new">
-                  <Plus className="size-4" /> New deal
+                  <Plus className="size-4" /> {t("newDeal")}
                 </Link>
               </Button>
             </>
@@ -92,14 +97,19 @@ export default async function DealsPage({
           <CardContent className="pt-5">
             <form method="get" className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <input type="hidden" name="view" value="list" />
-              <Input name="q" defaultValue={params.q} placeholder="Search deal or company…" aria-label="Search deals" />
+              <Input
+                name="q"
+                defaultValue={params.q}
+                placeholder={t("searchDealsPlaceholder")}
+                aria-label={t("searchDeals")}
+              />
               <select
                 name="pipelineId"
                 defaultValue={pipelineId ?? ""}
-                aria-label="Filter by pipeline"
+                aria-label={t("filterByPipeline")}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">All pipelines</option>
+                <option value="">{t("allPipelines")}</option>
                 {pipelines.map((pipeline) => (
                   <option key={pipeline.id} value={pipeline.id}>
                     {pipeline.name}
@@ -109,10 +119,10 @@ export default async function DealsPage({
               <select
                 name="stageId"
                 defaultValue={params.stageId ?? ""}
-                aria-label="Filter by stage"
+                aria-label={t("filterByStage")}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">All stages</option>
+                <option value="">{t("allStages")}</option>
                 {allStages.map((stage) => (
                   <option key={stage.id} value={stage.id}>
                     {stage.pipelineName} · {stage.name}
@@ -122,43 +132,53 @@ export default async function DealsPage({
               <select
                 name="status"
                 defaultValue={params.status ?? ""}
-                aria-label="Filter by status"
+                aria-label={tCommon("filterByStatus")}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">All statuses</option>
-                <option value="open">Open</option>
-                <option value="won">Won</option>
-                <option value="lost">Lost</option>
+                <option value="">{t("allStatuses")}</option>
+                <option value="open">{tEnums("dealStatus.open")}</option>
+                <option value="won">{tEnums("dealStatus.won")}</option>
+                <option value="lost">{tEnums("dealStatus.lost")}</option>
               </select>
               <select
                 name="ownerId"
                 defaultValue={params.ownerId ?? ""}
-                aria-label="Filter by owner"
+                aria-label={tCommon("filterByOwner")}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">All owners</option>
+                <option value="">{tCommon("allOwners")}</option>
                 {activeMembers.map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.name}
                   </option>
                 ))}
               </select>
-              <Input name="closeFrom" type="date" defaultValue={params.closeFrom ?? ""} aria-label="Close date from" />
-              <Input name="closeTo" type="date" defaultValue={params.closeTo ?? ""} aria-label="Close date to" />
+              <Input
+                name="closeFrom"
+                type="date"
+                defaultValue={params.closeFrom ?? ""}
+                aria-label={t("closeDateFrom")}
+              />
+              <Input
+                name="closeTo"
+                type="date"
+                defaultValue={params.closeTo ?? ""}
+                aria-label={t("closeDateTo")}
+              />
               <div className="flex gap-2">
                 <select
                   name="sort"
                   defaultValue={params.sort}
-                  aria-label="Sort deals"
+                  aria-label={t("sortDeals")}
                   className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value="updated">Recently updated</option>
-                  <option value="amount_desc">Amount: high to low</option>
-                  <option value="amount_asc">Amount: low to high</option>
-                  <option value="close_date">Close date</option>
+                  <option value="updated">{t("sortRecentlyUpdated")}</option>
+                  <option value="amount_desc">{t("sortAmountDesc")}</option>
+                  <option value="amount_asc">{t("sortAmountAsc")}</option>
+                  <option value="close_date">{t("sortCloseDate")}</option>
                 </select>
                 <Button type="submit" variant="secondary">
-                  Filter
+                  {tCommon("filter")}
                 </Button>
               </div>
             </form>
@@ -168,21 +188,21 @@ export default async function DealsPage({
         {data.items.length === 0 ? (
           <EmptyState
             icon={Handshake}
-            title="No deals match those filters"
-            description="Try clearing a filter or create a new opportunity."
-            action={<Button asChild><Link href="/deals/new">New deal</Link></Button>}
+            title={t("dealsNoMatchTitle")}
+            description={t("dealsEmptyDescription")}
+            action={<Button asChild><Link href="/deals/new">{t("newDeal")}</Link></Button>}
           />
         ) : (
           <Card>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Deal</TableHead>
-                  <TableHead>Stage</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>Close date</TableHead>
+                  <TableHead>{t("deal")}</TableHead>
+                  <TableHead>{t("stage")}</TableHead>
+                  <TableHead>{tCommon("status")}</TableHead>
+                  <TableHead>{t("amount")}</TableHead>
+                  <TableHead>{tCommon("owner")}</TableHead>
+                  <TableHead>{t("closeDate")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -201,11 +221,11 @@ export default async function DealsPage({
                     <TableCell>
                       <DealStatusBadge status={deal.status} />
                     </TableCell>
-                    <TableCell>{formatCurrency(deal.amount)}</TableCell>
+                    <TableCell>{formatCurrency(deal.amount, locale)}</TableCell>
                     <TableCell>
                       {deal.ownerName}
                       {deal.ownerStatus === "inactive" ? (
-                        <Badge variant="outline" className="ml-2">Inactive</Badge>
+                        <Badge variant="outline" className="ml-2">{tCommon("inactive")}</Badge>
                       ) : null}
                     </TableCell>
                     <TableCell>
@@ -232,7 +252,11 @@ export default async function DealsPage({
 
   if (!selectedPipeline) {
     return (
-      <EmptyState icon={Handshake} title="No pipeline configured" description="Create a pipeline in settings first." />
+      <EmptyState
+        icon={Handshake}
+        title={t("noPipelineTitle")}
+        description={t("noPipelineDescription")}
+      />
     );
   }
 
@@ -251,18 +275,18 @@ export default async function DealsPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Deals"
-        description="Drag deals between stages or use the move menu on each card."
+        title={t("deals")}
+        description={t("boardDescription")}
         actions={
           <>
             <Button variant="outline" asChild>
               <Link href={buildHref("/deals", raw, { view: "list" })}>
-                <List className="size-4" /> List
+                <List className="size-4" /> {t("listView")}
               </Link>
             </Button>
             <Button asChild>
               <Link href="/deals/new">
-                <Plus className="size-4" /> New deal
+                <Plus className="size-4" /> {t("newDeal")}
               </Link>
             </Button>
           </>
@@ -276,22 +300,22 @@ export default async function DealsPage({
             <select
               name="pipelineId"
               defaultValue={selectedPipeline.id}
-              aria-label="Select pipeline"
+              aria-label={t("selectPipeline")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
               {pipelines.map((pipeline) => (
                 <option key={pipeline.id} value={pipeline.id}>
                   {pipeline.name}
-                  {pipeline.isDefault ? " (default)" : ""}
+                  {pipeline.isDefault ? t("defaultSuffix") : ""}
                 </option>
               ))}
             </select>
-            <Button type="submit" variant="secondary">Switch</Button>
+            <Button type="submit" variant="secondary">{t("switchPipeline")}</Button>
           </form>
           <div className="flex flex-wrap gap-4 text-sm">
-            <span><span className="text-muted-foreground">Open:</span> {openDeals.length}</span>
-            <span><span className="text-muted-foreground">Value:</span> {formatCurrency(openValue)}</span>
-            <span><span className="text-muted-foreground">Weighted:</span> {formatCurrency(weightedValue)}</span>
+            <span><span className="text-muted-foreground">{t("openDeals")}</span> {openDeals.length}</span>
+            <span><span className="text-muted-foreground">{t("value")}</span> {formatCurrency(openValue, locale)}</span>
+            <span><span className="text-muted-foreground">{t("weighted")}</span> {formatCurrency(weightedValue, locale)}</span>
           </div>
         </CardContent>
       </Card>

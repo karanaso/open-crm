@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CampaignForm } from "@/components/marketing/campaign-form";
@@ -8,6 +9,7 @@ import { listTeamMembers } from "@/lib/services/users";
 
 export default async function NewCampaignPage() {
   const user = await requireUser();
+  const t = await getTranslations("marketing");
   const [segments, team] = await Promise.all([getSegmentOptions(), listTeamMembers()]);
   const owners = team
     .filter((member) => member.status === "active")
@@ -15,7 +17,7 @@ export default async function NewCampaignPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="New campaign" description="Choose a segment and plan the outreach." />
+      <PageHeader title={t("newCampaign")} description={t("newCampaignDescription")} />
       <Card>
         <CardContent className="pt-5">
           <CampaignForm
@@ -37,7 +39,7 @@ export default async function NewCampaignPage() {
               endDate: null,
               description: null,
             }}
-            submitLabel="Create campaign"
+            submitLabel={t("createCampaign")}
             cancelHref="/campaigns"
           />
         </CardContent>

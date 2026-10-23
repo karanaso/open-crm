@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskForm } from "@/components/timeline/task-form";
@@ -16,6 +17,7 @@ export default async function EditTaskPage({
   const [{ id }, raw] = await Promise.all([params, searchParams]);
   const task = await getTask(id);
   if (!task) notFound();
+  const t = await getTranslations("timeline");
 
   const team = await listTeamMembers();
   const assignees = team
@@ -26,7 +28,7 @@ export default async function EditTaskPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title="Edit task" description="Update the task details, assignee, or linked records." />
+      <PageHeader title={t("editTask")} description={t("editTaskDescription")} />
       <Card>
         <CardContent className="pt-5">
           <TaskForm

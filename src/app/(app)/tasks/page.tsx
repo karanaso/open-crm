@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { CheckSquare } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,9 @@ export default async function TasksPage({
 }) {
   const raw = await searchParams;
   const user = await requireUser();
+  const t = await getTranslations("timeline");
+  const tCommon = await getTranslations("common");
+  const tEnums = await getTranslations("enums");
   const parsed = taskListParamsSchema.safeParse({
     view: getParam(raw, "view") || "mine",
     assigneeId: getParam(raw, "assigneeId") || undefined,
@@ -57,16 +61,16 @@ export default async function TasksPage({
   const upcomingLimit = addDays(new Date(), 7).toISOString().slice(0, 10);
 
   const groups = [
-    { key: "overdue", label: "Overdue", items: open.filter((task) => task.dueDate < today) },
-    { key: "today", label: "Due today", items: open.filter((task) => task.dueDate === today) },
+    { key: "overdue", label: tCommon("overdue"), items: open.filter((task) => task.dueDate < today) },
+    { key: "today", label: t("dueToday"), items: open.filter((task) => task.dueDate === today) },
     {
       key: "upcoming",
-      label: "Next 7 days",
+      label: t("next7Days"),
       items: open.filter((task) => task.dueDate > today && task.dueDate <= upcomingLimit),
     },
     {
       key: "later",
-      label: "Later",
+      label: t("later"),
       items: open.filter((task) => task.dueDate > upcomingLimit),
     },
   ];
@@ -79,16 +83,16 @@ export default async function TasksPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Tasks"
-        description="Follow-up work across every record, grouped by what needs attention next."
+        title={t("tasks")}
+        description={t("tasksDescription")}
       />
 
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild variant={params.view === "mine" ? "default" : "outline"} size="sm">
-          <Link href="/tasks?view=mine">My tasks</Link>
+          <Link href="/tasks?view=mine">{t("myTasks")}</Link>
         </Button>
         <Button asChild variant={params.view === "all" ? "default" : "outline"} size="sm">
-          <Link href="/tasks?view=all">All tasks</Link>
+          <Link href="/tasks?view=all">{t("allTasks")}</Link>
         </Button>
       </div>
 
@@ -99,10 +103,10 @@ export default async function TasksPage({
             <select
               name="assigneeId"
               defaultValue={params.assigneeId ?? ""}
-              aria-label="Filter by assignee"
+              aria-label={tCommon("filterByAssignee")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">All assignees</option>
+              <option value="">{tCommon("allAssignees")}</option>
               {activeMembers.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.name}
@@ -112,39 +116,39 @@ export default async function TasksPage({
             <select
               name="priority"
               defaultValue={params.priority ?? ""}
-              aria-label="Filter by priority"
+              aria-label={tCommon("filterByPriority")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">All priorities</option>
-              <option value="high">High</option>
-              <option value="normal">Normal</option>
-              <option value="low">Low</option>
+              <option value="">{tCommon("allPriorities")}</option>
+              <option value="high">{tEnums("taskPriority.high")}</option>
+              <option value="normal">{tEnums("taskPriority.normal")}</option>
+              <option value="low">{tEnums("taskPriority.low")}</option>
             </select>
             <select
               name="status"
               defaultValue={params.status ?? ""}
-              aria-label="Filter by status"
+              aria-label={tCommon("filterByStatus")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">Open and completed</option>
-              <option value="open">Open</option>
-              <option value="completed">Completed</option>
+              <option value="">{t("allTaskStatuses")}</option>
+              <option value="open">{tEnums("taskStatus.open")}</option>
+              <option value="completed">{tEnums("taskStatus.completed")}</option>
             </select>
             <select
               name="recordType"
               defaultValue={params.recordType ?? ""}
-              aria-label="Filter by linked record type"
+              aria-label={t("filterByLinkedRecord")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">Any record</option>
-              <option value="company">Company</option>
-              <option value="contact">Contact</option>
-              <option value="deal">Deal</option>
-              <option value="ticket">Ticket</option>
-              <option value="campaign">Campaign</option>
+              <option value="">{t("anyRecord")}</option>
+              <option value="company">{t("recordCompany")}</option>
+              <option value="contact">{t("recordContact")}</option>
+              <option value="deal">{t("recordDeal")}</option>
+              <option value="ticket">{t("recordTicket")}</option>
+              <option value="campaign">{t("recordCampaign")}</option>
             </select>
             <Button type="submit" variant="secondary">
-              Apply filters
+              {tCommon("applyFilters")}
             </Button>
           </form>
         </CardContent>
@@ -153,8 +157,8 @@ export default async function TasksPage({
       {tasks.length === 0 ? (
         <EmptyState
           icon={CheckSquare}
-          title="No tasks match these filters"
-          description="Create tasks from a company, contact, deal, ticket, or campaign to see them here."
+          title={t("tasksNoMatchTitle")}
+          description={t("tasksNoMatchDescription")}
         />
       ) : (
         <div className="space-y-6">
@@ -168,7 +172,7 @@ export default async function TasksPage({
               </CardHeader>
               <CardContent>
                 {group.items.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nothing here.</p>
+                  <p className="text-sm text-muted-foreground">{t("nothingHere")}</p>
                 ) : (
                   <ul className="space-y-2">
                     {group.items.map((task) => (
@@ -183,7 +187,7 @@ export default async function TasksPage({
           {completed.length > 0 ? (
             <Card>
               <CardHeader className="flex-row items-center justify-between">
-                <CardTitle>Completed</CardTitle>
+                <CardTitle>{tEnums("taskStatus.completed")}</CardTitle>
                 <Badge variant="success">{completed.length}</Badge>
               </CardHeader>
               <CardContent>

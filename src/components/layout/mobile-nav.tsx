@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -14,10 +15,11 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { APP_NAME } from "@/lib/constants";
 
 export function MobileNav() {
+  const [open, setOpen] = useState(false);
   const t = useTranslations("nav");
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="lg:hidden" aria-label={t("openNavigation")}>
           <Menu className="size-5" />
@@ -29,7 +31,7 @@ export function MobileNav() {
             {APP_NAME} {t("navigation")}
           </SheetTitle>
         </SheetHeader>
-        <SidebarNav />
+        <SidebarNav onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

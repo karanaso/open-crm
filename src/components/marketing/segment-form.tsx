@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
 import { FormError, FormField } from "@/components/ui/form-field";
@@ -36,32 +37,34 @@ export function SegmentForm({
   cancelHref: string;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
+  const t = useTranslations("marketing");
+  const tCommon = useTranslations("common");
 
   return (
     <form action={formAction} className="space-y-6">
       <FormError message={state?.error} />
-      <FormField label="Segment name" htmlFor="name" error={state?.fieldErrors?.name?.[0]} required>
+      <FormField label={t("segmentName")} htmlFor="name" error={state?.fieldErrors?.name?.[0]} required>
         <Input id="name" name="name" defaultValue={initial?.name ?? ""} required autoFocus />
       </FormField>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Contact tags" htmlFor="tags" hint="Comma-separated. Matches any selected tag.">
-          <Input id="tags" name="tags" defaultValue={initial?.criteria.tags?.join(", ") ?? ""} placeholder="vip, renewal" />
+        <FormField label={t("contactTags")} htmlFor="tags" hint={t("contactTagsHint")}>
+          <Input id="tags" name="tags" defaultValue={initial?.criteria.tags?.join(", ") ?? ""} placeholder={t("tagsPlaceholder")} />
         </FormField>
-        <FormField label="Company industry" htmlFor="industry">
-          <Input id="industry" name="industry" defaultValue={initial?.criteria.industry ?? ""} placeholder="Software" />
+        <FormField label={t("companyIndustry")} htmlFor="industry">
+          <Input id="industry" name="industry" defaultValue={initial?.criteria.industry ?? ""} placeholder={t("industryPlaceholder")} />
         </FormField>
-        <FormField label="Job title contains" htmlFor="jobTitle">
-          <Input id="jobTitle" name="jobTitle" defaultValue={initial?.criteria.jobTitle ?? ""} placeholder="Director" />
+        <FormField label={t("jobTitleContains")} htmlFor="jobTitle">
+          <Input id="jobTitle" name="jobTitle" defaultValue={initial?.criteria.jobTitle ?? ""} placeholder={t("jobTitlePlaceholder")} />
         </FormField>
-        <FormField label="Contact owner" htmlFor="ownerId">
+        <FormField label={t("contactOwner")} htmlFor="ownerId">
           <select
             id="ownerId"
             name="ownerId"
             defaultValue={initial?.criteria.ownerId ?? ""}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Any owner</option>
+            <option value="">{t("anyOwner")}</option>
             {owners.map((owner) => (
               <option key={owner.id} value={owner.id}>
                 {owner.name}
@@ -69,28 +72,26 @@ export function SegmentForm({
             ))}
           </select>
         </FormField>
-        <FormField label="Created from" htmlFor="createdFrom">
+        <FormField label={t("createdFrom")} htmlFor="createdFrom">
           <Input id="createdFrom" name="createdFrom" type="date" defaultValue={initial?.criteria.createdFrom ?? ""} />
         </FormField>
-        <FormField label="Created to" htmlFor="createdTo">
+        <FormField label={t("createdTo")} htmlFor="createdTo">
           <Input id="createdTo" name="createdTo" type="date" defaultValue={initial?.criteria.createdTo ?? ""} />
         </FormField>
       </div>
 
-      <FormField label="Description" htmlFor="description">
+      <FormField label={tCommon("description")} htmlFor="description">
         <Textarea id="description" name="description" defaultValue={initial?.description ?? ""} />
       </FormField>
 
-      <p className="text-xs text-muted-foreground">
-        Criteria combine with AND across fields. Tags match contacts with any selected tag.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("criteriaHint")}</p>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild>
-          <Link href={cancelHref as Route}>Cancel</Link>
+          <Link href={cancelHref as Route}>{tCommon("cancel")}</Link>
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? tCommon("saving") : submitLabel}
         </Button>
       </div>
     </form>

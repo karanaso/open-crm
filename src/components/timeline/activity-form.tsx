@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { createActivityAction, updateActivityAction } from "@/actions/engagement";
 import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,9 @@ export function ActivityForm({
 }) {
   const action = initial ? updateActivityAction.bind(null, initial.id) : createActivityAction;
   const [state, formAction, pending] = useActionState<ActionState, FormData>(action, null);
+  const t = useTranslations("timeline");
+  const tCommon = useTranslations("common");
+  const tEnums = useTranslations("enums");
 
   return (
     <form action={formAction} className="space-y-4">
@@ -46,21 +50,21 @@ export function ActivityForm({
       <FormError message={state?.error} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Type" htmlFor="activity-type" error={state?.fieldErrors?.type?.[0]} required>
+        <FormField label={t("type")} htmlFor="activity-type" error={state?.fieldErrors?.type?.[0]} required>
           <select
             id="activity-type"
             name="type"
             defaultValue={initial?.type ?? "note"}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="note">Note</option>
-            <option value="call">Call</option>
-            <option value="email">Email</option>
-            <option value="meeting">Meeting</option>
+            <option value="note">{tEnums("activityType.note")}</option>
+            <option value="call">{tEnums("activityType.call")}</option>
+            <option value="email">{tEnums("activityType.email")}</option>
+            <option value="meeting">{tEnums("activityType.meeting")}</option>
           </select>
         </FormField>
         <FormField
-          label="Occurred at"
+          label={t("occurredAt")}
           htmlFor="occurredAt"
           error={state?.fieldErrors?.occurredAt?.[0]}
           required
@@ -79,21 +83,21 @@ export function ActivityForm({
         </FormField>
       </div>
 
-      <FormField label="Subject" htmlFor="activity-subject" error={state?.fieldErrors?.subject?.[0]} required>
+      <FormField label={tCommon("subject")} htmlFor="activity-subject" error={state?.fieldErrors?.subject?.[0]} required>
         <Input
           id="activity-subject"
           name="subject"
           defaultValue={initial?.subject ?? ""}
-          placeholder="What happened?"
+          placeholder={t("subjectPlaceholder")}
           required
         />
       </FormField>
-      <FormField label="Details" htmlFor="activity-body" error={state?.fieldErrors?.body?.[0]}>
+      <FormField label={tCommon("details")} htmlFor="activity-body" error={state?.fieldErrors?.body?.[0]}>
         <Textarea
           id="activity-body"
           name="body"
           defaultValue={initial?.body ?? ""}
-          placeholder="Add context for the team (optional)"
+          placeholder={t("bodyPlaceholder")}
         />
       </FormField>
       <FieldError message={state?.fieldErrors?.links?.[0]} />
@@ -101,11 +105,11 @@ export function ActivityForm({
       <div className="flex justify-end gap-2">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
         ) : null}
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : initial ? "Save activity" : "Log activity"}
+          {pending ? tCommon("saving") : initial ? t("saveActivity") : t("logActivity")}
         </Button>
       </div>
     </form>

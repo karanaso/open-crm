@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { DealForm } from "@/components/deals/deal-form";
@@ -13,6 +14,8 @@ export default async function EditDealPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const deal = await getDeal(id);
   if (!deal) notFound();
+  const t = await getTranslations("sales");
+  const tCommon = await getTranslations("common");
 
   const [pipelines, companies, contacts, team, currentCompany, currentContact] = await Promise.all([
     getPipelineOptions(),
@@ -49,7 +52,10 @@ export default async function EditDealPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title={`Edit ${deal.name}`} description="Update deal details, value, owner, or stage." />
+      <PageHeader
+        title={t("editDealTitle", { name: deal.name })}
+        description={t("editDealDescription")}
+      />
       <Card>
         <CardContent className="pt-5">
           <DealForm
@@ -72,7 +78,7 @@ export default async function EditDealPage({ params }: { params: Promise<{ id: s
               lostReason: deal.lostReason,
               updatedAt: deal.updatedAt.toISOString(),
             }}
-            submitLabel="Save changes"
+            submitLabel={tCommon("saveChanges")}
             cancelHref={`/deals/${deal.id}`}
           />
         </CardContent>

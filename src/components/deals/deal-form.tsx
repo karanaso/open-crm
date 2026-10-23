@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useActionState, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
 import { FormError, FormField } from "@/components/ui/form-field";
@@ -54,6 +55,8 @@ export function DealForm({
   cancelHref: string;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
+  const t = useTranslations("sales");
+  const tCommon = useTranslations("common");
   const defaultPipeline =
     pipelines.find((pipeline) => pipeline.id === initial?.pipelineId) ??
     pipelines.find((pipeline) => pipeline.isDefault) ??
@@ -78,11 +81,11 @@ export function DealForm({
       <FormError message={state?.error} />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField label="Deal name" htmlFor="name" error={state?.fieldErrors?.name?.[0]} className="sm:col-span-2" required>
+        <FormField label={t("dealName")} htmlFor="name" error={state?.fieldErrors?.name?.[0]} className="sm:col-span-2" required>
           <Input id="name" name="name" defaultValue={initial?.name ?? ""} required autoFocus />
         </FormField>
 
-        <FormField label="Company" htmlFor="companyId" error={state?.fieldErrors?.companyId?.[0]} required>
+        <FormField label={tCommon("company")} htmlFor="companyId" error={state?.fieldErrors?.companyId?.[0]} required>
           <select
             id="companyId"
             name="companyId"
@@ -94,7 +97,7 @@ export function DealForm({
             required
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Select a company</option>
+            <option value="">{tCommon("selectCompany")}</option>
             {companies.map((company) => (
               <option key={company.id} value={company.id}>
                 {company.name}
@@ -103,7 +106,7 @@ export function DealForm({
           </select>
         </FormField>
 
-        <FormField label="Primary contact" htmlFor="contactId" error={state?.fieldErrors?.contactId?.[0]}>
+        <FormField label={t("primaryContact")} htmlFor="contactId" error={state?.fieldErrors?.contactId?.[0]}>
           <select
             id="contactId"
             name="contactId"
@@ -111,7 +114,7 @@ export function DealForm({
             onChange={(event) => setContactId(event.target.value)}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="none">No primary contact</option>
+            <option value="none">{t("noPrimaryContact")}</option>
             {availableContacts.map((contact) => (
               <option key={contact.id} value={contact.id}>
                 {contact.firstName} {contact.lastName}
@@ -120,7 +123,7 @@ export function DealForm({
           </select>
         </FormField>
 
-        <FormField label="Pipeline" htmlFor="pipelineId" error={state?.fieldErrors?.pipelineId?.[0]} required>
+        <FormField label={t("pipeline")} htmlFor="pipelineId" error={state?.fieldErrors?.pipelineId?.[0]} required>
           <select
             id="pipelineId"
             name="pipelineId"
@@ -136,13 +139,13 @@ export function DealForm({
             {pipelines.map((pipeline) => (
               <option key={pipeline.id} value={pipeline.id}>
                 {pipeline.name}
-                {pipeline.isDefault ? " (default)" : ""}
+                {pipeline.isDefault ? t("defaultSuffix") : ""}
               </option>
             ))}
           </select>
         </FormField>
 
-        <FormField label="Stage" htmlFor="stageId" error={state?.fieldErrors?.stageId?.[0]} required>
+        <FormField label={t("stage")} htmlFor="stageId" error={state?.fieldErrors?.stageId?.[0]} required>
           <select
             id="stageId"
             name="stageId"
@@ -159,7 +162,7 @@ export function DealForm({
           </select>
         </FormField>
 
-        <FormField label="Amount (USD)" htmlFor="amount" error={state?.fieldErrors?.amount?.[0]} required>
+        <FormField label={t("amountUsd")} htmlFor="amount" error={state?.fieldErrors?.amount?.[0]} required>
           <Input
             id="amount"
             name="amount"
@@ -171,7 +174,7 @@ export function DealForm({
           />
         </FormField>
 
-        <FormField label="Owner" htmlFor="ownerId" error={state?.fieldErrors?.ownerId?.[0]} required>
+        <FormField label={tCommon("owner")} htmlFor="ownerId" error={state?.fieldErrors?.ownerId?.[0]} required>
           <select
             id="ownerId"
             name="ownerId"
@@ -181,13 +184,13 @@ export function DealForm({
             {owners.map((owner) => (
               <option key={owner.id} value={owner.id}>
                 {owner.name}
-                {owner.status === "inactive" ? " (inactive)" : ""}
+                {owner.status === "inactive" ? tCommon("inactiveSuffix") : ""}
               </option>
             ))}
           </select>
         </FormField>
 
-        <FormField label="Expected close date" htmlFor="expectedCloseDate">
+        <FormField label={t("expectedCloseDate")} htmlFor="expectedCloseDate">
           <Input
             id="expectedCloseDate"
             name="expectedCloseDate"
@@ -198,7 +201,7 @@ export function DealForm({
 
         {selectedStage?.outcome === "lost" ? (
           <FormField
-            label="Lost reason"
+            label={t("lostReason")}
             htmlFor="lostReason"
             error={state?.fieldErrors?.lostReason?.[0]}
             className="sm:col-span-2"
@@ -208,7 +211,7 @@ export function DealForm({
               id="lostReason"
               name="lostReason"
               defaultValue={initial?.lostReason ?? ""}
-              placeholder="Budget, timing, competitor…"
+              placeholder={t("lostReasonPlaceholder")}
               required
             />
           </FormField>
@@ -217,16 +220,16 @@ export function DealForm({
         )}
       </div>
 
-      <FormField label="Description" htmlFor="description">
+      <FormField label={tCommon("description")} htmlFor="description">
         <Textarea id="description" name="description" defaultValue={initial?.description ?? ""} />
       </FormField>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild>
-          <Link href={cancelHref as Route}>Cancel</Link>
+          <Link href={cancelHref as Route}>{tCommon("cancel")}</Link>
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? tCommon("saving") : submitLabel}
         </Button>
       </div>
     </form>

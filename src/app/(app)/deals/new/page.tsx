@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { DealForm } from "@/components/deals/deal-form";
@@ -10,6 +11,7 @@ import { listTeamMembers } from "@/lib/services/users";
 
 export default async function NewDealPage() {
   const user = await requireUser();
+  const t = await getTranslations("sales");
   const [pipelines, companies, contacts, team] = await Promise.all([
     getPipelineOptions(),
     getCompanyPickerOptions(),
@@ -23,7 +25,7 @@ export default async function NewDealPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="New deal" description="Add an opportunity and place it in your pipeline." />
+      <PageHeader title={t("newDeal")} description={t("newDealDescription")} />
       <Card>
         <CardContent className="pt-5">
           <DealForm
@@ -38,7 +40,7 @@ export default async function NewDealPage() {
             }))}
             owners={owners}
             defaultOwnerId={user.id}
-            submitLabel="Create deal"
+            submitLabel={t("createDeal")}
             cancelHref="/deals"
           />
         </CardContent>

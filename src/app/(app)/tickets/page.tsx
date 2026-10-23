@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { LifeBuoy, Plus } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,9 @@ export default async function TicketsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const raw = await searchParams;
+  const t = await getTranslations("support");
+  const tCommon = await getTranslations("common");
+  const tEnums = await getTranslations("enums");
   const parsed = ticketListParamsSchema.safeParse({
     q: getParam(raw, "q") ?? "",
     status: getParam(raw, "status") || "active",
@@ -57,12 +61,12 @@ export default async function TicketsPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Tickets"
-        description="Support requests with clear ownership, priority, and response targets."
+        title={t("tickets")}
+        description={t("ticketsDescription")}
         actions={
           <Button asChild>
             <Link href="/tickets/new">
-              <Plus className="size-4" /> New ticket
+              <Plus className="size-4" /> {t("newTicket")}
             </Link>
           </Button>
         }
@@ -71,39 +75,44 @@ export default async function TicketsPage({
       <Card>
         <CardContent className="pt-5">
           <form method="get" className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            <Input name="q" defaultValue={params.q} placeholder="Search subject or requester…" aria-label="Search tickets" />
+            <Input
+              name="q"
+              defaultValue={params.q}
+              placeholder={t("searchTicketsPlaceholder")}
+              aria-label={t("searchTickets")}
+            />
             <select
               name="status"
               defaultValue={params.status}
-              aria-label="Filter by status"
+              aria-label={tCommon("filterByStatus")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="active">Active (open, in progress, pending)</option>
-              <option value="open">Open</option>
-              <option value="in_progress">In progress</option>
-              <option value="pending">Pending</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+              <option value="active">{t("activeStatusOption")}</option>
+              <option value="open">{tEnums("ticketStatus.open")}</option>
+              <option value="in_progress">{tEnums("ticketStatus.in_progress")}</option>
+              <option value="pending">{tEnums("ticketStatus.pending")}</option>
+              <option value="resolved">{tEnums("ticketStatus.resolved")}</option>
+              <option value="closed">{tEnums("ticketStatus.closed")}</option>
             </select>
             <select
               name="priority"
               defaultValue={params.priority ?? ""}
-              aria-label="Filter by priority"
+              aria-label={tCommon("filterByPriority")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">All priorities</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="normal">Normal</option>
-              <option value="low">Low</option>
+              <option value="">{tCommon("allPriorities")}</option>
+              <option value="urgent">{tEnums("ticketPriority.urgent")}</option>
+              <option value="high">{tEnums("ticketPriority.high")}</option>
+              <option value="normal">{tEnums("ticketPriority.normal")}</option>
+              <option value="low">{tEnums("ticketPriority.low")}</option>
             </select>
             <select
               name="assigneeId"
               defaultValue={params.assigneeId ?? ""}
-              aria-label="Filter by assignee"
+              aria-label={tCommon("filterByAssignee")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">All assignees</option>
+              <option value="">{tCommon("allAssignees")}</option>
               {activeMembers.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.name}
@@ -113,10 +122,10 @@ export default async function TicketsPage({
             <select
               name="companyId"
               defaultValue={params.companyId ?? ""}
-              aria-label="Filter by company"
+              aria-label={tCommon("filterByCompany")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">All companies</option>
+              <option value="">{tCommon("allCompanies")}</option>
               {companies.map((company) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
@@ -126,26 +135,26 @@ export default async function TicketsPage({
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <label className="flex items-center gap-2">
                 <input type="checkbox" name="unassigned" value="1" defaultChecked={Boolean(params.unassigned)} />
-                Unassigned
+                {tCommon("unassigned")}
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" name="overdue" value="1" defaultChecked={Boolean(params.overdue)} />
-                Overdue
+                {tCommon("overdue")}
               </label>
             </div>
             <select
               name="sort"
               defaultValue={params.sort}
-              aria-label="Sort tickets"
+              aria-label={t("sortTickets")}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="updated">Recently updated</option>
-              <option value="created">Newest</option>
-              <option value="priority">Priority</option>
-              <option value="sla">SLA due time</option>
+              <option value="updated">{t("sortRecentlyUpdated")}</option>
+              <option value="created">{t("sortNewest")}</option>
+              <option value="priority">{t("sortPriority")}</option>
+              <option value="sla">{t("sortSlaDue")}</option>
             </select>
             <div className="lg:col-span-2">
-              <Button type="submit" variant="secondary">Apply filters</Button>
+              <Button type="submit" variant="secondary">{tCommon("applyFilters")}</Button>
             </div>
           </form>
         </CardContent>
@@ -154,22 +163,22 @@ export default async function TicketsPage({
       {data.items.length === 0 ? (
         <EmptyState
           icon={LifeBuoy}
-          title="No tickets match those filters"
-          description="Try the active view or clear a filter to see more requests."
-          action={<Button asChild><Link href="/tickets/new">New ticket</Link></Button>}
+          title={t("ticketsNoMatchTitle")}
+          description={t("ticketsNoMatchDescription")}
+          action={<Button asChild><Link href="/tickets/new">{t("newTicket")}</Link></Button>}
         />
       ) : (
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead>Requester</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Assignee</TableHead>
-                <TableHead>SLA</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead>{tCommon("subject")}</TableHead>
+                <TableHead>{tCommon("requester")}</TableHead>
+                <TableHead>{tCommon("priority")}</TableHead>
+                <TableHead>{tCommon("status")}</TableHead>
+                <TableHead>{tCommon("assignee")}</TableHead>
+                <TableHead>{t("sla")}</TableHead>
+                <TableHead>{tCommon("updated")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -194,22 +203,22 @@ export default async function TicketsPage({
                     <TicketStatusBadge status={ticket.status} />
                   </TableCell>
                   <TableCell>
-                    {ticket.assigneeName ?? <span className="text-muted-foreground">Unassigned</span>}
+                    {ticket.assigneeName ?? <span className="text-muted-foreground">{tCommon("unassigned")}</span>}
                   </TableCell>
                   <TableCell>
                     {ticket.sla.isOverdue ? (
-                      <Badge variant="destructive">Overdue</Badge>
+                      <Badge variant="destructive">{tCommon("overdue")}</Badge>
                     ) : !ticket.firstResponseAt ? (
                       <span className="text-xs text-muted-foreground">
-                        Reply by <LocalTime value={ticket.sla.firstResponseDue} />
+                        {t("replyBy")} <LocalTime value={ticket.sla.firstResponseDue} />
                       </span>
                     ) : !ticket.resolvedAt ? (
                       <span className="text-xs text-muted-foreground">
-                        Resolve by <LocalTime value={ticket.sla.resolutionDue} />
+                        {t("resolveBy")} <LocalTime value={ticket.sla.resolutionDue} />
                       </span>
                     ) : (
                       <Badge variant={ticket.sla.resolutionMet ? "success" : "warning"}>
-                        {ticket.sla.resolutionMet ? "Met" : "Breached"}
+                        {ticket.sla.resolutionMet ? t("met") : t("breached")}
                       </Badge>
                     )}
                   </TableCell>

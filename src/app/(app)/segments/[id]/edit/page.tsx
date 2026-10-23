@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { SegmentForm } from "@/components/marketing/segment-form";
@@ -10,6 +11,8 @@ export default async function EditSegmentPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const segment = await getSegment(id);
   if (!segment) notFound();
+  const t = await getTranslations("marketing");
+  const tCommon = await getTranslations("common");
   const team = await listTeamMembers();
   const owners = team
     .filter((member) => member.status === "active")
@@ -17,7 +20,7 @@ export default async function EditSegmentPage({ params }: { params: Promise<{ id
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title={`Edit ${segment.name}`} description="Update the segment criteria. Campaign audiences already activated do not change." />
+      <PageHeader title={t("editSegmentTitle", { name: segment.name })} description={t("editSegmentDescription")} />
       <Card>
         <CardContent className="pt-5">
           <SegmentForm
@@ -28,7 +31,7 @@ export default async function EditSegmentPage({ params }: { params: Promise<{ id
               criteria: segment.criteria,
             }}
             owners={owners}
-            submitLabel="Save changes"
+            submitLabel={tCommon("saveChanges")}
             cancelHref={`/segments/${segment.id}`}
           />
         </CardContent>

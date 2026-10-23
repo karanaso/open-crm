@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { createTaskAction, updateTaskAction } from "@/actions/engagement";
 import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,9 @@ export function TaskForm({
 }) {
   const action = initial ? updateTaskAction.bind(null, initial.id) : createTaskAction;
   const [state, formAction, pending] = useActionState<ActionState, FormData>(action, null);
+  const t = useTranslations("timeline");
+  const tCommon = useTranslations("common");
+  const tEnums = useTranslations("enums");
 
   return (
     <form action={formAction} className="space-y-4">
@@ -49,17 +53,17 @@ export function TaskForm({
       ))}
       <FormError message={state?.error} />
 
-      <FormField label="Task" htmlFor="task-title" error={state?.fieldErrors?.title?.[0]} required>
+      <FormField label={t("task")} htmlFor="task-title" error={state?.fieldErrors?.title?.[0]} required>
         <Input
           id="task-title"
           name="title"
           defaultValue={initial?.title ?? ""}
-          placeholder="Follow up on the proposal"
+          placeholder={t("taskPlaceholder")}
           required
         />
       </FormField>
       <div className="grid gap-4 sm:grid-cols-3">
-        <FormField label="Due date" htmlFor="dueDate" error={state?.fieldErrors?.dueDate?.[0]} required>
+        <FormField label={t("dueDate")} htmlFor="dueDate" error={state?.fieldErrors?.dueDate?.[0]} required>
           <Input
             id="dueDate"
             name="dueDate"
@@ -69,52 +73,52 @@ export function TaskForm({
             required
           />
         </FormField>
-        <FormField label="Priority" htmlFor="task-priority">
+        <FormField label={tCommon("priority")} htmlFor="task-priority">
           <select
             id="task-priority"
             name="priority"
             defaultValue={initial?.priority ?? "normal"}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="high">High</option>
+            <option value="low">{tEnums("taskPriority.low")}</option>
+            <option value="normal">{tEnums("taskPriority.normal")}</option>
+            <option value="high">{tEnums("taskPriority.high")}</option>
           </select>
         </FormField>
-        <FormField label="Assignee" htmlFor="assigneeId" error={state?.fieldErrors?.assigneeId?.[0]}>
+        <FormField label={tCommon("assignee")} htmlFor="assigneeId" error={state?.fieldErrors?.assigneeId?.[0]}>
           <select
             id="assigneeId"
             name="assigneeId"
             defaultValue={initial?.assigneeId ?? "none"}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="none">Unassigned</option>
+            <option value="none">{tCommon("unassigned")}</option>
             {assignees.map((assignee) => (
               <option key={assignee.id} value={assignee.id}>
                 {assignee.name}
-                {assignee.status === "inactive" ? " (inactive)" : ""}
+                {assignee.status === "inactive" ? tCommon("inactiveSuffix") : ""}
               </option>
             ))}
           </select>
         </FormField>
       </div>
-      <FormField label="Description" htmlFor="task-description">
+      <FormField label={tCommon("description")} htmlFor="task-description">
         <Textarea
           id="task-description"
           name="description"
           defaultValue={initial?.description ?? ""}
-          placeholder="Optional context"
+          placeholder={t("descriptionPlaceholder")}
         />
       </FormField>
 
       <div className="flex justify-end gap-2">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
         ) : null}
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : initial ? "Save task" : "Create task"}
+          {pending ? tCommon("saving") : initial ? t("saveTask") : t("createTask")}
         </Button>
       </div>
     </form>

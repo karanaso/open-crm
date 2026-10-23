@@ -38,9 +38,9 @@ test.describe("support desk", () => {
     await page.getByRole("link", { name: SUBJECT }).click();
     await expect(page.getByRole("heading", { name: SUBJECT })).toBeVisible();
 
-    await page.getByRole("button", { name: "resolved", exact: true }).click();
+    await page.getByRole("button", { name: "Resolved", exact: true }).click();
     await expect(page.getByText("Resolved", { exact: true }).first()).toBeVisible();
-    await page.getByRole("button", { name: "open", exact: true }).click();
+    await page.getByRole("button", { name: "Open", exact: true }).click();
     await expect(page.getByText("Open", { exact: true }).first()).toBeVisible();
   });
 

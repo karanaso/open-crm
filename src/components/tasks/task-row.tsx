@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Check, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import { completeTaskAction, deleteTaskAction, reopenTaskAction } from "@/actions/engagement";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import { PriorityBadge } from "@/components/ui/badges";
 import { cn } from "@/lib/utils";
 import type { TaskListItem } from "@/lib/services/tasks";
 
-export function TaskRow({
+export async function TaskRow({
   task,
   returnTo,
   showLinks = true,
@@ -18,6 +19,9 @@ export function TaskRow({
   returnTo: string;
   showLinks?: boolean;
 }) {
+  const t = await getTranslations("timeline");
+  const tCommon = await getTranslations("common");
+
   return (
     <li className="rounded-lg border p-3">
       <div className="flex items-start justify-between gap-2">
@@ -26,8 +30,8 @@ export function TaskRow({
             {task.title}
           </p>
           <p className="text-xs text-muted-foreground">
-            Due <DateDisplay value={task.dueDate} />
-            {task.assigneeName ? ` · ${task.assigneeName}` : " · Unassigned"}
+            {t("due")} <DateDisplay value={task.dueDate} />
+            {task.assigneeName ? ` · ${task.assigneeName}` : ` · ${tCommon("unassigned")}`}
           </p>
           {showLinks && task.links.length > 0 ? (
             <div className="mt-1 flex flex-wrap gap-1">
@@ -45,7 +49,7 @@ export function TaskRow({
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <PriorityBadge priority={task.priority} />
-          {task.isOverdue ? <Badge variant="destructive">Overdue</Badge> : null}
+          {task.isOverdue ? <Badge variant="destructive">{tCommon("overdue")}</Badge> : null}
         </div>
       </div>
       {task.description ? (
@@ -55,27 +59,27 @@ export function TaskRow({
         {task.status === "open" ? (
           <form action={completeTaskAction.bind(null, task.id, returnTo)}>
             <Button type="submit" variant="ghost" size="sm">
-              <Check className="size-3.5" /> Complete
+              <Check className="size-3.5" /> {t("complete")}
             </Button>
           </form>
         ) : (
           <form action={reopenTaskAction.bind(null, task.id, returnTo)}>
             <Button type="submit" variant="ghost" size="sm">
-              <RotateCcw className="size-3.5" /> Reopen
+              <RotateCcw className="size-3.5" /> {t("reopen")}
             </Button>
           </form>
         )}
         <Button variant="ghost" size="sm" asChild>
           <Link href={`/tasks/${task.id}/edit?returnTo=${encodeURIComponent(returnTo)}`}>
-            <Pencil className="size-3.5" /> Edit
+            <Pencil className="size-3.5" /> {tCommon("edit")}
           </Link>
         </Button>
         <form action={deleteTaskAction.bind(null, task.id, returnTo)}>
           <ConfirmSubmit
-            message="Delete this task?"
+            message={t("deleteTaskConfirm")}
             className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-destructive")}
           >
-            <Trash2 className="size-3.5" /> Delete
+            <Trash2 className="size-3.5" /> {tCommon("delete")}
           </ConfirmSubmit>
         </form>
       </div>

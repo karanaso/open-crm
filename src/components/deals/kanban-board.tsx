@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   DndContext,
   DragOverlay,
@@ -28,7 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatCurrency, titleCase } from "@/lib/utils";
+import { formatCurrency, formatNumber } from "@/lib/utils";
 import { DateDisplay } from "@/components/ui/local-time";
 import { useMessageTranslator } from "@/i18n/messages";
 
@@ -64,6 +65,9 @@ function DealCard({
   dragging?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: deal.id });
+  const t = useTranslations("sales");
+  const tEnums = useTranslations("enums");
+  const locale = useLocale();
   const style = { transform: CSS.Translate.toString(transform) };
 
   return (
@@ -83,12 +87,17 @@ function DealCard({
         <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-7" aria-label={`Move ${deal.name}`}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                aria-label={t("moveDeal", { name: deal.name })}
+              >
                 <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Move to stage</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("moveToStage")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {stages
                 .filter((stage) => stage.id !== deal.stageId)
@@ -102,7 +111,7 @@ function DealCard({
           <button
             type="button"
             className="cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
-            aria-label={`Drag ${deal.name}`}
+            aria-label={t("dragDeal", { name: deal.name })}
             {...listeners}
             {...attributes}
           >
@@ -111,13 +120,13 @@ function DealCard({
         </div>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">{deal.companyName}</p>
-      <p className="mt-2 text-sm font-semibold">{formatCurrency(deal.amount)}</p>
+      <p className="mt-2 text-sm font-semibold">{formatCurrency(deal.amount, locale)}</p>
       <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
         <span>{deal.ownerName}</span>
-        {deal.expectedCloseDate ? <DateDisplay value={deal.expectedCloseDate} /> : <span>No close date</span>}
+        {deal.expectedCloseDate ? <DateDisplay value={deal.expectedCloseDate} /> : <span>{t("noCloseDate")}</span>}
       </div>
       <Badge variant={deal.status === "won" ? "success" : deal.status === "lost" ? "destructive" : "outline"} className="mt-2">
-        {titleCase(deal.status)}
+        {tEnums(`dealStatus.${deal.status}`)}
       </Badge>
     </div>
   );
@@ -135,6 +144,8 @@ function StageColumn({
   onMove: (deal: BoardDeal, stage: StageOption) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const t = useTranslations("sales");
+  const locale = useLocale();
   const total = deals.reduce((sum, deal) => sum + Number(deal.amount), 0);
 
   return (
@@ -143,10 +154,10 @@ function StageColumn({
         <div>
           <p className="text-sm font-medium">{stage.name}</p>
           <p className="text-xs text-muted-foreground">
-            {deals.length} deals · {formatCurrency(total)}
+            {t("dealCount", { count: deals.length })} · {formatCurrency(total, locale)}
           </p>
         </div>
-        <Badge variant="outline">{stage.probability}%</Badge>
+        <Badge variant="outline">{t("probabilityValue", { value: formatNumber(stage.probability, locale) })}</Badge>
       </div>
       <div
         ref={setNodeRef}
@@ -158,7 +169,7 @@ function StageColumn({
           <DealCard key={deal.id} deal={deal} stages={stages} onMove={onMove} />
         ))}
         {deals.length === 0 ? (
-          <p className="px-2 py-6 text-center text-xs text-muted-foreground">Drop a deal here</p>
+          <p className="px-2 py-6 text-center text-xs text-muted-foreground">{t("dropHere")}</p>
         ) : null}
       </div>
     </div>
@@ -178,6 +189,8 @@ export function KanbanBoard({
   const [activeDeal, setActiveDeal] = useState<BoardDeal | null>(null);
   const router = useRouter();
   const translate = useMessageTranslator();
+  const t = useTranslations("sales");
+  const locale = useLocale();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   async function move(deal: BoardDeal, stage: StageOption, reason?: string) {
@@ -234,7 +247,7 @@ export function KanbanBoard({
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-3" aria-label={`${pipeline.name} pipeline board`}>
+      <div className="flex gap-4 overflow-x-auto pb-3" aria-label={t("boardLabel", { pipeline: pipeline.name })}>
         {stages.map((stage) => (
           <StageColumn
             key={stage.id}
@@ -250,7 +263,7 @@ export function KanbanBoard({
           <div className="w-64 rotate-2 rounded-lg border bg-card p-3 shadow-lg">
             <p className="text-sm font-medium">{activeDeal.name}</p>
             <p className="text-xs text-muted-foreground">{activeDeal.companyName}</p>
-            <p className="mt-1 text-sm font-semibold">{formatCurrency(activeDeal.amount)}</p>
+            <p className="mt-1 text-sm font-semibold">{formatCurrency(activeDeal.amount, locale)}</p>
           </div>
         ) : null}
       </DragOverlay>

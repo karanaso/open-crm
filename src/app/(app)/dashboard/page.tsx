@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   ArrowUpRight,
   CheckSquare,
@@ -18,8 +19,13 @@ import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { requireUser } from "@/lib/auth/guards";
 import { getDashboardData } from "@/lib/services/dashboard";
 import { formatDurationHours } from "@/lib/dates";
-import { formatCurrency, titleCase } from "@/lib/utils";
-import { getLocale } from "next-intl/server";
+import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatNumber as formatLocaleNumber } from "@/i18n/format";
+import type { Locale } from "@/i18n/config";
+
+function percent(value: number, locale: Locale) {
+  return `${formatLocaleNumber(value, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}
 
 function MetricCard({
   label,
@@ -48,28 +54,38 @@ function MetricCard({
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const [data, locale] = await Promise.all([getDashboardData(user.id), getLocale()]);
+  const [data, locale, t, tNav, tEnums, tSales, tSupport, tMarketing, tTimeline] = await Promise.all([
+    getDashboardData(user.id),
+    getLocale(),
+    getTranslations("dashboard"),
+    getTranslations("nav"),
+    getTranslations("enums"),
+    getTranslations("sales"),
+    getTranslations("support"),
+    getTranslations("marketing"),
+    getTranslations("timeline"),
+  ]);
 
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Dashboard"
-        description={`Welcome back, ${user.name}. Here is what needs attention across the workspace.`}
+        title={t("title")}
+        description={t("welcome", { name: user.name })}
         actions={
           <>
             <Button asChild size="sm">
               <Link href="/deals/new">
-                <Handshake className="size-4" /> New deal
+                <Handshake className="size-4" /> {tSales("newDeal")}
               </Link>
             </Button>
             <Button asChild size="sm" variant="outline">
               <Link href="/tickets/new">
-                <LifeBuoy className="size-4" /> New ticket
+                <LifeBuoy className="size-4" /> {tSupport("newTicket")}
               </Link>
             </Button>
             <Button asChild size="sm" variant="outline">
               <Link href="/campaigns/new">
-                <Megaphone className="size-4" /> New campaign
+                <Megaphone className="size-4" /> {tMarketing("newCampaign")}
               </Link>
             </Button>
           </>
@@ -77,91 +93,94 @@ export default async function DashboardPage() {
       />
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Sales</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("sales")}</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Open pipeline"
+            label={t("openPipeline")}
             value={formatCurrency(data.sales.openValue, locale)}
-            hint={`${data.sales.openCount} open deals · ${formatCurrency(data.sales.weightedValue, locale)} weighted`}
+            hint={t("openPipelineHint", {
+              count: data.sales.openCount,
+              weighted: formatCurrency(data.sales.weightedValue, locale),
+            })}
             href="/deals"
           />
           <MetricCard
-            label="Won this month"
+            label={t("wonThisMonth")}
             value={formatCurrency(data.sales.wonThisMonthValue, locale)}
-            hint={`${data.sales.wonThisMonthCount} deals won`}
+            hint={t("dealsWon", { count: data.sales.wonThisMonthCount })}
             href="/deals?view=list&status=won"
           />
           <MetricCard
-            label="Win rate this month"
-            value={`${data.sales.winRate.toFixed(1)}%`}
-            hint="Won / (won + lost) closed this month"
+            label={t("winRate")}
+            value={percent(data.sales.winRate, locale)}
+            hint={t("winRateHint")}
           />
           <MetricCard
-            label="Closing in 30 days"
-            value={String(data.sales.closingSoonCount)}
-            hint="Open deals with an expected close date"
+            label={t("closingSoon")}
+            value={formatNumber(data.sales.closingSoonCount, locale)}
+            hint={t("closingSoonHint")}
             href="/deals?view=list"
           />
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Support</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("support")}</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Open tickets"
-            value={String(data.support.openCount)}
-            hint={`${data.support.unassignedCount} unassigned`}
+            label={t("openTickets")}
+            value={formatNumber(data.support.openCount, locale)}
+            hint={t("unassignedCount", { count: data.support.unassignedCount })}
             href="/tickets"
           />
           <MetricCard
-            label="Overdue tickets"
-            value={String(data.support.overdueCount)}
-            hint="Missed first-response or resolution target"
+            label={t("overdueTickets")}
+            value={formatNumber(data.support.overdueCount, locale)}
+            hint={t("overdueTicketsHint")}
             href="/tickets?overdue=1"
           />
           <MetricCard
-            label="Avg first response"
+            label={t("avgFirstResponse")}
             value={formatDurationHours(data.support.averageFirstResponseHours, locale)}
-            hint="Tickets resolved in the last 30 days"
+            hint={t("resolvedLast30Days")}
           />
           <MetricCard
-            label="Avg resolution"
+            label={t("avgResolution")}
             value={formatDurationHours(data.support.averageResolutionHours, locale)}
-            hint="Tickets resolved in the last 30 days"
+            hint={t("resolvedLast30Days")}
           />
         </div>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Marketing</h2>
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("marketing")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <MetricCard
-              label="Active campaigns"
-              value={String(data.marketing.activeCampaigns)}
-              hint={`${data.marketing.audience} recipients`}
+              label={t("activeCampaigns")}
+              value={formatNumber(data.marketing.activeCampaigns, locale)}
+              hint={t("recipientsCount", { count: data.marketing.audience })}
               href="/campaigns"
             />
             <MetricCard
-              label="Response rate"
-              value={`${data.marketing.responseRate.toFixed(1)}%`}
-              hint={`${data.marketing.conversions} conversions`}
+              label={tMarketing("responseRate")}
+              value={percent(data.marketing.responseRate, locale)}
+              hint={t("conversionsCount", { count: data.marketing.conversions })}
             />
           </div>
         </div>
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">My tasks</h2>
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{tTimeline("myTasks")}</h2>
           <div className="grid gap-4 sm:grid-cols-3">
-            <MetricCard label="Overdue" value={String(data.tasks.overdue)} href="/tasks" />
-            <MetricCard label="Due today" value={String(data.tasks.dueToday)} href="/tasks" />
-            <MetricCard label="Upcoming" value={String(data.tasks.upcoming)} href="/tasks" />
+            <MetricCard label={t("overdueTasks")} value={formatNumber(data.tasks.overdue, locale)} href="/tasks" />
+            <MetricCard label={t("dueToday")} value={formatNumber(data.tasks.dueToday, locale)} href="/tasks" />
+            <MetricCard label={t("upcoming")} value={formatNumber(data.tasks.upcoming, locale)} href="/tasks" />
           </div>
         </div>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Trends</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{t("trends")}</h2>
         <DashboardCharts
           pipeline={data.charts.pipeline}
           tickets={data.charts.tickets}
@@ -172,14 +191,14 @@ export default async function DashboardPage() {
       <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <Card>
           <CardHeader>
-            <CardTitle>Recent activity</CardTitle>
+            <CardTitle>{t("recentActivity")}</CardTitle>
           </CardHeader>
           <CardContent>
             {data.recentActivity.length === 0 ? (
               <EmptyState
                 icon={Sparkles}
-                title="No activity yet"
-                description="Log a note, call, email, or meeting from any record to start the timeline."
+                title={t("noActivityTitle")}
+                description={t("noActivityDescription")}
               />
             ) : (
               <ul className="space-y-3">
@@ -189,11 +208,11 @@ export default async function DashboardPage() {
                       <div>
                         <p className="font-medium">{activity.subject}</p>
                         <p className="text-xs text-muted-foreground">
-                          {titleCase(activity.type)} · {activity.authorName} ·{" "}
+                          {tEnums(`activityType.${activity.type}`)} · {activity.authorName} ·{" "}
                           <LocalTime value={activity.occurredAt} />
                         </p>
                       </div>
-                      <Badge variant="outline">{titleCase(activity.type)}</Badge>
+                      <Badge variant="outline">{tEnums(`activityType.${activity.type}`)}</Badge>
                     </div>
                     {activity.links.length > 0 ? (
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -217,21 +236,21 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Quick links</CardTitle>
+            <CardTitle>{t("quickLinks")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Link href="/companies" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
-              Companies <ArrowUpRight className="size-4" />
+              {tNav("companies")} <ArrowUpRight className="size-4" />
             </Link>
             <Link href="/contacts" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
-              Contacts <ArrowUpRight className="size-4" />
+              {tNav("contacts")} <ArrowUpRight className="size-4" />
             </Link>
             <Link href="/tasks" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
-              <span className="flex items-center gap-2"><CheckSquare className="size-4" /> Tasks</span>
+              <span className="flex items-center gap-2"><CheckSquare className="size-4" /> {tNav("tasks")}</span>
               <ArrowUpRight className="size-4" />
             </Link>
             <Link href="/segments" className="flex items-center justify-between rounded-md border p-3 text-sm hover:bg-muted">
-              Segments <ArrowUpRight className="size-4" />
+              {tMarketing("segments")} <ArrowUpRight className="size-4" />
             </Link>
           </CardContent>
         </Card>

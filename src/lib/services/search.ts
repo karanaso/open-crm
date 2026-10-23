@@ -7,6 +7,8 @@ export type SearchResult = {
   id: string;
   title: string;
   subtitle: string;
+  status?: string;
+  amount?: string;
   href: Route;
 };
 
@@ -109,7 +111,7 @@ export async function globalSearch(term: string): Promise<GlobalSearchResults> {
     companies: companyRows.map((row) => ({
       id: row.id,
       title: row.name,
-      subtitle: row.domain ?? "Company",
+      subtitle: row.domain ?? "",
       href: `/companies/${row.id}` as Route,
     })),
     contacts: contactRows.map((row) => ({
@@ -121,19 +123,22 @@ export async function globalSearch(term: string): Promise<GlobalSearchResults> {
     deals: dealRows.map((row) => ({
       id: row.id,
       title: row.name,
-      subtitle: `${row.companyName} · $${Number(row.amount).toLocaleString()}`,
+      subtitle: row.companyName,
+      amount: String(row.amount),
       href: `/deals/${row.id}` as Route,
     })),
     tickets: ticketRows.map((row) => ({
       id: row.id,
       title: row.subject,
-      subtitle: `${row.requesterFirst} ${row.requesterLast} · ${row.status.replaceAll("_", " ")}`,
+      subtitle: `${row.requesterFirst} ${row.requesterLast}`,
+      status: row.status,
       href: `/tickets/${row.id}` as Route,
     })),
     campaigns: campaignRows.map((row) => ({
       id: row.id,
       title: row.name,
-      subtitle: `Campaign · ${row.status}`,
+      subtitle: "",
+      status: row.status,
       href: `/campaigns/${row.id}` as Route,
     })),
   };

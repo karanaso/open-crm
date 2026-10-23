@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Check, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { completeTaskAction, deleteTaskAction, reopenTaskAction } from "@/actions/engagement";
 import { TaskForm } from "@/components/timeline/task-form";
@@ -11,12 +12,12 @@ import { PriorityBadge } from "@/components/ui/badges";
 import { cn } from "@/lib/utils";
 import type { TaskListItem } from "@/lib/services/tasks";
 
-export function TaskSection({
+export async function TaskSection({
   tasks,
   links,
   returnTo,
   assignees,
-  title = "Tasks",
+  title,
 }: {
   tasks: TaskListItem[];
   links: Partial<Record<"companyId" | "contactId" | "dealId" | "ticketId" | "campaignId", string | null>>;
@@ -24,19 +25,21 @@ export function TaskSection({
   assignees: Array<{ id: string; name: string; status: "active" | "inactive" }>;
   title?: string;
 }) {
+  const t = await getTranslations("timeline");
+  const tCommon = await getTranslations("common");
   const open = tasks.filter((task) => task.status === "open");
   const completed = tasks.filter((task) => task.status === "completed");
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
-        <CardTitle>{title}</CardTitle>
-        <Badge variant="outline">{open.length} open</Badge>
+        <CardTitle>{title ?? t("tasks")}</CardTitle>
+        <Badge variant="outline">{t("openCount", { count: open.length })}</Badge>
       </CardHeader>
       <CardContent className="space-y-4">
         <details className="rounded-lg border bg-muted/20 p-3">
           <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-            <Plus className="size-4" /> Add a task
+            <Plus className="size-4" /> {t("addTask")}
           </summary>
           <div className="mt-4">
             <TaskForm links={links} returnTo={returnTo} assignees={assignees} />
@@ -44,7 +47,7 @@ export function TaskSection({
         </details>
 
         {open.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No open tasks for this record.</p>
+          <p className="text-sm text-muted-foreground">{t("noOpenTasks")}</p>
         ) : (
           <ul className="space-y-2">
             {open.map((task) => (
@@ -53,8 +56,8 @@ export function TaskSection({
                   <div className="min-w-0">
                     <p className="font-medium">{task.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      Due <DateDisplay value={task.dueDate} />
-                      {task.assigneeName ? ` · ${task.assigneeName}` : " · Unassigned"}
+                      {t("due")} <DateDisplay value={task.dueDate} />
+                      {task.assigneeName ? ` · ${task.assigneeName}` : ` · ${tCommon("unassigned")}`}
                     </p>
                     {task.links.length > 0 ? (
                       <div className="mt-1 flex flex-wrap gap-1">
@@ -72,7 +75,7 @@ export function TaskSection({
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <PriorityBadge priority={task.priority} />
-                    {task.isOverdue ? <Badge variant="destructive">Overdue</Badge> : null}
+                    {task.isOverdue ? <Badge variant="destructive">{tCommon("overdue")}</Badge> : null}
                   </div>
                 </div>
                 {task.description ? (
@@ -81,20 +84,20 @@ export function TaskSection({
                 <div className="mt-2 flex items-center justify-end gap-1">
                   <form action={completeTaskAction.bind(null, task.id, returnTo)}>
                     <Button type="submit" variant="ghost" size="sm">
-                      <Check className="size-3.5" /> Complete
+                      <Check className="size-3.5" /> {t("complete")}
                     </Button>
                   </form>
                   <Button variant="ghost" size="sm" asChild>
                     <Link href={`/tasks/${task.id}/edit?returnTo=${encodeURIComponent(returnTo)}`}>
-                      <Pencil className="size-3.5" /> Edit
+                      <Pencil className="size-3.5" /> {tCommon("edit")}
                     </Link>
                   </Button>
                   <form action={deleteTaskAction.bind(null, task.id, returnTo)}>
                     <ConfirmSubmit
-                      message="Delete this task?"
+                      message={t("deleteTaskConfirm")}
                       className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-destructive")}
                     >
-                      <Trash2 className="size-3.5" /> Delete
+                      <Trash2 className="size-3.5" /> {tCommon("delete")}
                     </ConfirmSubmit>
                   </form>
                 </div>
@@ -106,7 +109,7 @@ export function TaskSection({
         {completed.length > 0 ? (
           <details>
             <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
-              Completed ({completed.length})
+              {t("completedCount", { count: completed.length })}
             </summary>
             <ul className="mt-2 space-y-1">
               {completed.map((task) => (
@@ -115,12 +118,12 @@ export function TaskSection({
                   <div className="flex items-center gap-1">
                     <form action={reopenTaskAction.bind(null, task.id, returnTo)}>
                       <Button type="submit" variant="ghost" size="sm">
-                        <RotateCcw className="size-3.5" /> Reopen
+                        <RotateCcw className="size-3.5" /> {t("reopen")}
                       </Button>
                     </form>
                     <form action={deleteTaskAction.bind(null, task.id, returnTo)}>
                       <ConfirmSubmit
-                        message="Delete this task?"
+                        message={t("deleteTaskConfirm")}
                         className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-destructive")}
                       >
                         <Trash2 className="size-3.5" />

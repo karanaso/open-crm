@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Plus, Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -9,21 +10,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TagList } from "@/components/ui/badges";
 import { LocalTime } from "@/components/ui/local-time";
 import { listSegments } from "@/lib/services/marketing";
+import { formatNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function SegmentsPage() {
+  const t = await getTranslations("marketing");
+  const tCommon = await getTranslations("common");
+  const locale = await getLocale();
   const segments = await listSegments(false);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Segments"
-        description="Reusable groups of contacts defined by live criteria."
+        title={t("segments")}
+        description={t("segmentsDescription")}
         actions={
           <Button asChild>
             <Link href="/segments/new">
-              <Plus className="size-4" /> New segment
+              <Plus className="size-4" /> {t("newSegment")}
             </Link>
           </Button>
         }
@@ -32,19 +37,19 @@ export default async function SegmentsPage() {
       {segments.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No segments yet"
-          description="Create a segment to group contacts for a campaign."
-          action={<Button asChild><Link href="/segments/new">New segment</Link></Button>}
+          title={t("segmentsEmptyTitle")}
+          description={t("segmentsEmptyDescription")}
+          action={<Button asChild><Link href="/segments/new">{t("newSegment")}</Link></Button>}
         />
       ) : (
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Segment</TableHead>
-                <TableHead>Criteria</TableHead>
-                <TableHead>Audience</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead>{t("segment")}</TableHead>
+                <TableHead>{t("criteria")}</TableHead>
+                <TableHead>{t("audience")}</TableHead>
+                <TableHead>{tCommon("updated")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,7 +72,7 @@ export default async function SegmentsPage() {
                   </TableCell>
                   <TableCell>
                     <Link href={`/segments/${segment.id}`} className="font-medium hover:underline">
-                      {segment.audienceCount}
+                      {formatNumber(segment.audienceCount, locale)}
                     </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground">

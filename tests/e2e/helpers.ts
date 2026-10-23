@@ -19,7 +19,7 @@ export async function login(page: Page, email = ADMIN.email, password = ADMIN.pa
   await page.fill("#password", password);
   await page.click("button[type=submit]");
   await page.waitForURL("**/dashboard", { timeout: 30000 });
-  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Dashboard|Πίνακας ελέγχου/ })).toBeVisible();
 }
 
 export async function logout(page: Page) {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   Building2,
   Mail,
@@ -39,6 +40,13 @@ export default async function ContactDetailPage({
   const currentUser = await requireUser();
   const filterType = getParam(raw, "activityType");
   const timelinePage = Math.max(1, Number(getParam(raw, "timelinePage") ?? 1) || 1);
+  const t = await getTranslations("directory");
+  const tCommon = await getTranslations("common");
+  const tSales = await getTranslations("sales");
+  const tSupport = await getTranslations("support");
+  const tMarketing = await getTranslations("marketing");
+  const tEnums = await getTranslations("enums");
+  const locale = await getLocale();
 
   const [relations, timeline, tasks, team] = await Promise.all([
     getContactRelations(id),
@@ -60,22 +68,22 @@ export default async function ContactDetailPage({
           <>
             <Button variant="outline" asChild>
               <Link href={`/contacts/${contact.id}/edit`}>
-                <Pencil className="size-4" /> Edit
+                <Pencil className="size-4" /> {tCommon("edit")}
               </Link>
             </Button>
             {contact.archivedAt ? (
               <form action={restoreContactAction.bind(null, contact.id)}>
                 <Button type="submit" variant="outline">
-                  <RotateCcw className="size-4" /> Restore
+                  <RotateCcw className="size-4" /> {tCommon("restore")}
                 </Button>
               </form>
             ) : (
               <form action={archiveContactAction.bind(null, contact.id)}>
                 <ConfirmSubmit
-                  message="Archive this contact? Their existing records stay intact."
+                  message={t("archiveContactConfirm")}
                   className={cn(buttonVariants({ variant: "outline" }))}
                 >
-                  <Trash2 className="size-4" /> Archive
+                  <Trash2 className="size-4" /> {tCommon("archive")}
                 </ConfirmSubmit>
               </form>
             )}
@@ -83,24 +91,24 @@ export default async function ContactDetailPage({
         }
       />
 
-      {contact.archivedAt ? <Badge variant="outline">Archived contact</Badge> : null}
+      {contact.archivedAt ? <Badge variant="outline">{t("archivedContact")}</Badge> : null}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Deals</CardTitle>
+              <CardTitle>{tSales("deals")}</CardTitle>
             </CardHeader>
             <CardContent>
               {relations.deals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No deals linked to this contact yet.</p>
+                <p className="text-sm text-muted-foreground">{t("contactDealsEmpty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Deal</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead>{tSales("deal")}</TableHead>
+                      <TableHead>{tCommon("status")}</TableHead>
+                      <TableHead>{tSales("amount")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -114,7 +122,7 @@ export default async function ContactDetailPage({
                         <TableCell>
                           <DealStatusBadge status={deal.status} />
                         </TableCell>
-                        <TableCell>{formatCurrency(deal.amount)}</TableCell>
+                        <TableCell>{formatCurrency(deal.amount, locale)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -125,18 +133,18 @@ export default async function ContactDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Tickets</CardTitle>
+              <CardTitle>{tSupport("tickets")}</CardTitle>
             </CardHeader>
             <CardContent>
               {relations.tickets.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tickets from this contact yet.</p>
+                <p className="text-sm text-muted-foreground">{t("contactTicketsEmpty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{tCommon("subject")}</TableHead>
+                      <TableHead>{tCommon("priority")}</TableHead>
+                      <TableHead>{tCommon("status")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -163,11 +171,11 @@ export default async function ContactDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Campaigns</CardTitle>
+              <CardTitle>{tMarketing("campaigns")}</CardTitle>
             </CardHeader>
             <CardContent>
               {relations.campaigns.length === 0 ? (
-                <p className="text-sm text-muted-foreground">This contact has not been in a campaign yet.</p>
+                <p className="text-sm text-muted-foreground">{t("contactCampaignsEmpty")}</p>
               ) : (
                 <ul className="space-y-2">
                   {relations.campaigns.map((campaign) => (
@@ -178,7 +186,9 @@ export default async function ContactDetailPage({
                       <Link href={`/campaigns/${campaign.campaignId}`} className="font-medium hover:underline">
                         {campaign.campaignName}
                       </Link>
-                      <Badge variant="outline">{campaign.recipientStatus}</Badge>
+                      <Badge variant="outline">
+                        {tEnums(`recipientStatus.${campaign.recipientStatus}`)}
+                      </Badge>
                     </li>
                   ))}
                 </ul>
@@ -190,16 +200,16 @@ export default async function ContactDetailPage({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Contact details</CardTitle>
+              <CardTitle>{t("contactDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div>
-                <p className="text-muted-foreground">Company</p>
+                <p className="text-muted-foreground">{tCommon("company")}</p>
                 {contact.companyId ? (
                   <Link href={`/companies/${contact.companyId}`} className="flex items-center gap-2 font-medium hover:underline">
                     <Building2 className="size-3.5" /> {contact.companyName}
                     {contact.companyArchivedAt ? (
-                      <Badge variant="outline">Archived</Badge>
+                      <Badge variant="outline">{tCommon("archived")}</Badge>
                     ) : null}
                   </Link>
                 ) : (
@@ -207,12 +217,12 @@ export default async function ContactDetailPage({
                 )}
               </div>
               <div>
-                <p className="text-muted-foreground">Owner</p>
+                <p className="text-muted-foreground">{tCommon("owner")}</p>
                 <p className="font-medium">
                   {contact.ownerName}
                   {contact.ownerStatus === "inactive" ? (
                     <Badge variant="outline" className="ml-2">
-                      Inactive
+                      {tCommon("inactive")}
                     </Badge>
                   ) : null}
                 </p>
@@ -234,20 +244,20 @@ export default async function ContactDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle>At a glance</CardTitle>
+              <CardTitle>{t("atAGlance")}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xl font-semibold">{relations.deals.length}</p>
-                <p className="text-xs text-muted-foreground">Deals</p>
+                <p className="text-xs text-muted-foreground">{tSales("deals")}</p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xl font-semibold">{relations.tickets.length}</p>
-                <p className="text-xs text-muted-foreground">Tickets</p>
+                <p className="text-xs text-muted-foreground">{tSupport("tickets")}</p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xl font-semibold">{relations.campaigns.length}</p>
-                <p className="text-xs text-muted-foreground">Campaigns</p>
+                <p className="text-xs text-muted-foreground">{tMarketing("campaigns")}</p>
               </div>
             </CardContent>
           </Card>

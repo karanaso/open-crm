@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { TicketForm } from "@/components/tickets/ticket-form";
@@ -11,6 +12,8 @@ export default async function EditTicketPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const ticket = await getTicket(id);
   if (!ticket) notFound();
+  const t = await getTranslations("support");
+  const tCommon = await getTranslations("common");
 
   const [contacts, team] = await Promise.all([getContactPickerOptions(), listTeamMembers()]);
   const assignees = team
@@ -19,7 +22,7 @@ export default async function EditTicketPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="Edit ticket" description="Update the requester, priority, assignment, or details." />
+      <PageHeader title={t("editTicket")} description={t("editTicketDescription")} />
       <Card>
         <CardContent className="pt-5">
           <TicketForm
@@ -34,7 +37,7 @@ export default async function EditTicketPage({ params }: { params: Promise<{ id:
               assigneeId: ticket.assigneeId,
               updatedAt: ticket.updatedAt.toISOString(),
             }}
-            submitLabel="Save changes"
+            submitLabel={tCommon("saveChanges")}
             cancelHref={`/tickets/${ticket.id}`}
           />
         </CardContent>

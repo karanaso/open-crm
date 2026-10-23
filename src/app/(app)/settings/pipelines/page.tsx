@@ -1,3 +1,4 @@
+import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowDown, ArrowUp, Plus, Star, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { PageError } from "@/components/ui/page-error";
@@ -20,7 +21,7 @@ import {
   setDefaultPipelineFormAction,
   updateStageFormAction,
 } from "@/actions/pipelines";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 
 export default async function PipelineSettingsPage({
   searchParams,
@@ -31,35 +32,39 @@ export default async function PipelineSettingsPage({
   const raw = await searchParams;
   const error = getParam(raw, "error");
   const pipelines = await listPipelines(false);
+  const t = await getTranslations("settings");
+  const tCommon = await getTranslations("common");
+  const tEnums = await getTranslations("enums");
+  const locale = await getLocale();
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Pipelines"
-        description="Configure sales stages, probabilities, and which pipeline new deals use by default."
-      />
+      <PageHeader title={t("pipelines")} description={t("pipelineSettingsDescription")} />
 
       <PageError code={error} />
 
       <Card>
         <CardHeader>
-          <CardTitle>New pipeline</CardTitle>
+          <CardTitle>{t("newPipeline")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={createPipelineFormAction} className="flex flex-wrap items-end gap-2">
             <div className="min-w-56 flex-1 space-y-1">
               <label htmlFor="new-pipeline-name" className="text-sm font-medium">
-                Pipeline name
+                {t("pipelineName")}
               </label>
-              <Input id="new-pipeline-name" name="name" placeholder="Partnerships" required />
+              <Input
+                id="new-pipeline-name"
+                name="name"
+                placeholder={t("pipelineNamePlaceholder")}
+                required
+              />
             </div>
             <Button type="submit">
-              <Plus className="size-4" /> Create pipeline
+              <Plus className="size-4" /> {t("createPipeline")}
             </Button>
           </form>
-          <p className="mt-2 text-xs text-muted-foreground">
-            New pipelines start with Lead, Qualified, Proposal, Negotiation, Won, and Lost stages.
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">{t("newPipelineHint")}</p>
         </CardContent>
       </Card>
 
@@ -69,25 +74,27 @@ export default async function PipelineSettingsPage({
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2">
                 {pipeline.name}
-                {pipeline.isDefault ? <Badge>Default</Badge> : null}
+                {pipeline.isDefault ? <Badge>{t("defaultBadge")}</Badge> : null}
               </CardTitle>
-              <p className="text-xs text-muted-foreground">{pipeline.stages.length} stages</p>
+              <p className="text-xs text-muted-foreground">
+                {t("stageCount", { count: pipeline.stages.length })}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {!pipeline.isDefault ? (
                 <form action={setDefaultPipelineFormAction.bind(null, pipeline.id)}>
                   <Button type="submit" variant="outline" size="sm">
-                    <Star className="size-4" /> Make default
+                    <Star className="size-4" /> {t("makeDefault")}
                   </Button>
                 </form>
               ) : null}
               {!pipeline.isDefault ? (
                 <form action={archivePipelineFormAction.bind(null, pipeline.id)}>
                   <ConfirmSubmit
-                    message="Archive this pipeline? It must have no deals."
+                    message={t("archivePipelineConfirm")}
                     className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-destructive")}
                   >
-                    <Trash2 className="size-4" /> Archive
+                    <Trash2 className="size-4" /> {tCommon("archive")}
                   </ConfirmSubmit>
                 </form>
               ) : null}
@@ -96,24 +103,27 @@ export default async function PipelineSettingsPage({
           <CardContent className="space-y-4">
             <form action={renamePipelineFormAction.bind(null, pipeline.id)} className="flex flex-wrap items-end gap-2">
               <div className="min-w-56 flex-1 space-y-1">
-                <label htmlFor={`pipeline-${pipeline.id}-name`} className="text-xs font-medium text-muted-foreground">
-                  Rename pipeline
+                <label
+                  htmlFor={`pipeline-${pipeline.id}-name`}
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  {t("renamePipeline")}
                 </label>
                 <Input id={`pipeline-${pipeline.id}-name`} name="name" defaultValue={pipeline.name} required />
               </div>
               <Button type="submit" variant="secondary" size="sm">
-                Save name
+                {t("saveName")}
               </Button>
             </form>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Stage</TableHead>
-                  <TableHead>Probability</TableHead>
-                  <TableHead>Outcome</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("order")}</TableHead>
+                  <TableHead>{t("stage")}</TableHead>
+                  <TableHead>{t("probability")}</TableHead>
+                  <TableHead>{t("outcome")}</TableHead>
+                  <TableHead>{tCommon("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,7 +139,7 @@ export default async function PipelineSettingsPage({
                             size="icon"
                             className="size-7"
                             disabled={index === 0}
-                            aria-label={`Move ${stage.name} up`}
+                            aria-label={t("moveStageUp", { name: stage.name })}
                           >
                             <ArrowUp className="size-3.5" />
                           </Button>
@@ -141,7 +151,7 @@ export default async function PipelineSettingsPage({
                             size="icon"
                             className="size-7"
                             disabled={index === pipeline.stages.length - 1}
-                            aria-label={`Move ${stage.name} down`}
+                            aria-label={t("moveStageDown", { name: stage.name })}
                           >
                             <ArrowDown className="size-3.5" />
                           </Button>
@@ -153,7 +163,13 @@ export default async function PipelineSettingsPage({
                         action={updateStageFormAction.bind(null, stage.id)}
                         className="flex flex-wrap items-center gap-2"
                       >
-                        <Input name="name" defaultValue={stage.name} className="h-8 w-36" aria-label="Stage name" required />
+                        <Input
+                          name="name"
+                          defaultValue={stage.name}
+                          className="h-8 w-36"
+                          aria-label={t("stageName")}
+                          required
+                        />
                         <input type="hidden" name="position" value={stage.position} />
                         <Input
                           name="probability"
@@ -162,37 +178,37 @@ export default async function PipelineSettingsPage({
                           max={100}
                           defaultValue={stage.probability}
                           className="h-8 w-20"
-                          aria-label="Probability"
+                          aria-label={t("probability")}
                           required
                         />
                         <select
                           name="outcome"
                           defaultValue={stage.outcome}
                           className="h-8 rounded-md border border-input bg-background px-2 text-sm"
-                          aria-label="Outcome"
+                          aria-label={t("outcome")}
                         >
-                          <option value="open">Open</option>
-                          <option value="won">Won</option>
-                          <option value="lost">Lost</option>
+                          <option value="open">{tEnums("stageOutcome.open")}</option>
+                          <option value="won">{tEnums("stageOutcome.won")}</option>
+                          <option value="lost">{tEnums("stageOutcome.lost")}</option>
                         </select>
                         <Button type="submit" variant="secondary" size="sm">
-                          Save
+                          {tCommon("save")}
                         </Button>
                       </form>
                     </TableCell>
-                    <TableCell>{stage.probability}%</TableCell>
+                    <TableCell>{formatNumber(stage.probability, locale)}%</TableCell>
                     <TableCell>
                       <Badge variant={stage.outcome === "won" ? "success" : stage.outcome === "lost" ? "destructive" : "info"}>
-                        {stage.outcome}
+                        {tEnums(`stageOutcome.${stage.outcome}`)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <form action={deleteStageFormAction.bind(null, stage.id)}>
                         <ConfirmSubmit
-                          message="Remove this stage? It must have no deals."
+                          message={t("removeStageConfirm")}
                           className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-destructive")}
                         >
-                          <Trash2 className="size-3.5" /> Remove
+                          <Trash2 className="size-3.5" /> {tCommon("remove")}
                         </ConfirmSubmit>
                       </form>
                     </TableCell>
@@ -203,19 +219,40 @@ export default async function PipelineSettingsPage({
 
             <form action={createStageFormAction.bind(null, pipeline.id)} className="flex flex-wrap items-end gap-2">
               <div className="min-w-40 flex-1 space-y-1">
-                <label htmlFor={`stage-${pipeline.id}-name`} className="text-xs font-medium text-muted-foreground">
-                  Add stage
+                <label
+                  htmlFor={`stage-${pipeline.id}-name`}
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  {t("addStage")}
                 </label>
-                <Input id={`stage-${pipeline.id}-name`} name="name" placeholder="New stage" required />
+                <Input
+                  id={`stage-${pipeline.id}-name`}
+                  name="name"
+                  placeholder={t("newStagePlaceholder")}
+                  required
+                />
               </div>
-              <Input name="probability" type="number" min={0} max={100} defaultValue={50} className="h-9 w-24" aria-label="Probability" required />
-              <select name="outcome" className="h-9 rounded-md border border-input bg-background px-2 text-sm" aria-label="Outcome">
-                <option value="open">Open</option>
-                <option value="won">Won</option>
-                <option value="lost">Lost</option>
+              <Input
+                name="probability"
+                type="number"
+                min={0}
+                max={100}
+                defaultValue={50}
+                className="h-9 w-24"
+                aria-label={t("probability")}
+                required
+              />
+              <select
+                name="outcome"
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                aria-label={t("outcome")}
+              >
+                <option value="open">{tEnums("stageOutcome.open")}</option>
+                <option value="won">{tEnums("stageOutcome.won")}</option>
+                <option value="lost">{tEnums("stageOutcome.lost")}</option>
               </select>
               <Button type="submit" size="sm">
-                <Plus className="size-4" /> Add stage
+                <Plus className="size-4" /> {t("addStage")}
               </Button>
             </form>
           </CardContent>

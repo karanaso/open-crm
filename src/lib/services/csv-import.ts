@@ -3,7 +3,7 @@ import { isNotNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { companies, contacts } from "@/db/schema";
 import { normalizeDomain, normalizeEmail } from "@/lib/auth/normalize";
-import { AppError } from "@/lib/errors";
+import { AppError, type MessageDescriptor } from "@/lib/errors";
 import { companySchema } from "@/lib/validation/company";
 import { contactSchema } from "@/lib/validation/contact";
 import { fieldErrorsFromZod, type ImportReport } from "@/lib/action-state";
@@ -11,6 +11,25 @@ import { MAX_CSV_ROWS } from "@/lib/constants";
 
 type CsvRow = Record<string, string | undefined>;
 export type ImportTarget = "companies" | "contacts";
+
+function importFieldError(
+  fieldErrors: Record<string, MessageDescriptor[]>,
+): MessageDescriptor {
+  const [field, messages] = Object.entries(fieldErrors)[0] ?? [];
+  const descriptor = messages?.[0] ?? { key: "validation.invalid" };
+
+  if (descriptor.key === "validation.required") {
+    if (field === "name") return { key: "directory.companyNameRequired" };
+    if (field === "firstName") return { key: "directory.firstNameRequired" };
+    if (field === "lastName") return { key: "directory.lastNameRequired" };
+    if (field === "email") return { key: "directory.emailRequired" };
+  }
+  if (field === "email" && descriptor.key === "validation.email") {
+    return { key: "directory.emailInvalid" };
+  }
+
+  return descriptor;
+}
 
 function mapped(row: CsvRow, mapping: Record<string, string>, field: string) {
   const header = mapping[field];
@@ -47,7 +66,7 @@ export async function importCsv(input: {
   actorId: string;
 }): Promise<ImportReport> {
   const rows = parse(input.text);
-  const errors: Array<{ row: number; message: string }> = [];
+  const errors: Array<{ row: number; message: MessageDescriptor }> = [];
   let duplicates = 0;
 
   if (input.target === "companies") {
@@ -89,9 +108,7 @@ export async function importCsv(input: {
         const fieldErrors = fieldErrorsFromZod(result.error);
         errors.push({
           row: rowNumber,
-          message: Object.entries(fieldErrors)
-            .map(([field, messages]) => `${field}: ${messages[0]}`)
-            .join("; "),
+          message: importFieldError(fieldErrors),
         });
         continue;
       }
@@ -166,7 +183,10 @@ export async function importCsv(input: {
     if ((companyDomain || companyName) && !companyId) {
       errors.push({
         row: rowNumber,
-        message: `Company not found: ${companyDomain ?? companyName}. Import companies first.`,
+        message: {
+          key: "directory.companyNotFound",
+          params: { company: companyDomain ?? companyName ?? "" },
+        },
       });
       continue;
     }
@@ -186,9 +206,7 @@ export async function importCsv(input: {
       const fieldErrors = fieldErrorsFromZod(result.error);
       errors.push({
         row: rowNumber,
-        message: Object.entries(fieldErrors)
-          .map(([field, messages]) => `${field}: ${messages[0]}`)
-          .join("; "),
+        message: importFieldError(fieldErrors),
       });
       continue;
     }

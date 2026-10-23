@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CampaignForm } from "@/components/marketing/campaign-form";
@@ -10,6 +11,8 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
   const { id } = await params;
   const campaign = await getCampaign(id);
   if (!campaign) notFound();
+  const t = await getTranslations("marketing");
+  const tCommon = await getTranslations("common");
 
   const [segments, team, currentSegment] = await Promise.all([
     getSegmentOptions(),
@@ -38,7 +41,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title={`Edit ${campaign.name}`} description="Update campaign details. Audience snapshots do not change." />
+      <PageHeader title={t("editCampaignTitle", { name: campaign.name })} description={t("editCampaignDescription")} />
       <Card>
         <CardContent className="pt-5">
           <CampaignForm
@@ -55,7 +58,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
               endDate: campaign.endDate,
               description: campaign.description,
             }}
-            submitLabel="Save changes"
+            submitLabel={tCommon("saveChanges")}
             cancelHref={`/campaigns/${campaign.id}`}
           />
         </CardContent>

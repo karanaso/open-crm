@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { ContactForm } from "@/components/directory/contact-form";
@@ -13,6 +14,8 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
   if (!contact) notFound();
 
   const [team, companies] = await Promise.all([listTeamMembers(), getCompanyPickerOptions()]);
+  const t = await getTranslations("directory");
+  const tCommon = await getTranslations("common");
   const owners = team
     .filter((member) => member.status === "active" || member.id === contact.ownerId)
     .map((member) => ({ id: member.id, name: member.name, status: member.status }));
@@ -21,7 +24,7 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
   if (contact.companyId && !companyOptions.some((company) => company.id === contact.companyId)) {
     companyOptions.push({
       id: contact.companyId,
-      name: contact.companyName ?? "Unknown company",
+      name: contact.companyName ?? t("unknownCompany"),
       domain: null,
       archivedAt: contact.companyArchivedAt,
     });
@@ -30,8 +33,8 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
-        title={`Edit ${contact.firstName} ${contact.lastName}`}
-        description="Update contact details, company, ownership, and tags."
+        title={t("editContactTitle", { name: `${contact.firstName} ${contact.lastName}` })}
+        description={t("editContactDescription")}
       />
       <Card>
         <CardContent className="pt-5">
@@ -41,7 +44,7 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
             owners={owners}
             companies={companyOptions}
             defaultOwnerId={contact.ownerId}
-            submitLabel="Save changes"
+            submitLabel={tCommon("saveChanges")}
           />
         </CardContent>
       </Card>

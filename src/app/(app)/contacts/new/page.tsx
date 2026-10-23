@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { ContactForm } from "@/components/directory/contact-form";
@@ -21,6 +22,7 @@ export default async function NewContactPage({
     getCompanyPickerOptions(),
     companyId ? getCompany(companyId) : Promise.resolve(null),
   ]);
+  const t = await getTranslations("directory");
 
   const owners = team
     .filter((member) => member.status === "active")
@@ -38,7 +40,7 @@ export default async function NewContactPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title="New contact" description="Add a person to your customer directory." />
+      <PageHeader title={t("newContact")} description={t("newContactDescription")} />
       <Card>
         <CardContent className="pt-5">
           <ContactForm
@@ -47,7 +49,7 @@ export default async function NewContactPage({
             owners={owners}
             companies={companyOptions}
             defaultOwnerId={user.id}
-            submitLabel="Create contact"
+            submitLabel={t("createContact")}
           />
         </CardContent>
       </Card>

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { moveDealAction } from "@/actions/deals";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ export function DealStageControl({
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const translate = useMessageTranslator();
+  const t = useTranslations("sales");
+  const tCommon = useTranslations("common");
   const selected = stages.find((stage) => stage.id === stageId);
 
   function submit() {
@@ -53,7 +56,7 @@ export function DealStageControl({
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        <Label htmlFor="deal-stage">Move to stage</Label>
+        <Label htmlFor="deal-stage">{t("moveToStage")}</Label>
         <select
           id="deal-stage"
           value={stageId}
@@ -69,17 +72,17 @@ export function DealStageControl({
       </div>
       {selected?.outcome === "lost" ? (
         <div className="space-y-1">
-          <Label htmlFor="deal-lost-reason">Lost reason</Label>
+          <Label htmlFor="deal-lost-reason">{t("lostReason")}</Label>
           <Input
             id="deal-lost-reason"
             value={lostReason}
             onChange={(event) => setLostReason(event.target.value)}
-            placeholder="Why was this deal lost?"
+            placeholder={t("lostReasonPrompt")}
           />
         </div>
       ) : null}
       <Button onClick={submit} disabled={pending || stageId === currentStageId} className="w-full">
-        {pending ? "Updating…" : "Update stage"}
+        {pending ? tCommon("updating") : t("updateStage")}
       </Button>
     </div>
   );

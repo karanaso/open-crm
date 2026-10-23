@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompanyForm } from "@/components/directory/company-form";
@@ -12,13 +13,18 @@ export default async function EditCompanyPage({ params }: { params: Promise<{ id
   if (!company) notFound();
 
   const team = await listTeamMembers();
+  const t = await getTranslations("directory");
+  const tCommon = await getTranslations("common");
   const owners = team
     .filter((member) => member.status === "active" || member.id === company.ownerId)
     .map((member) => ({ id: member.id, name: member.name, status: member.status }));
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <PageHeader title={`Edit ${company.name}`} description="Update company details, ownership, and tags." />
+      <PageHeader
+        title={t("editCompanyTitle", { name: company.name })}
+        description={t("editCompanyDescription")}
+      />
       <Card>
         <CardContent className="pt-5">
           <CompanyForm
@@ -26,7 +32,7 @@ export default async function EditCompanyPage({ params }: { params: Promise<{ id
             initial={company}
             owners={owners}
             defaultOwnerId={company.ownerId}
-            submitLabel="Save changes"
+            submitLabel={tCommon("saveChanges")}
           />
         </CardContent>
       </Card>
