@@ -24,6 +24,9 @@ src/db/                  Drizzle schema, client, seed, default pipeline
 src/lib/auth/            password, tokens, guards, throttling
 src/lib/services/        domain queries and mutations
 src/lib/validation/      Zod schemas
+messages/                English and Greek UI catalogs
+src/i18n/                locale config, request, formatting, labels, catalog checks
+docs/i18n/               glossary, style guide, error contract, accessibility notes
 tests/unit/              pure logic and component tests
 tests/integration/       real PostgreSQL service tests
 tests/e2e/               Playwright journeys
@@ -40,6 +43,7 @@ pnpm typecheck
 pnpm test
 pnpm test:integration
 pnpm test:e2e
+pnpm i18n:check
 pnpm db:generate
 pnpm db:migrate
 pnpm db:seed
@@ -54,6 +58,10 @@ Integration tests use `opencode_crm_test`. E2E tests prepare and use `opencode_c
 - Zod schemas in `src/lib/validation/` are the shared input contract. Every Server Action re-validates on the server.
 - Shared UI belongs in `src/components/ui/`. Module-specific UI belongs under the module folder.
 - Database enum values are stable identifiers. Translate display labels, not stored values.
+- UI strings live in `messages/en.json` (source) and `messages/el.json`. Do not hardcode user-facing strings. Run `pnpm i18n:check` after catalog changes.
+- Server Actions and services return locale-independent message descriptors; translate them at the UI boundary. Never return English display sentences from services.
+- Use `src/i18n/format.ts` for locale-aware dates, numbers, USD amounts, and durations. USD and UTC SLA calculations do not change.
+- Do not translate user data or stored enum values. Greek terminology lives in `docs/i18n/glossary.md` and `docs/i18n/style-guide.md`; do not send strings to an external translation service.
 - One workspace per deployment. All active members share records. Do not introduce `workspace_id` casually.
 - Amounts are USD. SLA calculations use calendar hours in UTC. Do not silently change these constraints.
 - No email/calendar delivery, file attachments, public API, or multi-tenancy in this version.
@@ -128,6 +136,7 @@ Load the relevant module skill alongside the role agent; do not create per-modul
 - The requested behavior is implemented and scoped.
 - Relevant tests were added or updated.
 - `pnpm lint`, `pnpm typecheck`, and the relevant test suites pass.
+- `pnpm i18n:check` passes when UI strings or catalogs change.
 - A production build passes for release-level changes.
 - Documentation is updated when behavior or setup changes.
 - No secrets, generated build output, or unrelated files are staged.

@@ -11,6 +11,7 @@ A self-hosted CRM for a small team: companies and contacts, a sales pipeline, su
 - **Marketing** — live contact segments, campaigns, audience snapshots, and manual per-recipient engagement tracking.
 - **Dashboard** — sales, support, marketing, and personal task metrics, charts, recent activity, and global search.
 - **Workspace access** — first-run admin setup, invite-only onboarding, admin/member roles, deactivation, and one-time password reset links.
+- **Localization** — English and Greek interfaces with a profile language preference, localized validation and errors, and locale-aware dates, numbers, and USD formatting.
 
 ## Stack
 
@@ -19,6 +20,7 @@ A self-hosted CRM for a small team: companies and contacts, a sales pipeline, su
 - Auth.js v5 (Credentials, JWT sessions) + Argon2id
 - Tailwind CSS v4 + shadcn/ui and Radix primitives
 - dnd-kit, Recharts, Papa Parse
+- next-intl (English and Greek catalogs)
 - Vitest + Testing Library + Playwright
 
 ## Quick start
@@ -114,12 +116,23 @@ pnpm test                 # unit and component tests
 pnpm test:integration     # integration tests against opencode_crm_test
 pnpm exec playwright install chromium
 pnpm test:e2e             # resets the E2E database, starts a test server on :3100
+pnpm i18n:check           # English/Greek key, empty-value, and placeholder parity
 pnpm lint
 pnpm typecheck
 pnpm build
 ```
 
 The E2E tests are ordered: the auth spec performs first-run setup and creates the admin used by later specs. They run serially against an isolated database.
+
+## Localization
+
+- English is the default; Greek is available from **Settings → Profile** and from the language control on setup, sign-in, invitation, and reset pages.
+- The preference is stored on `users.locale` and mirrored in the `opencrm_locale` cookie. URLs do not contain a locale.
+- UI strings live in `messages/en.json` (source) and `messages/el.json`; keys and placeholders must match. Run `pnpm i18n:check` after changing either file.
+- Server Actions and services return locale-independent message descriptors. Forms and pages translate them; services never return English display sentences.
+- Dates, numbers, USD amounts, and durations use `src/i18n/format.ts` and the active locale. USD and UTC calendar-hour SLA rules do not change.
+- Do not translate user data: company and contact names, notes, tags, pipeline stage names, campaign copy, activity subjects, or task titles. Stored enum values stay in English; only their display labels are localized through `src/i18n/labels.ts`.
+- Greek terminology and style rules live in `docs/i18n/glossary.md` and `docs/i18n/style-guide.md`. Translation is local only; do not send application strings to an external service.
 
 ## Team operations
 
@@ -266,3 +279,4 @@ tests/
 - Date-only task due dates are evaluated in UTC.
 - CSV import runs synchronously; large files may take a few seconds.
 - Archived records are retained rather than hard-deleted.
+- English and Greek are the supported interface languages. There is no URL-prefixed locale, right-to-left layout, or additional language catalog.
