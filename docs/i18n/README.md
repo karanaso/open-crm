@@ -15,6 +15,8 @@ The profile preference on `users.locale` is the durable source for signed-in use
 - Setup and invite acceptance store the cookie locale on the new account.
 - Auth pages can change the cookie before a user exists.
 
+The `opencrm_locale` cookie is readable by client code because it contains only `en` or `el`; this lets the root-layout error fallback honor the preference without a provider. Authentication and session cookies remain `httpOnly`.
+
 A second active session keeps its previous locale until its next sign-in.
 
 ## File map
@@ -58,6 +60,8 @@ Use `src/i18n/format.ts` for dates, USD amounts, numbers, and durations. Date-on
 
 Domain services and Server Actions return locale-independent message descriptors; forms translate them at the UI boundary. See `docs/i18n/errors.md` for the contract.
 
+The error boundary (`src/app/error.tsx`), not-found page (`src/app/not-found.tsx`), and root-layout fallback (`src/app/global-error.tsx`) use the `errorPages` namespace. The error boundaries render generic localized copy and never render `error.message`, stack traces, or digests; the diagnostic is logged for operators. The root-layout fallback resolves the locale from the readable locale cookie, then `navigator.language`, then English.
+
 ## Commands
 
 ```bash
@@ -65,6 +69,7 @@ pnpm i18n:check     # key, empty-value, and placeholder parity
 pnpm typecheck      # typed message keys
 pnpm test           # catalog, formatting, labels, and document tests
 pnpm test:e2e       # includes the Greek authentication and locale journey
+pnpm test:e2e tests/e2e/01-auth.spec.ts tests/e2e/10-error-pages.spec.ts  # error/404 coverage
 ```
 
 ## Translation rules
