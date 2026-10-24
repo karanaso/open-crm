@@ -8,7 +8,7 @@ Record customer interactions and follow-up work on any CRM record so the team ca
 
 ### Requirement: Activity logging
 
-The system SHALL let active team members log activities of type note, call, email, or meeting. Each activity MUST include a type, subject, occurred-at time, author, and at least one linked company, contact, deal, ticket, or campaign. The occurred-at time MUST NOT be later than the current time. Body text MUST be optional and limited to 10,000 characters.
+The system SHALL let active team members log activities of type note, call, email, or meeting. Each activity MUST include a type, subject, occurred-at time, author, and at least one linked company, contact, deal, listing, ticket, or campaign. The occurred-at time MUST NOT be later than the current time. Body text MUST be optional and limited to 10,000 characters.
 
 #### Scenario: Call is logged
 
@@ -27,12 +27,12 @@ The system SHALL let active team members log activities of type note, call, emai
 
 #### Scenario: Activity links to multiple records
 
-- **WHEN** a member logs a meeting linked to a company, a contact, and a deal
-- **THEN** the activity appears on the timeline of all three records
+- **WHEN** a member logs a meeting linked to a company, a contact, a listing, and a deal
+- **THEN** the activity appears on the timeline of all four records
 
 ### Requirement: Record timeline
 
-Every company, contact, deal, ticket, and campaign detail page MUST show a combined timeline of its activities and completed tasks in reverse chronological order. The timeline MUST show type, subject, author, timestamp, and related-record links, and MUST support filtering by activity type and loading older entries.
+Every company, contact, deal, listing, ticket, and campaign detail page MUST show a combined timeline of its activities and completed tasks in reverse chronological order. The timeline MUST show type, subject, author, timestamp, and related-record links, and MUST support filtering by activity type and loading older entries.
 
 #### Scenario: Newest entries appear first
 
@@ -51,8 +51,8 @@ Every company, contact, deal, ticket, and campaign detail page MUST show a combi
 
 #### Scenario: Completed task appears on the timeline
 
-- **WHEN** a task linked to a deal is completed
-- **THEN** the deal timeline includes the completed task with its completion time
+- **WHEN** a task linked to a listing is completed
+- **THEN** the listing timeline includes the completed task with its completion time
 
 ### Requirement: Activity editing and deletion
 
@@ -86,6 +86,11 @@ The system SHALL let active team members create tasks with a required title and 
 
 - **WHEN** a member submits a task with no linked record
 - **THEN** the system rejects it and asks for at least one record
+
+#### Scenario: Task links to a listing
+
+- **WHEN** a member creates a task with a listing link
+- **THEN** the task appears on the listing detail page
 
 #### Scenario: Past due date is rejected
 
@@ -128,7 +133,7 @@ Tasks MUST support open and completed statuses. Completing a task MUST record th
 
 ### Requirement: Task views
 
-The system MUST provide a task page with "My tasks" and "All tasks" views. Open tasks MUST be grouped as overdue, due today, upcoming, and later, with completed tasks shown separately. Filters MUST include assignee, priority, status, and linked record type. Tasks MUST also appear on the detail page of every linked record.
+The system MUST provide a task page with "My tasks" and "All tasks" views. Open tasks MUST be grouped as overdue, due today, upcoming, and later, with completed tasks shown separately. Filters MUST include assignee, priority, status, and linked record type, including listings. Tasks MUST also appear on the detail page of every linked record.
 
 #### Scenario: My tasks are grouped
 
@@ -137,13 +142,13 @@ The system MUST provide a task page with "My tasks" and "All tasks" views. Open 
 
 #### Scenario: Filters apply
 
-- **WHEN** a member filters tasks by high priority and assignee
+- **WHEN** a member filters tasks by high priority, assignee, and listing record type
 - **THEN** only matching tasks are listed
 
 #### Scenario: Task appears on linked record
 
-- **WHEN** a task is linked to a deal
-- **THEN** the task appears on the deal detail page and links back to the task
+- **WHEN** a task is linked to a listing
+- **THEN** the task appears on the listing detail page and links back to the task
 
 #### Scenario: Completed tasks are separate
 
@@ -152,7 +157,7 @@ The system MUST provide a task page with "My tasks" and "All tasks" views. Open 
 
 ### Requirement: Task editing and deletion
 
-Active team members MUST be able to edit a task's title, description, due date, priority, assignee, and linked records, and MUST be able to delete tasks. Deleting a task MUST remove it from all task lists and record timelines.
+Active team members MUST be able to edit a task's title, description, due date, priority, assignee, and linked records, including adding or removing a listing link, and MUST be able to delete tasks. Deleting a task MUST remove it from all task lists and record timelines.
 
 #### Scenario: Task details are edited
 
@@ -161,8 +166,13 @@ Active team members MUST be able to edit a task's title, description, due date, 
 
 #### Scenario: Linked record is added
 
-- **WHEN** a member links an existing task to a campaign
-- **THEN** the task appears on the campaign detail page
+- **WHEN** a member links an existing task to a listing
+- **THEN** the task appears on the listing detail page
+
+#### Scenario: Linked record is removed
+
+- **WHEN** a member removes the listing link from a task that has another linked record
+- **THEN** the task no longer appears on the listing but remains on the other record
 
 #### Scenario: Task is deleted
 
