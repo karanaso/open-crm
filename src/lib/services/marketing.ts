@@ -20,7 +20,7 @@ import type { campaignListParamsSchema } from "@/lib/validation/marketing";
 
 type CampaignListParams = z.infer<typeof campaignListParamsSchema>;
 
-function segmentWhere(criteria: SegmentCriteria) {
+export function segmentWhere(criteria: SegmentCriteria) {
   const conditions = [isNull(contacts.archivedAt)];
 
   if (criteria.tags && criteria.tags.length > 0) {

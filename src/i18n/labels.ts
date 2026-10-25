@@ -71,6 +71,29 @@ export const enumLabelKeys = {
     reply: "enums.commentVisibility.reply",
     internal: "enums.commentVisibility.internal",
   },
+  messageStatus: {
+    draft: "enums.messageStatus.draft",
+    sending: "enums.messageStatus.sending",
+    completed: "enums.messageStatus.completed",
+    cancelled: "enums.messageStatus.cancelled",
+  },
+  deliveryStatus: {
+    queued: "enums.deliveryStatus.queued",
+    sent: "enums.deliveryStatus.sent",
+    failed: "enums.deliveryStatus.failed",
+    skipped: "enums.deliveryStatus.skipped",
+  },
+  outcomeReason: {
+    opted_out: "enums.outcomeReason.opted_out",
+    archived: "enums.outcomeReason.archived",
+    missing_email: "enums.outcomeReason.missing_email",
+    cancelled: "enums.outcomeReason.cancelled",
+    auth: "enums.outcomeReason.auth",
+    connection: "enums.outcomeReason.connection",
+    timeout: "enums.outcomeReason.timeout",
+    rejected: "enums.outcomeReason.rejected",
+    unknown: "enums.outcomeReason.unknown",
+  },
 } as const;
 
 export type EnumGroup = keyof typeof enumLabelKeys;

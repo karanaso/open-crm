@@ -26,6 +26,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LocalTime } from "@/components/ui/local-time";
 import { DealStatusBadge, PriorityBadge, TagList, TicketStatusBadge } from "@/components/ui/badges";
 import {
+  DeliveryStatusBadge,
+  OutcomeReasonBadge,
+} from "@/components/messaging/badges";
+import { ContactEmailOptOut } from "@/components/messaging/contact-email-opt-out";
+import {
   Table,
   TableBody,
   TableCell,
@@ -36,8 +41,10 @@ import {
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/i18n/format";
 import { getContact, getContactRelations } from "@/lib/services/contacts";
+import { getContactMessageHistory } from "@/lib/services/messaging";
 import { getWorkspaceDefaults } from "@/lib/services/workspace-settings";
 import { archiveContactAction, restoreContactAction } from "@/actions/contacts";
+import { setContactEmailOptOutAction } from "@/actions/messaging";
 
 type Translator = (key: string, values?: Record<string, string | number>) => string;
 
@@ -62,14 +69,16 @@ export default async function ContactDetailPage({
   const tMarketing = await getTranslations("marketing");
   const tEnums = await getTranslations("enums");
   const tListings = (await getTranslations("listings")) as unknown as Translator;
+  const tMessaging = await getTranslations("messaging");
   const locale = await getLocale();
 
-  const [relations, timeline, tasks, team, workspace] = await Promise.all([
+  const [relations, timeline, tasks, team, workspace, messageHistory] = await Promise.all([
     getContactRelations(id),
     getTimeline({ contactId: id }, { type: filterType, page: timelinePage }),
     getTasksForRecord({ contactId: id }),
     listTeamMembers(),
     getWorkspaceDefaults(),
+    getContactMessageHistory(id),
   ]);
 
   const assignees = team
@@ -337,6 +346,53 @@ export default async function ContactDetailPage({
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{tMessaging("contactMessages")}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {messageHistory.length === 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  {tMessaging("contactMessagesEmpty")}
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{tCommon("subject")}</TableHead>
+                      <TableHead>{tMessaging("sentAt")}</TableHead>
+                      <TableHead>{tMessaging("outcome")}</TableHead>
+                      <TableHead>{tCommon("reason")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {messageHistory.map((entry) => (
+                      <TableRow key={entry.messageId}>
+                        <TableCell>
+                          <Link
+                            href={`/messages/${entry.messageId}`}
+                            className="font-medium hover:underline"
+                          >
+                            {entry.subject}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <LocalTime value={entry.sentAt ?? entry.createdAt} />
+                        </TableCell>
+                        <TableCell>
+                          <DeliveryStatusBadge status={entry.status} />
+                        </TableCell>
+                        <TableCell>
+                          <OutcomeReasonBadge reason={entry.reason} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-6">
@@ -375,6 +431,14 @@ export default async function ContactDetailPage({
               <p className="flex items-center gap-2 break-all">
                 <Mail className="text-muted-foreground size-3.5" /> {contact.email}
               </p>
+              <ContactEmailOptOut
+                action={setContactEmailOptOutAction.bind(
+                  null,
+                  contact.id,
+                  `/contacts/${contact.id}`,
+                )}
+                optedOut={Boolean(contact.emailOptOutAt)}
+              />
               {contact.phone ? (
                 <p className="flex items-center gap-2">
                   <Phone className="text-muted-foreground size-3.5" /> {contact.phone}

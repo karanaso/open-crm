@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Organize contacts into targeted segments and track campaign outreach and responses while leaving message delivery to external tools.
+Organize contacts into targeted segments, plan campaign outreach, and track responses recorded by the team.
 
 ## Requirements
 
@@ -188,9 +188,9 @@ The campaign list MUST support filtering by status, channel, and owner, text sea
 - **WHEN** a member sorts campaigns by start date descending
 - **THEN** the most recently started campaign appears first
 
-### Requirement: No message delivery
+### Requirement: Campaigns do not deliver messages
 
-The system MUST NOT send email, SMS, or social messages. Activating a campaign MUST NOT contact recipients, and every engagement status MUST be recorded manually by a team member.
+Campaigns SHALL remain planning and tracking records. Activating a campaign MUST create recipients with targeted status and MUST NOT contact them. Every engagement status MUST be recorded manually by an active team member, and each change MUST be attributed to that member. A campaign channel MUST NOT trigger delivery.
 
 #### Scenario: Activation does not send messages
 
@@ -201,3 +201,8 @@ The system MUST NOT send email, SMS, or social messages. Activating a campaign M
 
 - **WHEN** a recipient's status changes
 - **THEN** the change is attributed to the team member who recorded it
+
+#### Scenario: Email channel does not trigger delivery
+
+- **WHEN** a member activates a campaign whose channel is email
+- **THEN** no recipient is contacted and engagement remains manual

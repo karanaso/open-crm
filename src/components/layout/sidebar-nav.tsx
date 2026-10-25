@@ -12,6 +12,7 @@ import {
   Home,
   LayoutDashboard,
   LifeBuoy,
+  Mail,
   Megaphone,
   Settings,
   Users,
@@ -28,6 +29,7 @@ const icons: Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon> = {
   "/deals": Handshake,
   "/tickets": LifeBuoy,
   "/campaigns": Megaphone,
+  "/messages": Mail,
   "/tasks": CheckSquare,
   "/settings": Settings,
 };

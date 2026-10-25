@@ -79,7 +79,7 @@ The seed script is idempotent and refuses to run in production.
 
 ## Navigation
 
-Authenticated pages share a persistent sidebar: **Dashboard**, **Companies**, **Contacts**, **Listings**, **Deals**, **Tickets**, **Campaigns**, **Tasks**, and **Settings**. Listings has an inventory view and a module overview. Settings shows profile and password to everyone; administrators also see **Team administration**, **Pipelines**, and **Workspace defaults** (currency and display time zone). On mobile widths the sidebar becomes a slide-out menu.
+Authenticated pages share a persistent sidebar: **Dashboard**, **Companies**, **Contacts**, **Listings**, **Deals**, **Tickets**, **Campaigns**, **Messages**, **Tasks**, and **Settings**. Listings has an inventory view and a module overview. Settings shows profile and password to everyone; administrators also see **Team administration**, **Pipelines**, and **Workspace defaults** (currency and display time zone). On mobile widths the sidebar becomes a slide-out menu.
 
 ## Environment variables
 
@@ -91,6 +91,15 @@ Authenticated pages share a persistent sidebar: **Dashboard**, **Companies**, **
 | `AUTH_TRUST_HOST`   | Recommended | Set to `true` when running behind a reverse proxy.                                                                            |
 | `NODE_ENV`          | Yes         | `development`, `test`, or `production`.                                                                                       |
 | `IMAGE_STORAGE_DIR` | No          | Writable directory for listing photos. Defaults to `./storage/listing-images`; in Docker it is `/app/storage/listing-images`. |
+| `SMTP_HOST`         | No          | SMTP server host. Messaging stays draft-only when unset.                                                                      |
+| `SMTP_PORT`         | No          | SMTP port. Defaults to `587`.                                                                                                 |
+| `SMTP_SECURE`       | No          | Set to `true` for implicit TLS, usually port 465. Defaults to `false` (STARTTLS).                                             |
+| `SMTP_USER`         | No          | SMTP username; requires `SMTP_PASSWORD`.                                                                                      |
+| `SMTP_PASSWORD`     | No          | SMTP password; requires `SMTP_USER`. Never logged or sent to the browser.                                                     |
+| `SMTP_ALLOW_PLAINTEXT` | No       | Set to `true` to allow SMTP AUTH without STARTTLS. Use only for a trusted local relay.                                        |
+| `MESSAGING_FROM`    | With SMTP   | Sender identity, e.g. `OpenCRM <crm@example.com>`. Required before any message can be sent.                                   |
+| `MESSAGING_MAX_RECIPIENTS` | No    | Maximum eligible recipients per message. Defaults to `100`; values above `1000` are clamped.                                  |
+| `MESSAGING_TRANSPORT` | No        | Set to `fake` to bypass delivery in local demos and tests. Ignored when `NODE_ENV=production`.                                 |
 
 ## Database and migrations
 
@@ -241,8 +250,20 @@ Ticket status transitions:
 - **Segments** evaluate current contact data with AND across fields and OR within a tag list. At least one criterion is required.
 - **Activating a campaign** snapshots the matching contacts into recipients and stores the segment name and criteria. Later segment or contact changes do not alter the snapshot.
 - Engagement statuses are manual: targeted, sent, opened, clicked, responded, converted. Campaign metrics count current statuses and show response and conversion rates.
-- **No messages are sent from the CRM.** Use an external tool for delivery.
+- **Campaigns never send messages.** Activating a campaign only creates recipients; delivery belongs to Messaging.
 - Archived campaigns are read-only.
+
+## Messaging
+
+- Compose plain-text email to a static recipient group or a segment. Sending freezes the audience and keeps the group or segment name and criteria as a snapshot.
+- Merge fields `{{firstName}}`, `{{lastName}}`, and `{{company}}` are replaced per recipient. Any other placeholder is rejected when saving.
+- Contacts marked do-not-email, archived contacts, and contacts without an email address are recorded as skipped with a reason rather than silently dropped.
+- Each recipient records `queued`, `sent`, `failed`, or `skipped`. "Sent" means the SMTP server accepted the message; the CRM cannot observe delivery, bounces, or opens.
+- Retry re-attempts only queued and failed recipients. Sent and skipped recipients are never retried.
+- A message can be cancelled while a send is interrupted; remaining queued recipients become skipped.
+- A single send is capped at `MESSAGING_MAX_RECIPIENTS` (default 100) eligible recipients.
+- Sending is synchronous. A crash mid-send leaves the message in `sending` with queued recipients available for retry.
+- Deliverability is the operator's responsibility: configure SPF, DKIM, and DMARC for the sender domain and use a From address the SMTP server may send as.
 
 ## Dashboard and search
 
@@ -282,6 +303,8 @@ docker run -p 3000:3000 \
 
 The listing-image directory must be writable by the `nextjs` user and included in backups. In Docker Compose the `crm_images` volume is mounted automatically.
 
+To enable email delivery, also pass `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, optional `SMTP_USER` and `SMTP_PASSWORD`, `MESSAGING_FROM`, and optionally `MESSAGING_MAX_RECIPIENTS`. Without them the Messaging pages still work, but sending is rejected with a configuration error. Configure SPF, DKIM, and DMARC for the sender domain before sending to real recipients.
+
 The image exposes `/api/health`, which checks database connectivity. Terminate TLS at a reverse proxy and keep the database private. Migrations are forward-only; back up the database before upgrading.
 
 ## Project structure
@@ -300,6 +323,7 @@ src/
     auth/              password, tokens, guards, throttling
     services/          domain services and queries
     validation/        Zod schemas
+    messaging/         email transport, merge-field rendering, delivery config
     listing-features.ts grouped listing feature catalog
 tests/
   unit/                pure logic and component tests
@@ -314,7 +338,7 @@ tests/
 - No rental management (leases, rent collection, maintenance), public HTML listing pages, or co-owner seller table.
 - File uploads are limited to listing photos; there are no documents, contracts, or other attachments.
 - The public API is read-only and limited to active listings. There is no public write, webhook, or API key surface.
-- No email/calendar integration, campaign delivery, mobile app, real-time collaboration, custom report builder, or audit log.
+- No calendar integration, SMS, HTML email or templates, scheduling, attachments, bounce webhooks, or unsubscribe pages; email delivery is limited to plain-text relationship email. No mobile app, real-time collaboration, custom report builder, or audit log.
 - SLA calculations use calendar hours in UTC, not business hours or a workspace timezone.
 - Date-only task due dates are evaluated in UTC; listing and viewing display uses the workspace time zone.
 - CSV import runs synchronously; large files may take a few seconds.

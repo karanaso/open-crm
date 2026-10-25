@@ -36,6 +36,20 @@
       "when": 1792784318246,
       "tag": "0004_graceful_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792836994069,
+      "tag": "0005_overjoyed_enchantress",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792841511080,
+      "tag": "0006_faulty_toro",
+      "breakpoints": true
     }
   ]
 }

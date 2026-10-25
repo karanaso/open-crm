@@ -19,6 +19,7 @@ import {
 import type {
   ActivityMetadata,
   CampaignSegmentSnapshot,
+  MessageAudienceSnapshot,
   SegmentCriteria,
 } from "@/lib/types";
 
@@ -69,6 +70,30 @@ export const recipientStatusEnum = pgEnum("recipient_status", [
   "clicked",
   "responded",
   "converted",
+]);
+export const messageChannelEnum = pgEnum("message_channel", ["email"]);
+export const messageStatusEnum = pgEnum("message_status", [
+  "draft",
+  "sending",
+  "completed",
+  "cancelled",
+]);
+export const messageDeliveryStatusEnum = pgEnum("message_delivery_status", [
+  "queued",
+  "sent",
+  "failed",
+  "skipped",
+]);
+export const messageOutcomeReasonEnum = pgEnum("message_outcome_reason", [
+  "opted_out",
+  "archived",
+  "missing_email",
+  "cancelled",
+  "auth",
+  "connection",
+  "timeout",
+  "rejected",
+  "unknown",
 ]);
 export const listingTransactionEnum = pgEnum("listing_transaction", ["sale", "rent"]);
 export const listingStatusEnum = pgEnum("listing_status", ["active", "inactive"]);
@@ -224,6 +249,7 @@ export const contacts = pgTable(
     firstName: text("first_name").notNull(),
     lastName: text("last_name").notNull(),
     email: text("email").notNull(),
+    emailOptOutAt: timestamp("email_opt_out_at", { withTimezone: true }),
     phone: text("phone"),
     jobTitle: text("job_title"),
     companyId: uuid("company_id").references(() => companies.id, { onDelete: "set null" }),
@@ -687,6 +713,94 @@ export const campaignRecipients = pgTable(
   ],
 );
 
+export const messageGroups = pgTable(
+  "message_groups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    description: text("description"),
+    createdById: uuid("created_by_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    index("message_groups_archived_idx").on(table.archivedAt),
+    index("message_groups_created_by_idx").on(table.createdById),
+  ],
+);
+
+export const messageGroupMembers = pgTable(
+  "message_group_members",
+  {
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => messageGroups.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+    addedById: uuid("added_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.groupId, table.contactId] }),
+    index("message_group_members_contact_idx").on(table.contactId),
+  ],
+);
+
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    channel: messageChannelEnum("channel").notNull().default("email"),
+    status: messageStatusEnum("status").notNull().default("draft"),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    groupId: uuid("group_id").references(() => messageGroups.id, { onDelete: "restrict" }),
+    segmentId: uuid("segment_id").references(() => segments.id, { onDelete: "restrict" }),
+    audienceSnapshot: jsonb("audience_snapshot").$type<MessageAudienceSnapshot>(),
+    createdById: uuid("created_by_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    runStartedAt: timestamp("run_started_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    check("messages_audience_check", sql`num_nonnulls(${table.groupId}, ${table.segmentId}) = 1`),
+    index("messages_status_idx").on(table.status),
+    index("messages_group_idx").on(table.groupId),
+    index("messages_segment_idx").on(table.segmentId),
+    index("messages_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const messageRecipients = pgTable(
+  "message_recipients",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    messageId: uuid("message_id")
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "restrict" }),
+    address: text("address").notNull(),
+    status: messageDeliveryStatusEnum("status").notNull().default("queued"),
+    reason: messageOutcomeReasonEnum("reason"),
+    providerMessageId: text("provider_message_id"),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("message_recipients_message_contact_idx").on(table.messageId, table.contactId),
+    index("message_recipients_message_status_idx").on(table.messageId, table.status),
+    index("message_recipients_contact_idx").on(table.contactId),
+  ],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   ownedCompanies: many(companies),
   ownedContacts: many(contacts),
@@ -699,6 +813,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   activities: many(activities),
   campaigns: many(campaigns),
   segments: many(segments),
+  messageGroups: many(messageGroups),
+  messages: many(messages),
 }));
 
 export const companiesRelations = relations(companies, ({ one, many }) => ({
@@ -720,6 +836,8 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   activities: many(activities),
   tasks: many(tasks),
   campaignRecipients: many(campaignRecipients),
+  messageGroupMemberships: many(messageGroupMembers),
+  messageRecipients: many(messageRecipients),
   tags: many(contactTags),
 }));
 
@@ -854,6 +972,41 @@ export const campaignRecipientsRelations = relations(campaignRecipients, ({ one 
   }),
 }));
 
+export const messageGroupsRelations = relations(messageGroups, ({ one, many }) => ({
+  createdBy: one(users, { fields: [messageGroups.createdById], references: [users.id] }),
+  members: many(messageGroupMembers),
+}));
+
+export const messageGroupMembersRelations = relations(messageGroupMembers, ({ one }) => ({
+  group: one(messageGroups, {
+    fields: [messageGroupMembers.groupId],
+    references: [messageGroups.id],
+  }),
+  contact: one(contacts, {
+    fields: [messageGroupMembers.contactId],
+    references: [contacts.id],
+  }),
+  addedBy: one(users, { fields: [messageGroupMembers.addedById], references: [users.id] }),
+}));
+
+export const messagesRelations = relations(messages, ({ one, many }) => ({
+  createdBy: one(users, { fields: [messages.createdById], references: [users.id] }),
+  group: one(messageGroups, { fields: [messages.groupId], references: [messageGroups.id] }),
+  segment: one(segments, { fields: [messages.segmentId], references: [segments.id] }),
+  recipients: many(messageRecipients),
+}));
+
+export const messageRecipientsRelations = relations(messageRecipients, ({ one }) => ({
+  message: one(messages, {
+    fields: [messageRecipients.messageId],
+    references: [messages.id],
+  }),
+  contact: one(contacts, {
+    fields: [messageRecipients.contactId],
+    references: [contacts.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Company = typeof companies.$inferSelect;
@@ -868,6 +1021,12 @@ export type TicketComment = typeof ticketComments.$inferSelect;
 export type Segment = typeof segments.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
 export type CampaignRecipient = typeof campaignRecipients.$inferSelect;
+export type MessageGroup = typeof messageGroups.$inferSelect;
+export type NewMessageGroup = typeof messageGroups.$inferInsert;
+export type MessageGroupMember = typeof messageGroupMembers.$inferSelect;
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;
+export type MessageRecipient = typeof messageRecipients.$inferSelect;
 export type WorkspaceSettings = typeof workspaceSettings.$inferSelect;
 export type NewWorkspaceSettings = typeof workspaceSettings.$inferInsert;
 export type Listing = typeof listings.$inferSelect;

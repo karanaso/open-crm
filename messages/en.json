@@ -85,7 +85,8 @@
     "settings": "Settings",
     "openNavigation": "Open navigation",
     "navigation": "Navigation",
-    "tagline": "One shared workspace\nSales · Support · Marketing"
+    "tagline": "One shared workspace\nSales · Support · Marketing",
+    "messages": "Messages"
   },
   "metadata": {
     "title": "OpenCRM — Customer relationships",
@@ -532,7 +533,7 @@
     "dates": "Dates",
     "activated": "Activated",
     "audienceSnapshotCriteria": "Audience snapshot criteria",
-    "noMessagesNote": "No messages are sent from this CRM. Update engagement statuses as outreach happens.",
+    "noMessagesNote": "Campaigns do not send messages. Record engagement statuses as outreach happens.",
     "newCampaignDescription": "Choose a segment and plan the outreach.",
     "createCampaign": "Create campaign",
     "editCampaignTitle": "Edit {name}",
@@ -678,7 +679,10 @@
     "dueDateRequired": "Due date is required.",
     "taskLinkRequired": "Link the task to at least one record.",
     "tagLength": "Tags must be at most {max} characters.",
-    "maxTags": "A record can have at most {max} tags."
+    "maxTags": "A record can have at most {max} tags.",
+    "audienceSource": "Choose either a recipient group or a segment.",
+    "subjectLineBreaks": "Subject cannot contain line breaks.",
+    "unsupportedMergeField": "Unsupported placeholder: {fields}. Allowed placeholders are firstName, lastName, and company."
   },
   "errors": {
     "BAD_REQUEST": "The request could not be completed.",
@@ -723,7 +727,14 @@
     "CSV_PARSE_ERROR": "Could not parse the CSV file.",
     "CONTACT_COMPANY_MISMATCH": "The contact does not belong to the selected company.",
     "ARCHIVED_SEGMENT": "Choose an active segment.",
-    "ARCHIVED_PIPELINE": "Archived pipelines cannot be selected."
+    "ARCHIVED_PIPELINE": "Archived pipelines cannot be selected.",
+    "ARCHIVED_CONTACT": "Choose an active contact.",
+    "ARCHIVED_MESSAGE_GROUP": "Archived recipient groups are read-only.",
+    "NO_ELIGIBLE_RECIPIENTS": "This audience has no eligible recipients.",
+    "RECIPIENT_LIMIT_EXCEEDED": "This message exceeds the recipient limit of {limit}.",
+    "MESSAGING_NOT_CONFIGURED": "Email delivery is not configured. Set the SMTP environment variables before sending.",
+    "INVALID_MESSAGE_STATE": "This action is not allowed in the message's current state.",
+    "SEND_IN_PROGRESS": "A send is already in progress for this message."
   },
   "errorPages": {
     "title": "Something went wrong",
@@ -805,6 +816,29 @@
     "commentVisibility": {
       "reply": "Reply",
       "internal": "Internal note"
+    },
+    "messageStatus": {
+      "draft": "Draft",
+      "sending": "Sending",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "deliveryStatus": {
+      "queued": "Queued",
+      "sent": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "outcomeReason": {
+      "opted_out": "Do not email",
+      "archived": "Archived contact",
+      "missing_email": "Missing email",
+      "cancelled": "Cancelled",
+      "auth": "Authentication failed",
+      "connection": "Connection failed",
+      "timeout": "Timed out",
+      "rejected": "Rejected",
+      "unknown": "Unknown error"
     }
   },
   "listings": {
@@ -1278,5 +1312,83 @@
         "g": "G"
       }
     }
+  },
+  "messaging": {
+    "messages": "Messages",
+    "messagesDescription": "Send plain-text email to a recipient group or a segment and keep the delivery record.",
+    "newMessage": "New message",
+    "newMessageDescription": "Write the email and choose who receives it.",
+    "message": "Message",
+    "audience": "Audience",
+    "audienceType": "Audience source",
+    "recipientGroup": "Recipient group",
+    "segment": "Segment",
+    "selectAudience": "Choose an audience",
+    "mergeFieldsHint": "Personalize with the merge fields firstName, lastName, and company.",
+    "noAudiencesTitle": "No audiences yet",
+    "noAudiencesDescription": "Create a recipient group or a segment before composing a message.",
+    "groups": "Recipient groups",
+    "groupsDescription": "Hand-picked lists of contacts you email together.",
+    "newGroup": "New group",
+    "newGroupDescription": "Name the group; you can add contacts next.",
+    "groupName": "Group name",
+    "group": "Group",
+    "members": "Members",
+    "memberCount": "{count, plural, =1 {1 member} other {# members}}",
+    "addMember": "Add contact",
+    "selectContact": "Select a contact",
+    "noContactsAvailable": "Every active contact is already in this group.",
+    "manageGroups": "Manage groups",
+    "archiveGroup": "Archive group",
+    "archiveGroupConfirm": "Archive this group? It will no longer be available for new messages.",
+    "archivedGroup": "Archived group",
+    "groupReadOnly": "Archived groups are read-only.",
+    "searchMessages": "Search messages",
+    "searchMessagesPlaceholder": "Search by subject",
+    "noMessagesTitle": "No messages yet",
+    "noMessagesDescription": "Compose a message to email a group or segment.",
+    "noMessagesMatchTitle": "No matching messages",
+    "noMessagesMatchDescription": "Try a different search or status filter.",
+    "send": "Send",
+    "sending": "Sending...",
+    "reviewAndSend": "Review and send",
+    "sendConfirmTitle": "Send this message?",
+    "sendConfirmDescription": "This sends immediately and cannot be undone. Review the audience before continuing.",
+    "totalAudience": "Audience",
+    "eligibleRecipients": "Eligible recipients",
+    "ineligibleRecipients": "Skipped recipients",
+    "skippedArchived": "Archived: {count}",
+    "skippedOptedOut": "Do not email: {count}",
+    "skippedMissingEmail": "Missing email: {count}",
+    "recipientLimit": "Limit: {limit} recipients per message.",
+    "sendBlockedEmpty": "No recipient is eligible, so this message cannot be sent.",
+    "sendBlockedLimit": "This audience exceeds the {limit}-recipient limit.",
+    "transportNotConfigured": "Email delivery is not configured",
+    "transportNotConfiguredDescription": "Set SMTP_HOST, MESSAGING_FROM, and the remaining SMTP variables before sending. Drafts can still be edited.",
+    "recipients": "Recipients",
+    "recipient": "Recipient",
+    "outcome": "Outcome",
+    "attemptedAt": "Attempted",
+    "sentAt": "Sent",
+    "completedAt": "Completed",
+    "retryUnsent": "Retry unsent",
+    "retrying": "Retrying...",
+    "cancelMessage": "Cancel send",
+    "cancelling": "Cancelling...",
+    "cancelConfirm": "Cancel this send? Remaining queued recipients will be skipped.",
+    "noRecipientsYet": "Recipients are recorded when the message is sent.",
+    "backToMessages": "Back to messages",
+    "backToGroups": "Back to groups",
+    "doNotEmail": "Mark do not email",
+    "allowEmail": "Allow email",
+    "doNotEmailStatus": "Do not email",
+    "doNotEmailSince": "Do not email since {date}",
+    "contactMessages": "Messages",
+    "contactMessagesEmpty": "No messages have included this contact yet.",
+    "contactMessagesDescription": "Recent messages that included this contact.",
+    "statusSendingHint": "This send did not finish. Retry unsent recipients or cancel it.",
+    "statusCompletedHint": "Sent means the SMTP server accepted the message. The CRM cannot confirm delivery or opens.",
+    "audienceSummary": "{eligible} of {total} contacts will receive this message.",
+    "segmentAudienceHint": "{count} matching contacts"
   }
 }

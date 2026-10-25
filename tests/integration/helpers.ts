@@ -4,6 +4,10 @@ import { ensureDefaultPipeline } from "@/db/ensure-default-pipeline";
 import { ensureWorkspaceSettings } from "@/db/ensure-workspace-settings";
 
 const TABLES = [
+  "message_recipients",
+  "messages",
+  "message_group_members",
+  "message_groups",
   "campaign_recipients",
   "campaigns",
   "segments",

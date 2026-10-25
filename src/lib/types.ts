@@ -12,6 +12,12 @@ export type CampaignSegmentSnapshot = {
   criteria: SegmentCriteria;
 };
 
+export type MessageAudienceSnapshot = {
+  kind: "group" | "segment";
+  name: string;
+  criteria?: SegmentCriteria;
+};
+
 export type ActivityMetadata = {
   fromStageId?: string;
   toStageId?: string;

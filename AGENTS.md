@@ -64,7 +64,7 @@ Integration tests use `opencode_crm_test`. E2E tests prepare and use `opencode_c
 - Do not translate user data or stored enum values. Greek terminology lives in `docs/i18n/glossary.md` and `docs/i18n/style-guide.md`; do not send strings to an external translation service.
 - One workspace per deployment. All active members share records. Do not introduce `workspace_id` casually.
 - Money uses the workspace default currency or the record's own currency. There is no FX conversion and totals are never summed across currencies. SLA calculations use calendar hours in UTC. Do not silently change these constraints.
-- No email/calendar delivery, general file attachments, or multi-tenancy in this version. Uploads are limited to listing photos and no other record type accepts attachments. The unauthenticated read-only public listings API is the only unauthenticated data surface; it must never expose seller, agent, commission, activity, task, or other CRM data.
+- No calendar delivery, general file attachments, or multi-tenancy in this version. Uploads are limited to listing photos and no other record type accepts attachments. Relationship email delivery is limited to the Messaging module over operator-configured SMTP; campaigns never send messages. The unauthenticated read-only public listings API is the only unauthenticated data surface; it must never expose seller, agent, commission, activity, task, or other CRM data.
 
 ## Modules
 
@@ -73,6 +73,7 @@ Integration tests use `opencode_crm_test`. E2E tests prepare and use `opencode_c
 - Sales: pipelines, stages, deals, Kanban, stage-change activity
 - Support: tickets, status machine, SLA, comments
 - Marketing: segments, campaigns, audience snapshots, engagement
+- Messaging: recipient groups, plain-text relationship email, per-recipient delivery outcomes
 - Dashboard: aggregates, charts, recent activity, global search
 - Access/settings: setup, invites, roles, profile, pipeline configuration
 

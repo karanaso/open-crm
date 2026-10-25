@@ -22,6 +22,7 @@ export const config = {
     "/deals/:path*",
     "/tickets/:path*",
     "/campaigns/:path*",
+    "/messages/:path*",
     "/segments/:path*",
     "/tasks/:path*",
     "/settings/:path*",

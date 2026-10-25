@@ -85,7 +85,8 @@
     "settings": "Ρυθμίσεις",
     "openNavigation": "Άνοιγμα πλοήγησης",
     "navigation": "Πλοήγηση",
-    "tagline": "Ένας κοινός χώρος εργασίας\nΠωλήσεις · Υποστήριξη · Μάρκετινγκ"
+    "tagline": "Ένας κοινός χώρος εργασίας\nΠωλήσεις · Υποστήριξη · Μάρκετινγκ",
+    "messages": "Μηνύματα"
   },
   "metadata": {
     "title": "OpenCRM — Σχέσεις με πελάτες",
@@ -532,7 +533,7 @@
     "dates": "Ημερομηνίες",
     "activated": "Ενεργοποιήθηκε",
     "audienceSnapshotCriteria": "Κριτήρια στιγμιότυπου κοινού",
-    "noMessagesNote": "Δεν αποστέλλονται μηνύματα από αυτό το CRM. Ενημερώστε τις καταστάσεις αλληλεπίδρασης καθώς γίνεται η προσέγγιση.",
+    "noMessagesNote": "Οι καμπάνιες δεν στέλνουν μηνύματα. Καταγράψτε τις καταστάσεις αλληλεπίδρασης καθώς γίνεται η προσέγγιση.",
     "newCampaignDescription": "Επιλέξτε ένα τμήμα και σχεδιάστε την προσέγγιση.",
     "createCampaign": "Δημιουργία καμπάνιας",
     "editCampaignTitle": "Επεξεργασία {name}",
@@ -678,7 +679,10 @@
     "dueDateRequired": "Η προθεσμία είναι υποχρεωτική.",
     "taskLinkRequired": "Συνδέστε την εργασία με τουλάχιστον μία εγγραφή.",
     "tagLength": "Κάθε ετικέτα μπορεί να έχει το πολύ {max} χαρακτήρες.",
-    "maxTags": "Μια εγγραφή μπορεί να έχει το πολύ {max} ετικέτες."
+    "maxTags": "Μια εγγραφή μπορεί να έχει το πολύ {max} ετικέτες.",
+    "audienceSource": "Επιλέξτε είτε ομάδα παραληπτών είτε τμήμα.",
+    "subjectLineBreaks": "Το θέμα δεν μπορεί να περιέχει αλλαγές γραμμής.",
+    "unsupportedMergeField": "Μη υποστηριζόμενο πεδίο συγχώνευσης: {fields}. Επιτρέπονται τα firstName, lastName και company."
   },
   "errors": {
     "BAD_REQUEST": "Δεν ήταν δυνατή η ολοκλήρωση του αιτήματος.",
@@ -723,7 +727,14 @@
     "CSV_PARSE_ERROR": "Δεν ήταν δυνατή η ανάλυση του αρχείου CSV.",
     "CONTACT_COMPANY_MISMATCH": "Η επαφή δεν ανήκει στην επιλεγμένη εταιρεία.",
     "ARCHIVED_SEGMENT": "Επιλέξτε ένα ενεργό τμήμα.",
-    "ARCHIVED_PIPELINE": "Οι αρχειοθετημένες ροές πωλήσεων δεν μπορούν να επιλεγούν."
+    "ARCHIVED_PIPELINE": "Οι αρχειοθετημένες ροές πωλήσεων δεν μπορούν να επιλεγούν.",
+    "ARCHIVED_CONTACT": "Επιλέξτε ενεργή επαφή.",
+    "ARCHIVED_MESSAGE_GROUP": "Οι αρχειοθετημένες ομάδες παραληπτών είναι μόνο για ανάγνωση.",
+    "NO_ELIGIBLE_RECIPIENTS": "Το κοινό δεν έχει επιλέξιμους παραλήπτες.",
+    "RECIPIENT_LIMIT_EXCEEDED": "Το μήνυμα υπερβαίνει το όριο παραληπτών ({limit}).",
+    "MESSAGING_NOT_CONFIGURED": "Η αποστολή email δεν έχει ρυθμιστεί. Ορίστε τις μεταβλητές περιβάλλοντος SMTP πριν από την αποστολή.",
+    "INVALID_MESSAGE_STATE": "Η ενέργεια δεν επιτρέπεται στην τρέχουσα κατάσταση του μηνύματος.",
+    "SEND_IN_PROGRESS": "Υπάρχει ήδη αποστολή σε εξέλιξη για αυτό το μήνυμα."
   },
   "errorPages": {
     "title": "Κάτι πήγε στραβά",
@@ -805,6 +816,29 @@
     "commentVisibility": {
       "reply": "Απάντηση",
       "internal": "Εσωτερική σημείωση"
+    },
+    "messageStatus": {
+      "draft": "Πρόχειρο",
+      "sending": "Σε αποστολή",
+      "completed": "Ολοκληρωμένο",
+      "cancelled": "Ακυρωμένο"
+    },
+    "deliveryStatus": {
+      "queued": "Σε αναμονή",
+      "sent": "Στάλθηκε",
+      "failed": "Απέτυχε",
+      "skipped": "Παραλείφθηκε"
+    },
+    "outcomeReason": {
+      "opted_out": "Δεν επιθυμεί email",
+      "archived": "Αρχειοθετημένη επαφή",
+      "missing_email": "Χωρίς email",
+      "cancelled": "Ακυρώθηκε",
+      "auth": "Αποτυχία ταυτοποίησης",
+      "connection": "Αποτυχία σύνδεσης",
+      "timeout": "Λήξη χρόνου",
+      "rejected": "Απορρίφθηκε",
+      "unknown": "Άγνωστο σφάλμα"
     }
   },
   "listings": {
@@ -1278,5 +1312,83 @@
         "g": "G"
       }
     }
+  },
+  "messaging": {
+    "messages": "Μηνύματα",
+    "messagesDescription": "Στείλτε email απλού κειμένου σε ομάδα παραληπτών ή τμήμα και κρατήστε το αρχείο αποστολής.",
+    "newMessage": "Νέο μήνυμα",
+    "newMessageDescription": "Γράψτε το email και επιλέξτε ποιοι θα το λάβουν.",
+    "message": "Μήνυμα",
+    "audience": "Κοινό",
+    "audienceType": "Πηγή κοινού",
+    "recipientGroup": "Ομάδα παραληπτών",
+    "segment": "Τμήμα",
+    "selectAudience": "Επιλέξτε κοινό",
+    "mergeFieldsHint": "Εξατομικεύστε με τα πεδία συγχώνευσης firstName, lastName και company.",
+    "noAudiencesTitle": "Δεν υπάρχει κοινό ακόμη",
+    "noAudiencesDescription": "Δημιουργήστε ομάδα παραληπτών ή τμήμα πριν συντάξετε μήνυμα.",
+    "groups": "Ομάδες παραληπτών",
+    "groupsDescription": "Χειροκίνητες λίστες επαφών που λαμβάνουν μαζί email.",
+    "newGroup": "Νέα ομάδα",
+    "newGroupDescription": "Ονομάστε την ομάδα· μπορείτε να προσθέσετε επαφές στη συνέχεια.",
+    "groupName": "Όνομα ομάδας",
+    "group": "Ομάδα",
+    "members": "Μέλη",
+    "memberCount": "{count, plural, =1 {1 μέλος} other {# μέλη}}",
+    "addMember": "Προσθήκη επαφής",
+    "selectContact": "Επιλέξτε επαφή",
+    "noContactsAvailable": "Όλες οι ενεργές επαφές είναι ήδη σε αυτή την ομάδα.",
+    "manageGroups": "Διαχείριση ομάδων",
+    "archiveGroup": "Αρχειοθέτηση ομάδας",
+    "archiveGroupConfirm": "Να αρχειοθετηθεί η ομάδα; Δεν θα είναι πλέον διαθέσιμη για νέα μηνύματα.",
+    "archivedGroup": "Αρχειοθετημένη ομάδα",
+    "groupReadOnly": "Οι αρχειοθετημένες ομάδες είναι μόνο για ανάγνωση.",
+    "searchMessages": "Αναζήτηση μηνυμάτων",
+    "searchMessagesPlaceholder": "Αναζήτηση με θέμα",
+    "noMessagesTitle": "Δεν υπάρχουν μηνύματα",
+    "noMessagesDescription": "Συντάξτε ένα μήνυμα για να στείλετε email σε ομάδα ή τμήμα.",
+    "noMessagesMatchTitle": "Δεν βρέθηκαν μηνύματα",
+    "noMessagesMatchDescription": "Δοκιμάστε άλλη αναζήτηση ή φίλτρο κατάστασης.",
+    "send": "Αποστολή",
+    "sending": "Αποστολή...",
+    "reviewAndSend": "Έλεγχος και αποστολή",
+    "sendConfirmTitle": "Αποστολή αυτού του μηνύματος;",
+    "sendConfirmDescription": "Η αποστολή γίνεται αμέσως και δεν αναιρείται. Ελέγξτε το κοινό πριν συνεχίσετε.",
+    "totalAudience": "Κοινό",
+    "eligibleRecipients": "Επιλέξιμοι παραλήπτες",
+    "ineligibleRecipients": "Παραλειπόμενοι παραλήπτες",
+    "skippedArchived": "Αρχειοθετημένοι: {count}",
+    "skippedOptedOut": "Δεν επιθυμούν email: {count}",
+    "skippedMissingEmail": "Χωρίς email: {count}",
+    "recipientLimit": "Όριο: {limit} παραλήπτες ανά μήνυμα.",
+    "sendBlockedEmpty": "Κανένας παραλήπτης δεν είναι επιλέξιμος, οπότε το μήνυμα δεν μπορεί να σταλεί.",
+    "sendBlockedLimit": "Το κοινό υπερβαίνει το όριο των {limit} παραληπτών.",
+    "transportNotConfigured": "Η αποστολή email δεν έχει ρυθμιστεί",
+    "transportNotConfiguredDescription": "Ορίστε SMTP_HOST, MESSAGING_FROM και τις υπόλοιπες μεταβλητές SMTP πριν από την αποστολή. Τα πρόχειρα παραμένουν επεξεργάσιμα.",
+    "recipients": "Παραλήπτες",
+    "recipient": "Παραλήπτης",
+    "outcome": "Αποτέλεσμα",
+    "attemptedAt": "Απόπειρα",
+    "sentAt": "Στάλθηκε",
+    "completedAt": "Ολοκληρώθηκε",
+    "retryUnsent": "Επανάληψη μη σταλμένων",
+    "retrying": "Επανάληψη...",
+    "cancelMessage": "Ακύρωση αποστολής",
+    "cancelling": "Ακύρωση...",
+    "cancelConfirm": "Ακύρωση αυτής της αποστολής; Οι υπόλοιποι παραλήπτες σε αναμονή θα παραλειφθούν.",
+    "noRecipientsYet": "Οι παραλήπτες καταγράφονται όταν σταλεί το μήνυμα.",
+    "backToMessages": "Πίσω στα μηνύματα",
+    "backToGroups": "Πίσω στις ομάδες",
+    "doNotEmail": "Σημείωση ως χωρίς email",
+    "allowEmail": "Αποδοχή email",
+    "doNotEmailStatus": "Χωρίς email",
+    "doNotEmailSince": "Χωρίς email από {date}",
+    "contactMessages": "Μηνύματα",
+    "contactMessagesEmpty": "Κανένα μήνυμα δεν έχει συμπεριλάβει αυτή την επαφή.",
+    "contactMessagesDescription": "Πρόσφατα μηνύματα που συμπεριέλαβαν αυτή την επαφή.",
+    "statusSendingHint": "Η αποστολή δεν ολοκληρώθηκε. Επαναλάβετε τους μη σταλμένους παραλήπτες ή ακυρώστε την.",
+    "statusCompletedHint": "«Στάλθηκε» σημαίνει ότι ο διακομιστής SMTP αποδέχτηκε το μήνυμα. Το CRM δεν μπορεί να επιβεβαιώσει παράδοση ή ανοίγματα.",
+    "audienceSummary": "{eligible} από {total} επαφές θα λάβουν αυτό το μήνυμα.",
+    "segmentAudienceHint": "{count} επαφές που ταιριάζουν"
   }
 }

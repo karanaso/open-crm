@@ -39,6 +39,7 @@ export default defineConfig({
       AUTH_URL: BASE_URL,
       AUTH_TRUST_HOST: "true",
       NODE_ENV: "development",
+      MESSAGING_TRANSPORT: "fake",
     },
   },
 });

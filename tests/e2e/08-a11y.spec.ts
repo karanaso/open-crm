@@ -55,3 +55,19 @@ test.describe("accessibility", () => {
     await expectNoSeriousViolations(page);
   });
 });
+
+test("messaging pages have no serious accessibility violations", async ({ page }) => {
+  await login(page);
+
+  await page.goto("/messages");
+  await expect(page.getByRole("heading", { name: "Messages" })).toBeVisible();
+  await expectNoSeriousViolations(page);
+
+  await page.goto("/messages/new");
+  await expect(page.getByRole("heading", { name: "New message" })).toBeVisible();
+  await expectNoSeriousViolations(page);
+
+  await page.goto("/messages/groups");
+  await expect(page.getByRole("heading", { name: "Recipient groups" })).toBeVisible();
+  await expectNoSeriousViolations(page);
+});

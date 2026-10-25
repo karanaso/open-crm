@@ -1,0 +1,66 @@
+import { z } from "zod";
+import type { MessageDescriptor } from "@/lib/errors";
+import { findUnsupportedMergeFields } from "@/lib/messaging/render";
+import {
+  optionalText,
+  optionalUuidSchema,
+  pageSizeSchema,
+  requiredText,
+  uuidSchema,
+} from "@/lib/validation/common";
+
+export const messageGroupSchema = z.object({
+  name: requiredText(160),
+  description: optionalText(2000),
+});
+
+export type MessageGroupInput = z.infer<typeof messageGroupSchema>;
+
+const audienceFields = {
+  groupId: optionalUuidSchema,
+  segmentId: optionalUuidSchema,
+};
+
+export const messageSchema = z
+  .object({
+    subject: requiredText(200).refine(
+      (value) => !/[\r\n]/.test(value),
+      "validation.subjectLineBreaks",
+    ),
+    body: z
+      .string()
+      .trim()
+      .min(1, "validation.required")
+      .max(10000, "validation.maxLength")
+      .refine(
+        (value) => findUnsupportedMergeFields(value).length === 0,
+        "validation.unsupportedMergeField",
+      ),
+    ...audienceFields,
+  })
+  .refine((value) => Boolean(value.groupId) !== Boolean(value.segmentId), {
+    message: "validation.audienceSource",
+    path: ["groupId"],
+  });
+
+export type MessageInput = z.infer<typeof messageSchema>;
+
+export const messageGroupMemberSchema = z.object({
+  contactId: uuidSchema,
+});
+
+export const messageListParamsSchema = z.object({
+  q: z.string().trim().max(200, "validation.maxLength").optional().default(""),
+  status: z.enum(["draft", "sending", "completed", "cancelled"]).optional(),
+  page: z.coerce.number().int().min(1).max(1000).default(1),
+  pageSize: pageSizeSchema,
+});
+
+export function unsupportedMergeFieldsDescriptor(body: string): MessageDescriptor | null {
+  const fields = findUnsupportedMergeFields(body);
+  if (fields.length === 0) return null;
+  return {
+    key: "validation.unsupportedMergeField",
+    params: { fields: fields.join(", ") },
+  };
+}
