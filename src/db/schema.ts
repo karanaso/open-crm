@@ -757,6 +757,7 @@ export const messages = pgTable(
     status: messageStatusEnum("status").notNull().default("draft"),
     subject: text("subject").notNull(),
     body: text("body").notNull(),
+    bodyHtml: text("body_html"),
     groupId: uuid("group_id").references(() => messageGroups.id, { onDelete: "restrict" }),
     segmentId: uuid("segment_id").references(() => segments.id, { onDelete: "restrict" }),
     audienceSnapshot: jsonb("audience_snapshot").$type<MessageAudienceSnapshot>(),

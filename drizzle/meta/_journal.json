@@ -50,6 +50,13 @@
       "when": 1792841511080,
       "tag": "0006_faulty_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792931911327,
+      "tag": "0007_goofy_pixie",
+      "breakpoints": true
     }
   ]
 }

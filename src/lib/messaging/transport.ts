@@ -3,6 +3,7 @@ export type OutboundEmail = {
   replyTo: string;
   subject: string;
   text: string;
+  html?: string;
 };
 
 export type SendResult = {

@@ -1,0 +1,2 @@
+export const MAX_MESSAGE_HTML_LENGTH = 50_000;
+export const MAX_MESSAGE_TEXT_LENGTH = 10_000;

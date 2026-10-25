@@ -9,8 +9,11 @@ import {
   messageGroupMemberSchema,
   messageGroupSchema,
   messageSchema,
-  unsupportedMergeFieldsDescriptor,
 } from "@/lib/validation/messaging";
+import {
+  inspectMessageBody,
+  messageBodyErrorDescriptor,
+} from "@/lib/messaging/html";
 import {
   addMessageGroupMember,
   cancelMessage,
@@ -36,9 +39,22 @@ function messageFromFormData(formData: FormData) {
   return {
     subject: formData.get("subject"),
     body: formData.get("body"),
+    bodyHtml: formData.get("bodyHtml"),
     groupId: formData.get("groupId"),
     segmentId: formData.get("segmentId"),
   };
+}
+
+function formText(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+function inspectBodyFromFormData(formData: FormData) {
+  return inspectMessageBody({
+    body: formText(formData, "body"),
+    bodyHtml: formText(formData, "bodyHtml"),
+  });
 }
 
 function safeReturnTo(value: string, fallback: string) {
@@ -142,8 +158,10 @@ export async function createMessageAction(
 ): Promise<ActionState> {
   const user = await requireUserForAction();
 
-  const unsupported = unsupportedMergeFieldsDescriptor(String(formData.get("body") ?? ""));
-  if (unsupported) return { fieldErrors: { body: [unsupported] } };
+  const inspection = inspectBodyFromFormData(formData);
+  if (!inspection.ok) {
+    return { fieldErrors: { body: [messageBodyErrorDescriptor(inspection.error)] } };
+  }
 
   const parsed = messageSchema.safeParse(messageFromFormData(formData));
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error) };
@@ -167,8 +185,10 @@ export async function updateMessageAction(
 ): Promise<ActionState> {
   await requireUserForAction();
 
-  const unsupported = unsupportedMergeFieldsDescriptor(String(formData.get("body") ?? ""));
-  if (unsupported) return { fieldErrors: { body: [unsupported] } };
+  const inspection = inspectBodyFromFormData(formData);
+  if (!inspection.ok) {
+    return { fieldErrors: { body: [messageBodyErrorDescriptor(inspection.error)] } };
+  }
 
   const parsed = messageSchema.safeParse(messageFromFormData(formData));
   if (!parsed.success) return { fieldErrors: fieldErrorsFromZod(parsed.error) };

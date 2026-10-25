@@ -171,11 +171,13 @@ describe("FakeTransport", () => {
       replyTo: "member@example.com",
       subject: "Hello",
       text: "Body",
+      html: "<p>Body</p>",
     };
 
     await expect(transport.send(email)).rejects.toThrow("rejected");
     await expect(transport.send(email)).resolves.toEqual({ providerMessageId: "ok-2" });
     expect(transport.attempts).toHaveLength(2);
+    expect(transport.attempts[1]?.html).toBe("<p>Body</p>");
   });
 });
 
@@ -197,6 +199,23 @@ describe("messageSchema", () => {
     expect(messageSchema.safeParse({ ...base, groupId: null, segmentId }).success).toBe(true);
   });
 
+  it("accepts an HTML body without a plain-text body", () => {
+    expect(
+      messageSchema.safeParse({
+        ...base,
+        body: null,
+        bodyHtml: "<p>Hi {{firstName}}</p>",
+      }).success,
+    ).toBe(true);
+    expect(
+      messageSchema.safeParse({
+        ...base,
+        body: null,
+        bodyHtml: "<p>Hi {{&nbsp;company&nbsp;}}</p>",
+      }).success,
+    ).toBe(true);
+  });
+
   it("requires a subject", () => {
     expect(messageSchema.safeParse({ ...base, subject: "" }).success).toBe(false);
   });
@@ -209,15 +228,33 @@ describe("messageSchema", () => {
     expect(messageSchema.safeParse({ ...base, subject: "a".repeat(201) }).success).toBe(false);
   });
 
-  it("requires a body", () => {
+  it("requires exactly one body source", () => {
     expect(messageSchema.safeParse({ ...base, body: "   " }).success).toBe(false);
+    expect(messageSchema.safeParse({ ...base, body: null, bodyHtml: null }).success).toBe(false);
+    expect(
+      messageSchema.safeParse({
+        ...base,
+        body: "Plain",
+        bodyHtml: "<p>HTML</p>",
+      }).success,
+    ).toBe(false);
   });
 
   it("rejects a body over 10,000 characters", () => {
     expect(messageSchema.safeParse({ ...base, body: "a".repeat(10001) }).success).toBe(false);
   });
 
-  it("rejects unsupported placeholders", () => {
+  it("rejects HTML over 50,000 characters", () => {
+    expect(
+      messageSchema.safeParse({
+        ...base,
+        body: null,
+        bodyHtml: `<p>${"a".repeat(50001)}</p>`,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects unsupported placeholders in text", () => {
     expect(messageSchema.safeParse({ ...base, body: "Hi {{email}}" }).success).toBe(false);
   });
 
