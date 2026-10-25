@@ -149,7 +149,7 @@ Tiptap ships only in the messaging client chunk. `sanitize-html` and `html-to-te
 
 ## Risks / Trade-offs
 
-- **Remote images allow tracking pixels and are often blocked by email clients** → Images are author-provided, limited to HTTPS, carry no server proxy, and no open/click tracking is added. The CRM never fetches image URLs server-side, so there is no SSRF surface; the composer does load them in the author's browser, and recipients' image-loading settings remain outside our control.
+- **Remote images allow tracking pixels and are often blocked by email clients** → Images are author-provided, limited to HTTPS, carry no server proxy, and no open/click tracking is added. The CRM never fetches image URLs server-side, so there is no SSRF surface; the composer and shared draft viewers load them in the browser, and recipients' image-loading settings remain outside our control.
 - **Sanitizer bypass or future allowlist drift** → Use a maintained allowlist library, re-sanitize before delivery, and test scripts, event handlers, schemes, and data URLs in unit and integration tests.
 - **Merge placeholders split by formatting** → Detect and reject at save with a field-level message; also check placeholders in both HTML and text projections.
 - **HTML rendering differs across email clients** → Emit only semantic tags, no CSS/style attributes, and keep the feature scoped to basic formatting, lists, links, and images.
