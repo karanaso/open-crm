@@ -34,6 +34,7 @@ import {
   isFakeTransport,
   isMessagingConfigured,
 } from "@/lib/messaging/transport";
+import { plainTextToHtml, sanitizeMessageHtml } from "@/lib/messaging/html";
 import {
   getMessage,
   getMessageGroup,
@@ -74,6 +75,10 @@ export default async function MessageDetailPage({
       if (current) segments.unshift(current);
     }
 
+    const initialHtml = message.bodyHtml
+      ? sanitizeMessageHtml(message.bodyHtml) || plainTextToHtml(message.body)
+      : plainTextToHtml(message.body);
+
     return (
       <div className="space-y-6">
         <PageHeader
@@ -110,7 +115,7 @@ export default async function MessageDetailPage({
                 }))}
                 initial={{
                   subject: message.subject,
-                  body: message.body,
+                  initialHtml,
                   groupId: message.groupId,
                   segmentId: message.segmentId,
                 }}

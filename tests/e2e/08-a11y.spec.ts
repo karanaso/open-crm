@@ -63,8 +63,21 @@ test("messaging pages have no serious accessibility violations", async ({ page }
   await expect(page.getByRole("heading", { name: "Messages" })).toBeVisible();
   await expectNoSeriousViolations(page);
 
+  const stamp = Date.now();
+  await createContact(
+    page,
+    "A11y",
+    "Recipient",
+    `a11y-recipient-${stamp}@example.com`,
+  );
+  await page.goto("/messages/groups/new");
+  await page.fill("#name", `A11y group ${stamp}`);
+  await page.getByRole("button", { name: "Create" }).click();
+  await page.waitForURL(/\/messages\/groups\/[0-9a-f-]+$/);
+
   await page.goto("/messages/new");
   await expect(page.getByRole("heading", { name: "New message" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Message" })).toBeVisible();
   await expectNoSeriousViolations(page);
 
   await page.goto("/messages/groups");

@@ -37,13 +37,44 @@ test("send a message to a hand-picked group", async ({ page }) => {
     page.getByRole("link", { name: `${contact.firstName} ${contact.lastName}` }),
   ).toBeVisible();
 
+  await page.route("https://example.com/e2e-logo.png", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nGQAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    });
+  });
+
   await page.goto("/messages/new");
   await page.fill("#subject", subject);
-  await page.fill("#body", "Hi {{firstName}}, a relationship email from {{company}}.");
+  const editor = page.getByRole("textbox", { name: "Message" });
+  await editor.fill("Hi {{firstName}}, a relationship email from {{company}}.");
+  await editor.press("Control+A");
+  await page.getByRole("button", { name: "Bold", exact: true }).click();
+  await page.getByRole("button", { name: "Link", exact: true }).click();
+  await page.getByLabel("Link URL").fill("https://example.com/relationship");
+  await page.getByRole("dialog").getByRole("button", { name: "Insert link" }).click();
+  await editor.click();
+  await editor.press("Control+End");
+  await page.getByRole("button", { name: "Image", exact: true }).click();
+  await page.getByLabel("Image URL").fill("https://example.com/e2e-logo.png");
+  await page.getByLabel("Alternative text").fill("E2E logo");
+  await page.getByRole("dialog").getByRole("button", { name: "Insert image" }).click();
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
   await page.selectOption("#groupId", groupId);
   await page.getByRole("button", { name: "Create" }).click();
   await page.waitForURL(/\/messages\/[0-9a-f-]+$/);
   await expect(page.getByRole("heading", { name: subject })).toBeVisible();
+
+  const savedEditor = page.locator(".ProseMirror");
+  await expect(savedEditor.locator("strong")).toContainText("relationship email");
+  await expect(
+    savedEditor.locator('a[href="https://example.com/relationship"]'),
+  ).toBeVisible();
+  await expect(savedEditor.locator('img[src="https://example.com/e2e-logo.png"]')).toBeVisible();
 
   await page.getByRole("button", { name: "Review and send" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -73,7 +104,7 @@ test("do-not-email blocks the next send and shows history", async ({ page }) => 
 
   await page.goto("/messages/new");
   await page.fill("#subject", blockedSubject);
-  await page.fill("#body", "This should not be sent.");
+  await page.getByRole("textbox", { name: "Message" }).fill("This should not be sent.");
   await page.selectOption("#groupId", groupId);
   await page.getByRole("button", { name: "Create" }).click();
   await page.waitForURL(/\/messages\/[0-9a-f-]+$/);

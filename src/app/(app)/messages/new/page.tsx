@@ -60,7 +60,7 @@ export default async function NewMessagePage() {
               segments={segmentOptions}
               initial={{
                 subject: "",
-                body: "",
+                initialHtml: "",
                 groupId: groupOptions[0]?.id ?? null,
                 segmentId: null,
               }}
