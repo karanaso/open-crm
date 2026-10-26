@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "@/lib/redirect";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/lib/auth/guards";
 import { countUsers } from "@/db/ensure-default-pipeline";
 import { SetupForm } from "@/components/auth/setup-form";
 
@@ -10,8 +10,8 @@ export default async function SetupPage() {
   const users = await countUsers();
   if (users > 0) redirect("/login");
 
-  const session = await auth();
-  if (session?.user?.id) redirect("/dashboard");
+  const user = await getCurrentUser();
+  if (user) redirect("/dashboard");
 
   const t = await getTranslations("auth");
 
