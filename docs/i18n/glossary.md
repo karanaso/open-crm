@@ -314,6 +314,22 @@ These describe what happened to a recipient (masculine «παραλήπτης»)
 
 Company and contact names, tags, pipeline and stage names, notes, descriptions, campaign copy, activity subjects and bodies, task titles and descriptions, comments, email addresses, URLs, CSV headers, and any other text entered by a user are displayed exactly as stored. For listings this includes the reference, title, description, address fields, and photo alt text. This also includes the seeded default stage names (`Lead`, `Qualified`, `Proposal`, `Negotiation`, `Won`, `Lost`): they are stored strings, not catalog labels. Greek users see them in English until an administrator renames them.
 
+## Appearance
+
+| English | Greek | Notes |
+| --- | --- | --- |
+| theme | **θέμα** (n) | The user's interface palette. Use «χρωματικό θέμα» when the surrounding copy needs to distinguish it from mode. Do not confuse it with `common.subject` («Θέμα» as an email subject). |
+| color theme | **χρωματικό θέμα** (n) | The palette field in profile settings. Theme names are product labels, not stored enum values. |
+| appearance | **εμφάνιση** (f) | The settings card that groups theme and mode. |
+| palette | **παλέτα** (f) | The set of surface, accent, and chart colors in a theme. |
+| neutral (palette) | **ουδέτερος τόνος** (m) | The low-chroma surface and text colors in a palette. Plural «ουδέτεροι τόνοι». |
+| color mode | **λειτουργία εμφάνισης** (f) | Light/dark/system choice. Do not leave «mode» untranslated. |
+| light mode | **φωτεινή λειτουργία** (f) | The mode label in controls is «Φωτεινή». |
+| dark mode | **σκοτεινή λειτουργία** (f) | The mode label in controls is «Σκοτεινή». |
+| system mode | **λειτουργία συστήματος** (f) | The mode label in controls is «Σύστημα»; it follows the operating system preference. |
+
+Theme names are product labels: «Προεπιλεγμένο» is neuter because it agrees with «θέμα», unlike `settings.defaultBadge` («Προεπιλεγμένη»), which agrees with «ροή πωλήσεων». Use «αποχρώσεις» for accent colours and «ουδέτεροι τόνοι» for neutrals.
+
 ## Gender and pluralization traps
 
 ### Record genders
