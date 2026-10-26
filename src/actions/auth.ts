@@ -35,6 +35,7 @@ import { appUrl } from "@/lib/env";
 import { hasSignInError } from "@/lib/auth/sign-in";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getLocaleCookie, setLocaleCookie } from "@/i18n/cookie";
+import { syncThemeCookiesForUser } from "@/lib/theme/cookie";
 
 function genericSignInError() {
   return { key: "auth.signInFailed" } as const;
@@ -73,6 +74,9 @@ export async function signInAction(_prevState: ActionState, formData: FormData):
   if (user && isLocale(user.locale)) {
     await setLocaleCookie(user.locale);
   }
+  if (user) {
+    await syncThemeCookiesForUser(user);
+  }
 
   redirect(callbackUrl);
 }
@@ -94,13 +98,15 @@ export async function setupAction(_prevState: ActionState, formData: FormData): 
 
   const locale = (await getLocaleCookie()) ?? defaultLocale;
 
+  let created: Awaited<ReturnType<typeof setupFirstAdmin>> | null = null;
   try {
-    await setupFirstAdmin({ ...parsed.data, locale });
+    created = await setupFirstAdmin({ ...parsed.data, locale });
   } catch (error) {
     return { error: errorDescriptor(error) };
   }
 
   await setLocaleCookie(locale);
+  await syncThemeCookiesForUser(created);
 
   try {
     await signIn("credentials", {
@@ -131,20 +137,22 @@ export async function acceptInviteAction(
 
   const locale = (await getLocaleCookie()) ?? defaultLocale;
 
+  let created: Awaited<ReturnType<typeof acceptInvite>> | null = null;
   let email = "";
   try {
-    const user = await acceptInvite({
+    created = await acceptInvite({
       token,
       name: parsed.data.name,
       password: parsed.data.password,
       locale,
     });
-    email = user.email;
+    email = created.email;
   } catch (error) {
     return { error: errorDescriptor(error) };
   }
 
   await setLocaleCookie(locale);
+  await syncThemeCookiesForUser(created);
 
   try {
     await signIn("credentials", {
