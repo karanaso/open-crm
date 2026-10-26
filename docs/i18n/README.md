@@ -42,7 +42,7 @@ A second active session keeps its previous locale until its next sign-in.
 4. Run `pnpm i18n:check` to verify key and placeholder parity.
 5. Run `pnpm typecheck`; message keys are typed from `messages/en.json`.
 
-Namespaces: `common`, `nav`, `metadata`, `auth`, `settings`, `directory`, `sales`, `support`, `marketing`, `dashboard`, `timeline`, `validation`, `errors`, `enums`.
+Namespaces: `common`, `nav`, `metadata`, `auth`, `settings`, `themes`, `directory`, `sales`, `support`, `marketing`, `dashboard`, `timeline`, `validation`, `errors`, `enums`.
 
 ## What is not translated
 
