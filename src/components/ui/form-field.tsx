@@ -59,7 +59,7 @@ export function FormSuccess({ message }: { message?: MessageDescriptor | null })
   const text = useMessageText(message);
   if (!text) return null;
   return (
-    <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+    <p className="border-success/30 bg-success/10 text-success rounded-md border px-3 py-2 text-sm">
       {text}
     </p>
   );

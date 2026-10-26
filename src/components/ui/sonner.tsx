@@ -1,11 +1,12 @@
 "use client";
 
 import { Toaster as SonnerToaster } from "sonner";
+import type { ThemeMode } from "@/lib/theme/config";
 
-export function Toaster() {
+export function Toaster({ mode = "system" }: { mode?: ThemeMode }) {
   return (
     <SonnerToaster
-      theme="light"
+      theme={mode}
       position="top-right"
       richColors
       closeButton

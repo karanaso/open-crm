@@ -98,7 +98,7 @@ export async function ViewingsCalendar({
                           {cell.viewings.map((viewing) => (
                             <li
                               key={viewing.id}
-                              className="truncate rounded bg-sky-50 px-1 py-0.5 text-[11px] text-sky-800"
+                              className="truncate rounded bg-info/10 px-1 py-0.5 text-[11px] text-info"
                               title={`${viewing.contactName} · ${formatZonedTime(
                                 viewing.scheduledAt,
                                 locale,

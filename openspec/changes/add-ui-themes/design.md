@@ -77,7 +77,7 @@ An alternative was to keep neutrals identical and change only accents. That is e
 
 - `data-mode` is always one of `light`, `dark`, `system`.
 - For `light` and `dark`, the server writes the matching class and no script is needed.
-- For `system`, the server omits `dark` and a tiny synchronous inline script in `<head>` reads `document.documentElement.dataset.mode`, checks `matchMedia("(prefers-color-scheme: dark)")`, and toggles the class before paint.
+- For `system`, the server omits `dark` and a tiny synchronous inline script, rendered as the first child of `<body>`, reads `document.documentElement.dataset.mode`, checks `matchMedia("(prefers-color-scheme: dark)")`, and toggles the class before app content is parsed or painted. It is body-first rather than in `<head>` because Next's App Router lint rejects a manual `<head>` element; a parser-blocking script before any content has the same pre-paint effect.
 - A client `ThemeRuntime` component listens to the media query while the mode is `system` and toggles the class when the OS preference changes. It also runs on mount to reconcile after hydration.
 - `suppressHydrationWarning` is added to `<html>` because the pre-paint script can change `class` before React hydrates. The script is a static constant; no user data is interpolated.
 - `color-scheme` in CSS handles native controls. No `meta name="theme-color"` change is required for this self-hosted desktop-first app.

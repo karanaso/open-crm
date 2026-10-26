@@ -49,12 +49,12 @@ export function InviteMemberForm() {
       </div>
 
       {state?.inviteUrl ? (
-        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+        <div className="rounded-md border border-success/30 bg-success/10 p-3 text-sm text-success">
           <p className="font-medium">
             {state.success ? translate(state.success) : null}
           </p>
           <div className="mt-2 flex items-center gap-2">
-            <Input readOnly value={state.inviteUrl} className="bg-white font-mono text-xs" />
+            <Input readOnly value={state.inviteUrl} className="bg-muted font-mono text-xs" />
             <Button
               type="button"
               variant="outline"

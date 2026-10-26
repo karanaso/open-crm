@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { RootDocument } from "@/components/layout/root-document";
-import { Toaster } from "@/components/ui/sonner";
 import { APP_NAME } from "@/lib/constants";
+import { getThemePreference } from "@/lib/theme/cookie";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,12 +17,20 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+  const [locale, messages, themePreference] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getThemePreference(),
+  ]);
 
   return (
-    <RootDocument locale={locale} messages={messages}>
+    <RootDocument
+      locale={locale}
+      messages={messages}
+      theme={themePreference.theme}
+      themeMode={themePreference.mode}
+    >
       {children}
-      <Toaster />
     </RootDocument>
   );
 }

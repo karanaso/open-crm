@@ -251,10 +251,10 @@ export function CsvImportForm({ defaultTarget = "companies" }: { defaultTarget?:
         <div className="space-y-3 rounded-lg border p-4">
           <h3 className="font-medium">{t("importComplete")}</h3>
           <div className="flex flex-wrap gap-2 text-sm">
-            <span className="rounded-md bg-emerald-50 px-2 py-1 text-emerald-700">
+            <span className="rounded-md bg-success/10 px-2 py-1 text-success">
               {t("importedCount", { count: state.report.imported })}
             </span>
-            <span className="rounded-md bg-amber-50 px-2 py-1 text-amber-700">
+            <span className="rounded-md bg-warning/10 px-2 py-1 text-warning">
               {t("duplicatesSkipped", { count: state.report.duplicates })}
             </span>
             <span className="rounded-md bg-destructive/5 px-2 py-1 text-destructive">

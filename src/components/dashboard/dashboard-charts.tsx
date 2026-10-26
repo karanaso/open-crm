@@ -17,7 +17,26 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatNumber } from "@/i18n/format";
 
-const COLORS = ["#4f6bed", "#2aa7a1", "#e0a43b", "#a855f7", "#ef4444", "#64748b"];
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+];
+
+const TOOLTIP_CONTENT_STYLE = {
+  backgroundColor: "var(--popover)",
+  borderColor: "var(--border)",
+  borderRadius: "0.5rem",
+  color: "var(--popover-foreground)",
+} as const;
+
+const TOOLTIP_ITEM_STYLE = { color: "var(--popover-foreground)" } as const;
+const TOOLTIP_LABEL_STYLE = { color: "var(--popover-foreground)" } as const;
+const LEGEND_STYLE = { color: "var(--muted-foreground)" } as const;
+const AXIS_TICK = { fill: "var(--muted-foreground)", fontSize: 12 } as const;
 
 type PipelinePoint = {
   stage: string;
@@ -88,8 +107,14 @@ export function DashboardCharts({
                   data={pipelineChartData}
                   margin={{ top: 4, right: 8, left: 8, bottom: 4 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="stage" tickLine={false} axisLine={false} fontSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis
+                    dataKey="stage"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                    tick={AXIS_TICK}
+                  />
                   <YAxis
                     tickFormatter={(value) =>
                       formatNumber(Number(value), locale, {
@@ -100,14 +125,19 @@ export function DashboardCharts({
                     tickLine={false}
                     axisLine={false}
                     fontSize={12}
+                    tick={AXIS_TICK}
                   />
                   <Tooltip
                     formatter={(value, name) => [
                       formatCurrency(Number(value), locale, String(name)),
                       String(name),
                     ]}
+                    contentStyle={TOOLTIP_CONTENT_STYLE}
+                    itemStyle={TOOLTIP_ITEM_STYLE}
+                    labelStyle={TOOLTIP_LABEL_STYLE}
+                    cursor={{ fill: "var(--muted)", opacity: 0.4 }}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={LEGEND_STYLE} />
                   {pipelineCurrencies.map((currency, index) => (
                     <Bar
                       key={currency}
@@ -180,8 +210,13 @@ export function DashboardCharts({
                     <Cell key={item.status} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => formatNumber(Number(value), locale)} />
-                <Legend />
+                <Tooltip
+                  formatter={(value) => formatNumber(Number(value), locale)}
+                  contentStyle={TOOLTIP_CONTENT_STYLE}
+                  itemStyle={TOOLTIP_ITEM_STYLE}
+                  labelStyle={TOOLTIP_LABEL_STYLE}
+                />
+                <Legend wrapperStyle={LEGEND_STYLE} />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -206,14 +241,20 @@ export function DashboardCharts({
                 }))}
                 margin={{ top: 4, right: 8, left: 8, bottom: 4 }}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} />
-                <Tooltip formatter={(value) => formatNumber(Number(value), locale)} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={AXIS_TICK} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={AXIS_TICK} />
+                <Tooltip
+                  formatter={(value) => formatNumber(Number(value), locale)}
+                  contentStyle={TOOLTIP_CONTENT_STYLE}
+                  itemStyle={TOOLTIP_ITEM_STYLE}
+                  labelStyle={TOOLTIP_LABEL_STYLE}
+                  cursor={{ fill: "var(--muted)", opacity: 0.4 }}
+                />
                 <Bar
                   dataKey="count"
                   name={t("seriesRecipients")}
-                  fill="#2aa7a1"
+                  fill="var(--chart-2)"
                   radius={[6, 6, 0, 0]}
                 />
               </BarChart>
