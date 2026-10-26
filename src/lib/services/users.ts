@@ -4,6 +4,7 @@ import { users, type User } from "@/db/schema";
 import { normalizeEmail, normalizeName } from "@/lib/auth/normalize";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { AppError } from "@/lib/errors";
+import type { Theme, ThemeMode } from "@/lib/theme/config";
 
 export async function findUserByEmail(email: string) {
   const [user] = await db
@@ -45,6 +46,16 @@ export async function updateUserLocale(userId: string, locale: "en" | "el") {
   const [updated] = await db
     .update(users)
     .set({ locale, updatedAt: new Date() })
+    .where(eq(users.id, userId))
+    .returning();
+  if (!updated) throw new AppError("User not found", "NOT_FOUND");
+  return updated;
+}
+
+export async function updateUserTheme(userId: string, theme: Theme, mode: ThemeMode) {
+  const [updated] = await db
+    .update(users)
+    .set({ theme, themeMode: mode, updatedAt: new Date() })
     .where(eq(users.id, userId))
     .returning();
   if (!updated) throw new AppError("User not found", "NOT_FOUND");

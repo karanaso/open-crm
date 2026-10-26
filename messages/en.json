@@ -146,6 +146,42 @@
     "updatePassword": "Update password",
     "updatingPassword": "Updating password…"
   },
+  "themes": {
+    "title": "Appearance",
+    "description": "Choose a color theme and how OpenCRM follows light or dark mode.",
+    "themeLabel": "Color theme",
+    "themeDescription": "The palette used for navigation, controls, and charts.",
+    "modeLabel": "Color mode",
+    "modeDescription": "Light and dark override your device. System follows it automatically.",
+    "quickMenu": "Change theme",
+    "openSettings": "Theme settings",
+    "saved": "Theme updated.",
+    "default": {
+      "name": "Default",
+      "description": "Blue accents with cool neutrals."
+    },
+    "violet": {
+      "name": "Violet",
+      "description": "Purple accents with cool neutrals."
+    },
+    "emerald": {
+      "name": "Emerald",
+      "description": "Green accents with fresh neutrals."
+    },
+    "amber": {
+      "name": "Amber",
+      "description": "Golden accents with warm neutrals."
+    },
+    "rose": {
+      "name": "Rose",
+      "description": "Pink accents with warm neutrals."
+    },
+    "mode": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
   "settings": {
     "profile": "Profile",
     "team": "Team",
@@ -694,6 +730,7 @@
     "UNAUTHORIZED": "You need to sign in to continue.",
     "FORBIDDEN": "You do not have permission to do that.",
     "INVALID_LOCALE": "Choose a supported language.",
+    "INVALID_THEME": "That theme is not available.",
     "INACTIVE_OWNER": "Choose an active team member as owner.",
     "INVALID_TRANSITION": "This action is not allowed in the current state.",
     "CONFLICT": "This record was changed by someone else. Refresh and try again.",

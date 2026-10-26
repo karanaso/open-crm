@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { setupFirstAdmin } from "@/lib/services/setup";
@@ -16,6 +16,7 @@ import {
   findUserById,
   setUserStatus,
   updateUserLocale,
+  updateUserTheme,
 } from "@/lib/services/users";
 import { verifyPassword } from "@/lib/auth/password";
 import {
@@ -195,5 +196,36 @@ describe("workspace access", () => {
     const updated = await updateUserLocale(user.id, "el");
     expect(updated.locale).toBe("el");
     expect((await findUserById(user.id))?.locale).toBe("el");
+  });
+
+  it("defaults new accounts to the default theme and system mode", async () => {
+    const user = await createUser();
+    expect(user.theme).toBe("default");
+    expect(user.themeMode).toBe("system");
+  });
+
+  it("persists a theme preference change", async () => {
+    const user = await createUser();
+    const updated = await updateUserTheme(user.id, "violet", "dark");
+    expect(updated.theme).toBe("violet");
+    expect(updated.themeMode).toBe("dark");
+
+    const stored = await findUserById(user.id);
+    expect(stored?.theme).toBe("violet");
+    expect(stored?.themeMode).toBe("dark");
+  });
+
+  it("rejects an unsupported theme at the database", async () => {
+    const user = await createUser();
+    await expect(
+      db.execute(sql`update users set theme = 'blue' where id = ${user.id}`),
+    ).rejects.toThrow();
+  });
+
+  it("rejects an unsupported theme mode at the database", async () => {
+    const user = await createUser();
+    await expect(
+      db.execute(sql`update users set theme_mode = 'auto' where id = ${user.id}`),
+    ).rejects.toThrow();
   });
 });

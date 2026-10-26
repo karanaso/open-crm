@@ -22,6 +22,7 @@ import type {
   MessageAudienceSnapshot,
   SegmentCriteria,
 } from "@/lib/types";
+import type { Theme, ThemeMode } from "@/lib/theme/config";
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "member"]);
 export const userStatusEnum = pgEnum("user_status", ["active", "inactive"]);
@@ -155,6 +156,8 @@ export const users = pgTable(
     role: userRoleEnum("role").notNull().default("member"),
     status: userStatusEnum("status").notNull().default("active"),
     locale: text("locale").notNull().default("en"),
+    theme: text("theme").$type<Theme>().notNull().default("default"),
+    themeMode: text("theme_mode").$type<ThemeMode>().notNull().default("system"),
     sessionVersion: integer("session_version").notNull().default(0),
     ...timestamps,
   },
@@ -162,6 +165,11 @@ export const users = pgTable(
     uniqueIndex("users_email_lower_idx").on(sql`lower(${table.email})`),
     index("users_status_idx").on(table.status),
     check("users_locale_check", sql`${table.locale} in ('en', 'el')`),
+    check(
+      "users_theme_check",
+      sql`${table.theme} in ('default', 'violet', 'emerald', 'amber', 'rose')`,
+    ),
+    check("users_theme_mode_check", sql`${table.themeMode} in ('light', 'dark', 'system')`),
   ],
 );
 
