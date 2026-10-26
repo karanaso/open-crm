@@ -100,6 +100,22 @@ Gender is shown as **(f)** feminine, **(m)** masculine, or **(n)** neuter. Greek
 | budget | **προϋπολογισμός** (m) | Campaign budget; label «Προϋπολογισμός» with the workspace-default currency. |
 | outreach | **προσέγγιση** (f) | Campaign outreach, not “εξόρμηση”. |
 
+## Messaging and email
+
+| English | Greek | Notes |
+| --- | --- | --- |
+| message | **μήνυμα** (n) | An outbound email record in the Messaging module. |
+| recipient | **παραλήπτης** (m) | A contact receiving a message. |
+| recipient group | **ομάδα παραληπτών** (f) | A hand-picked list of contacts emailed together. |
+| rich text / rich HTML email | **email με μορφοποίηση HTML** | The formatted message body. Do not calque «πλούσιο HTML»; «εμπλουτισμένο κείμενο» is acceptable only in descriptive prose, not as a UI label. |
+| plain text | **απλό κείμενο** (n) | The text alternative of an HTML message. |
+| merge field | **πεδίο συγχώνευσης** (n) | The `{{firstName}}`, `{{lastName}}`, and `{{company}}` placeholders. Keep the tokens in Latin and preserve the double braces. |
+| formatting | **μορφοποίηση** (f) | Editor formatting such as bold, italic, and lists. |
+| alternative text | **εναλλακτικό κείμενο** (n) | Image alt text. |
+| upload | **μεταφόρτωση** (f) | File upload; message images cannot be uploaded. |
+| attachment | **συνημμένο** (n) | Email attachment; not supported. Plural «συνημμένα». |
+| delivery record | **ιστορικό αποστολών** (n) | The stored message and per-recipient send outcomes; not proof of delivery. Do not use «αρχείο αποστολής», which reads as a file. |
+
 ## Timeline and tasks
 
 | English | Greek | Notes |
@@ -286,6 +302,9 @@ These describe what happened to a recipient (masculine «παραλήπτης»)
 | Email | Keep in address/format contexts. In running prose, «email» is acceptable. |
 | Domain | Web domain. Keep the Latin word; never «τομέας», which means industry/sector. |
 | URL, ID, UUID | Technical identifiers. Keep as-is. |
+| HTML | Markup format. Keep Latin capitals; never transliterate or expand. |
+| HTTPS | Protocol. Keep Latin capitals; message image URLs must use it. |
+| SMTP | Protocol acronym. Keep Latin capitals; environment variable names such as `SMTP_HOST` and `MESSAGING_FROM` stay verbatim. |
 | AND | Logical operator in segment criteria. Keep as-is; do not replace with «ΚΑΙ» in the criteria hint. |
 | MB, UTC | Units/standards. Keep as-is. |
 | Stored enum values | `open`, `in_progress`, `admin`, `targeted`, etc. Only display labels are translated. |

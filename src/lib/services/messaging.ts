@@ -15,7 +15,11 @@ import {
   type MessageRecipient,
 } from "@/db/schema";
 import { AppError } from "@/lib/errors";
-import { renderMergeFields } from "@/lib/messaging/render";
+import {
+  inspectMessageBody,
+  sanitizeMessageHtml,
+} from "@/lib/messaging/html";
+import { renderHtmlMergeFields, renderMergeFields } from "@/lib/messaging/render";
 import {
   getMaxRecipients,
   getTransport,
@@ -29,11 +33,18 @@ import { segmentWhere } from "@/lib/services/marketing";
 import type { MessageAudienceSnapshot } from "@/lib/types";
 import type {
   MessageGroupInput,
-  MessageInput,
   messageListParamsSchema,
 } from "@/lib/validation/messaging";
 
 type MessageListParams = z.infer<typeof messageListParamsSchema>;
+
+type MessageWriteInput = {
+  subject: string;
+  body?: string | null;
+  bodyHtml?: string | null;
+  groupId: string | null;
+  segmentId: string | null;
+};
 
 type AudienceContact = {
   id: string;
@@ -327,7 +338,7 @@ export async function previewMessageAudience(messageId: string) {
   };
 }
 
-async function validateAudienceSource(input: MessageInput, existing?: Message) {
+async function validateAudienceSource(input: MessageWriteInput, existing?: Message) {
   if (input.groupId) {
     const group = await requireGroup(input.groupId);
     if (group.archivedAt && existing?.groupId !== group.id) {
@@ -351,14 +362,24 @@ async function validateAudienceSource(input: MessageInput, existing?: Message) {
   }
 }
 
-export async function createMessage(input: MessageInput, actorId: string) {
+function prepareMessageBody(input: MessageWriteInput) {
+  const inspection = inspectMessageBody(input);
+  if (!inspection.ok) {
+    throw new AppError("The message body is invalid.", "BAD_REQUEST");
+  }
+  return inspection;
+}
+
+export async function createMessage(input: MessageWriteInput, actorId: string) {
   await validateAudienceSource(input);
+  const prepared = prepareMessageBody(input);
 
   const [message] = await db
     .insert(messages)
     .values({
       subject: input.subject,
-      body: input.body,
+      body: prepared.body,
+      bodyHtml: prepared.bodyHtml,
       groupId: input.groupId,
       segmentId: input.segmentId,
       createdById: actorId,
@@ -367,7 +388,7 @@ export async function createMessage(input: MessageInput, actorId: string) {
   return message;
 }
 
-export async function updateMessage(messageId: string, input: MessageInput) {
+export async function updateMessage(messageId: string, input: MessageWriteInput) {
   const [existing] = await db
     .select()
     .from(messages)
@@ -379,12 +400,14 @@ export async function updateMessage(messageId: string, input: MessageInput) {
   }
 
   await validateAudienceSource(input, existing);
+  const prepared = prepareMessageBody(input);
 
   const [message] = await db
     .update(messages)
     .set({
       subject: input.subject,
-      body: input.body,
+      body: prepared.body,
+      bodyHtml: prepared.bodyHtml,
       groupId: input.groupId,
       segmentId: input.segmentId,
       updatedAt: new Date(),
@@ -406,7 +429,21 @@ export async function listMessages(params: MessageListParams) {
   const [rows, totalRow] = await Promise.all([
     db
       .select({
-        message: messages,
+        message: {
+          id: messages.id,
+          channel: messages.channel,
+          status: messages.status,
+          subject: messages.subject,
+          groupId: messages.groupId,
+          segmentId: messages.segmentId,
+          audienceSnapshot: messages.audienceSnapshot,
+          createdById: messages.createdById,
+          sentAt: messages.sentAt,
+          completedAt: messages.completedAt,
+          runStartedAt: messages.runStartedAt,
+          createdAt: messages.createdAt,
+          updatedAt: messages.updatedAt,
+        },
         groupName: messageGroups.name,
         segmentName: segments.name,
         total: sql<number>`(select count(*)::int from message_recipients r where r.message_id = ${messages.id})`,
@@ -575,6 +612,8 @@ async function deliverRecipients(
     )
     .orderBy(asc(messageRecipients.createdAt), asc(messageRecipients.id));
 
+  const htmlTemplate = message.bodyHtml ? sanitizeMessageHtml(message.bodyHtml) : "";
+
   for (const row of pending) {
     const [current] = await db
       .select({ status: messages.status })
@@ -593,15 +632,19 @@ async function deliverRecipients(
     }
 
     try {
+      const mergeValues = {
+        firstName: row.firstName,
+        lastName: row.lastName,
+        company: row.companyName,
+      };
+      const text = renderMergeFields(message.body, mergeValues);
+      const html = htmlTemplate ? renderHtmlMergeFields(htmlTemplate, mergeValues) : "";
       const result = await transport.send({
         to: row.recipient.address,
         replyTo,
         subject: message.subject,
-        text: renderMergeFields(message.body, {
-          firstName: row.firstName,
-          lastName: row.lastName,
-          company: row.companyName,
-        }),
+        text,
+        ...(html.trim() && text.trim() ? { html } : {}),
       });
       await updateRecipientOutcome(row.recipient.id, statuses, {
         status: "sent",

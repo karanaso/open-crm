@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { MessageDescriptor } from "@/lib/errors";
+import { MAX_MESSAGE_HTML_LENGTH, MAX_MESSAGE_TEXT_LENGTH } from "@/lib/messaging/limits";
 import { findUnsupportedMergeFields } from "@/lib/messaging/render";
 import {
   optionalText,
@@ -21,22 +22,35 @@ const audienceFields = {
   segmentId: optionalUuidSchema,
 };
 
+const optionalBody = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, "validation.maxLength")
+    .optional()
+    .nullable()
+    .transform((value) => value || null);
+
 export const messageSchema = z
   .object({
     subject: requiredText(200).refine(
       (value) => !/[\r\n]/.test(value),
       "validation.subjectLineBreaks",
     ),
-    body: z
-      .string()
-      .trim()
-      .min(1, "validation.required")
-      .max(10000, "validation.maxLength")
-      .refine(
-        (value) => findUnsupportedMergeFields(value).length === 0,
-        "validation.unsupportedMergeField",
-      ),
+    body: optionalBody(MAX_MESSAGE_TEXT_LENGTH).refine(
+      (value) => value === null || findUnsupportedMergeFields(value).length === 0,
+      "validation.unsupportedMergeField",
+    ),
+    bodyHtml: optionalBody(MAX_MESSAGE_HTML_LENGTH),
     ...audienceFields,
+  })
+  .refine((value) => Boolean(value.body) || Boolean(value.bodyHtml), {
+    message: "validation.bodyRequired",
+    path: ["body"],
+  })
+  .refine((value) => !(value.body && value.bodyHtml), {
+    message: "validation.bodySource",
+    path: ["body"],
   })
   .refine((value) => Boolean(value.groupId) !== Boolean(value.segmentId), {
     message: "validation.audienceSource",

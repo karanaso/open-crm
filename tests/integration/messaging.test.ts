@@ -60,12 +60,13 @@ async function groupWith(actorId: string, contactIds: string[], name = "Test gro
 async function draftMessage(
   actorId: string,
   audience: { groupId?: string; segmentId?: string },
-  overrides: { subject?: string; body?: string } = {},
+  overrides: { subject?: string; body?: string | null; bodyHtml?: string | null } = {},
 ) {
   return createMessage(
     {
       subject: overrides.subject ?? "Hello from OpenCRM",
-      body: overrides.body ?? "Hi {{firstName}}, a note from {{company}}.",
+      body: overrides.body ?? (overrides.bodyHtml ? null : "Hi {{firstName}}, a note from {{company}}."),
+      bodyHtml: overrides.bodyHtml ?? null,
       groupId: audience.groupId ?? null,
       segmentId: audience.segmentId ?? null,
     },
@@ -236,6 +237,84 @@ describe("message drafts", () => {
     ).rejects.toMatchObject({ code: "INVALID_MESSAGE_STATE" });
   });
 
+  it("stores sanitized HTML and derives the text alternative", async () => {
+    const { admin, company } = await fixture();
+    const contact = await createContact(admin.id, company.id);
+    const group = await groupWith(admin.id, [contact.id]);
+    const message = await draftMessage(admin.id, { groupId: group.id }, {
+      body: null,
+      bodyHtml:
+        '<p>Hi <strong>{{firstName}}</strong></p><script>alert(1)</script><img src="http://example.com/tracker.png">',
+    });
+
+    const loaded = await getMessage(message.id);
+    expect(loaded?.body).toBe("Hi {{firstName}}");
+    expect(loaded?.bodyHtml).toContain("<strong>{{firstName}}</strong>");
+    expect(loaded?.bodyHtml).not.toContain("script");
+    expect(loaded?.bodyHtml).not.toContain("http://example.com/tracker.png");
+  });
+
+  it("converts a legacy text draft when it is saved as HTML", async () => {
+    const { admin, company } = await fixture();
+    const contact = await createContact(admin.id, company.id);
+    const group = await groupWith(admin.id, [contact.id]);
+    const message = await draftMessage(admin.id, { groupId: group.id }, {
+      body: "Line one\nLine two",
+    });
+    expect((await getMessage(message.id))?.bodyHtml).toBeNull();
+
+    await updateMessage(message.id, {
+      subject: "Converted",
+      body: null,
+      bodyHtml: "<p>Line one<br>Line two</p>",
+      groupId: group.id,
+      segmentId: null,
+    });
+
+    const loaded = await getMessage(message.id);
+    expect(loaded?.bodyHtml).toBe("<p>Line one<br />Line two</p>");
+    expect(loaded?.body).toBe("Line one\nLine two");
+  });
+
+  it("rejects HTML without readable content", async () => {
+    const { admin, company } = await fixture();
+    const contact = await createContact(admin.id, company.id);
+    const group = await groupWith(admin.id, [contact.id]);
+
+    await expect(
+      draftMessage(admin.id, { groupId: group.id }, {
+        body: null,
+        bodyHtml: "<script>alert(1)</script>",
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    await expect(
+      draftMessage(admin.id, { groupId: group.id }, {
+        body: null,
+        bodyHtml: "<p>{{company}}</p>",
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    await expect(
+      draftMessage(admin.id, { groupId: group.id }, {
+        body: "{{company}}",
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("rejects split merge placeholders", async () => {
+    const { admin, company } = await fixture();
+    const contact = await createContact(admin.id, company.id);
+    const group = await groupWith(admin.id, [contact.id]);
+
+    await expect(
+      draftMessage(admin.id, { groupId: group.id }, {
+        body: null,
+        bodyHtml: "<p>{{<strong>firstName</strong>}}</p>",
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
   it("lists messages newest first with filters and pagination", async () => {
     const { admin, company } = await fixture();
     const contact = await createContact(admin.id, company.id);
@@ -260,6 +339,8 @@ describe("message drafts", () => {
 
     const firstPage = await listMessages({ q: "", page: 1, pageSize: 2 });
     expect(firstPage.items.map((item) => item.subject)).toEqual(["Gamma", "Beta"]);
+    expect(firstPage.items[0]).not.toHaveProperty("body");
+    expect(firstPage.items[0]).not.toHaveProperty("bodyHtml");
     expect(firstPage.pageCount).toBe(2);
 
     const search = await listMessages({ q: "Bet", page: 1, pageSize: 20 });
@@ -302,6 +383,103 @@ describe("sending", () => {
     expect(loaded?.recipients).toHaveLength(2);
     expect(loaded?.audienceSnapshot?.name).toBe("Q1 renewals");
     expect(loaded?.audienceName).toBe("Q1 renewals");
+  });
+
+  it("sends HTML and text with escaped merge fields", async () => {
+    const { admin } = await fixture();
+    const company = await createCompany(admin.id, { name: "Smith & Sons", industry: "Software" });
+    const contact = await createContact(admin.id, company.id, { firstName: "Ada" });
+    const group = await groupWith(admin.id, [contact.id]);
+    const message = await draftMessage(admin.id, { groupId: group.id }, {
+      body: null,
+      bodyHtml: "<p>Hi {{firstName}} from {{company}}</p>",
+    });
+
+    const transport = new FakeTransport();
+    await sendMessage(message.id, admin.id, transport);
+
+    expect(transport.attempts).toHaveLength(1);
+    expect(transport.attempts[0]?.text).toBe("Hi Ada from Smith & Sons");
+    expect(transport.attempts[0]?.html).toContain("Hi Ada from Smith &amp; Sons");
+  });
+
+  it("sends legacy text-only messages without an HTML part", async () => {
+    const { admin, company } = await fixture();
+    const contact = await createContact(admin.id, company.id, { firstName: "Ada" });
+    const group = await groupWith(admin.id, [contact.id]);
+    const message = await draftMessage(admin.id, { groupId: group.id }, {
+      body: "Hi {{firstName}} from {{company}}.",
+    });
+
+    const transport = new FakeTransport();
+    await sendMessage(message.id, admin.id, transport);
+
+    expect(transport.attempts[0]?.text).toBe("Hi Ada from Acme Software.");
+    expect(transport.attempts[0]?.html).toBeUndefined();
+  });
+
+  it("sanitizes tampered stored HTML before delivery", async () => {
+    const { admin, company } = await fixture();
+    const contact = await createContact(admin.id, company.id);
+    const group = await groupWith(admin.id, [contact.id]);
+    const message = await draftMessage(admin.id, { groupId: group.id }, {
+      body: null,
+      bodyHtml: "<p>Safe</p>",
+    });
+
+    await db
+      .update(messages)
+      .set({ bodyHtml: '<p>Safe</p><script>alert(1)</script><img src="http://evil.test/x.png">' })
+      .where(eq(messages.id, message.id));
+
+    const transport = new FakeTransport();
+    await sendMessage(message.id, admin.id, transport);
+
+    expect(transport.attempts[0]?.html).toContain("Safe");
+    expect(transport.attempts[0]?.html).not.toContain("script");
+    expect(transport.attempts[0]?.html).not.toContain("evil.test");
+  });
+
+  it("omits the HTML part when stored HTML sanitizes to nothing", async () => {
+    const { admin, company } = await fixture();
+    const contact = await createContact(admin.id, company.id);
+    const group = await groupWith(admin.id, [contact.id]);
+    const message = await draftMessage(admin.id, { groupId: group.id }, {
+      body: null,
+      bodyHtml: "<p>Original</p>",
+    });
+
+    await db
+      .update(messages)
+      .set({ bodyHtml: "<script>alert(1)</script>" })
+      .where(eq(messages.id, message.id));
+
+    const transport = new FakeTransport();
+    await sendMessage(message.id, admin.id, transport);
+
+    expect(transport.attempts[0]?.text).toBe("Original");
+    expect(transport.attempts[0]?.html).toBeUndefined();
+  });
+
+  it("does not send an HTML part when rendered text would be empty", async () => {
+    const { admin } = await fixture();
+    const contact = await createContact(admin.id, null);
+    const group = await groupWith(admin.id, [contact.id]);
+    const message = await draftMessage(admin.id, { groupId: group.id }, {
+      body: null,
+      bodyHtml: "<p>Original</p>",
+    });
+
+    await db
+      .update(messages)
+      .set({ body: "{{company}}", bodyHtml: "<p>{{company}}</p>" })
+      .where(eq(messages.id, message.id));
+
+    const transport = new FakeTransport();
+    await sendMessage(message.id, admin.id, transport);
+
+    expect(transport.attempts[0]?.text).toBe("");
+    expect(transport.attempts[0]?.html).toBeUndefined();
   });
 
   it("stores skipped recipients without contacting them", async () => {

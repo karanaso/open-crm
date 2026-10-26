@@ -42,6 +42,7 @@ export function createSmtpTransport(): EmailTransport {
         replyTo: email.replyTo,
         subject: email.subject,
         text: email.text,
+        html: email.html,
       });
       return {
         providerMessageId: typeof info.messageId === "string" ? info.messageId : undefined,

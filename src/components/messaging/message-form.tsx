@@ -8,13 +8,13 @@ import type { ActionState } from "@/lib/action-state";
 import { Button } from "@/components/ui/button";
 import { FormError, FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/messaging/rich-text-editor";
 
 type AudienceOption = { id: string; name: string; count: number; archived?: boolean };
 
 type MessageInitial = {
   subject: string;
-  body: string;
+  initialHtml: string;
   groupId: string | null;
   segmentId: string | null;
 };
@@ -47,6 +47,7 @@ export function MessageForm({
   const options = kind === "group" ? groups : segments;
   const selected = options.find((option) => option.id === (kind === "group" ? groupId : segmentId));
   const selectionMissing = options.length === 0;
+  const bodyError = state?.fieldErrors?.bodyHtml?.[0] ?? state?.fieldErrors?.body?.[0];
 
   return (
     <form action={formAction} className="space-y-6">
@@ -146,16 +147,14 @@ export function MessageForm({
       <FormField
         label={t("message")}
         htmlFor="body"
-        error={state?.fieldErrors?.body?.[0]}
+        error={bodyError}
+        hint={t("richTextHint")}
         required
       >
-        <Textarea
-          id="body"
-          name="body"
-          defaultValue={initial?.body ?? ""}
-          rows={10}
-          maxLength={10000}
-          required
+        <RichTextEditor
+          initialHtml={initial?.initialHtml ?? ""}
+          label={t("message")}
+          invalid={Boolean(bodyError)}
         />
       </FormField>
       <div className="-mt-3 space-y-1">
