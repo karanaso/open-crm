@@ -8,7 +8,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const [user, workspace] = await Promise.all([requireUser(), getWorkspaceDefaults()]);
   return (
     <AppShell
-      user={{ name: user.name, email: user.email, role: user.role }}
+      user={{
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        theme: user.theme,
+        themeMode: user.themeMode,
+      }}
       timeZone={workspace.timeZone}
     >
       {children}
