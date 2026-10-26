@@ -10,7 +10,7 @@ See `proposal.md` — Why. The current constraints that shape this design:
 - `users` is small and uses text + check constraints for constrained values (`locale`), not PostgreSQL enums.
 - Dashboard charts use hardcoded series hex values, `#e5e7eb` grids, and Recharts' default light tooltip. Twelve component locations use light-only status classes (`emerald`, `amber`, `sky`).
 - The project has no theme library, no `next-themes`, and no client-side preference store. The app is fully server-rendered and already requires JavaScript.
-- The main branch's latest migration is `0006`. A concurrent change (`add-html-email-support`) is creating a `0007` migration in its own branch.
+- The main branch's latest migration is `0007` (the HTML email body column), so the next generated migration for this change is `0008`.
 
 ## Goals / Non-Goals
 
@@ -141,7 +141,7 @@ CSP note: the inline script is static. If the project later adds a Content Secur
 - **Palette contrast is the main quality risk** → constrain each palette to a small set of tested foreground/background pairs, use OKLCH, audit representative pages with axe in light and dark, and manually verify amber/rose primary buttons where white text may fail.
 - **Pre-paint class mutation can cause hydration warnings** → `suppressHydrationWarning` only on `<html>`, a static script, and an e2e test that emulates a dark system preference.
 - **Database and cookie can diverge on a failed half-write** → the action writes cookies first and the database second; the root keeps rendering the cookie; the next successful action or sign-in reconciles both. Tests assert both sides after a change.
-- **Migration numbering collides with the in-flight HTML email change** → merge one change first, then regenerate the second migration with `pnpm db:generate`; never hand-edit `_journal.json`. The columns are additive with constant defaults, so the migration is fast and rollback is a drop.
+- **Migration numbering can drift if `main` advances before apply** → generate `0008` from the current `0007` baseline, and if `main` gains another migration first, regenerate with the next available number using `pnpm db:generate`; never hand-edit `_journal.json`. The columns are additive with constant defaults, so the migration is fast and rollback is a drop.
 - **Enabling System by default flips existing users with a dark OS to dark mode** → intended by the specs; mention it in release notes. Users can force light in profile or header.
 - **Recharts does not consume Tailwind classes** → use CSS variables directly in SVG props and explicit tooltip styles; verify in the browser, not only in jsdom.
 - **Sonner's `system` theme uses its own media query** → pass the mode through and cover it in the dark-mode e2e audit; do not special-case toasts.
@@ -150,7 +150,7 @@ CSP note: the inline script is static. If the project later adds a Content Secur
 
 ## Migration Plan
 
-1. Generate the additive migration after the concurrent messaging migration is merged. Add `theme` and `theme_mode` with non-null defaults and named check constraints.
+1. Generate the additive migration as `0008` on top of main's `0007`. Add `theme` and `theme_mode` with non-null defaults and named check constraints.
 2. Deploy the migration before or with the app; existing rows receive `default` / `system` automatically. No backfill script is needed.
 3. Ship the CSS tokens, document rendering, action, and UI in that order, but in a single release so the new columns are never written by old code.
 4. Rollback: reverting the app leaves the columns unused; dropping them later is safe because no other table references them. Do not run destructive commands against development or production data without approval.

@@ -6,7 +6,7 @@
 - [ ] 1.2 Add `src/lib/validation/theme.ts` with a Zod schema built from the shared constants. Add `tests/unit/theme-validation.test.ts` covering accepted combinations and rejection of tampered theme/mode values; verify with `pnpm vitest run tests/unit/theme-validation.test.ts`.
 - [ ] 1.3 Add `theme` (default `default`) and `theme_mode` (default `system`) text columns with named check constraints to `users`, following the `locale` column style. Run `pnpm db:generate`, inspect the generated SQL for both columns and checks, and confirm the migration applies when the integration global setup runs.
 - [ ] 1.4 Add `updateUserTheme(userId, theme, mode)` to `src/lib/services/users.ts`. Extend `tests/integration/auth.test.ts` with new-account defaults, a persisted update, and direct-write rejection of an unsupported value; verify with `pnpm vitest run --config vitest.integration.config.ts tests/integration/auth.test.ts`.
-- [ ] 1.5 Before generating the migration, check the merge state of `add-html-email-support`; if its `0007` migration is on `main`, regenerate this migration with the next available number. Never hand-edit `drizzle/meta/_journal.json`; verify `pnpm db:generate` leaves a consistent journal and snapshot.
+- [ ] 1.5 Confirm main's latest migration is `0007` and generate this change's migration as `0008`. If `main` advances before apply, regenerate with the next available number. Never hand-edit `drizzle/meta/_journal.json`; verify `pnpm db:generate` leaves a consistent journal and snapshot.
 
 ## 2. Cookie, Server Action, and sign-in synchronization
 

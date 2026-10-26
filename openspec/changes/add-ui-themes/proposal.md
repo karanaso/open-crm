@@ -35,5 +35,5 @@ None. Existing localization, access, and dashboard requirements remain unchanged
 - **UI**: global CSS tokens, app shell header, user menu area, profile page, badges, form feedback, dashboard charts, toast host, and hardcoded status notices.
 - **Catalogs**: new English and Greek theme labels; `pnpm i18n:check` must continue to pass.
 - **Tests**: unit coverage for validation, cookies, action, and root attributes; integration coverage for user preference persistence; end-to-end coverage for switching, reload, cross-browser sign-in, system mode, and accessibility in light and dark modes.
-- **Concurrent work**: the in-flight `add-html-email-support` change also creates a `0007` migration. Merge order must be coordinated and the second migration regenerated with the next available number before apply.
+- **Migration ordering**: `main` already includes migration `0007` from the completed HTML email change, so this change adds `0008`.
 - **Out of scope**: workspace-wide default themes, user-defined colors, scheduled theme switching, a dedicated high-contrast palette, theming of email content, and any public listings API change.
