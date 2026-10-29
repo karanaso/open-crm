@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RowEditLink } from "@/components/ui/row-edit-link";
 import { TagList } from "@/components/ui/badges";
 import { LocalTime } from "@/components/ui/local-time";
 import { listSegments } from "@/lib/services/marketing";
@@ -50,6 +51,9 @@ export default async function SegmentsPage() {
                 <TableHead>{t("criteria")}</TableHead>
                 <TableHead>{t("audience")}</TableHead>
                 <TableHead>{tCommon("updated")}</TableHead>
+                <TableHead className="w-12 text-right">
+                  <span className="sr-only">{tCommon("actions")}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,6 +81,12 @@ export default async function SegmentsPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     <LocalTime value={segment.updatedAt} options={{ dateStyle: "medium" }} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RowEditLink
+                      href={`/segments/${segment.id}/edit`}
+                      label={tCommon("editFor", { name: segment.name })}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

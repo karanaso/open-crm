@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RowEditLink } from "@/components/ui/row-edit-link";
 import { TagList } from "@/components/ui/badges";
 import { Badge } from "@/components/ui/badge";
 import { LocalTime } from "@/components/ui/local-time";
@@ -156,6 +157,9 @@ export default async function ContactsPage({
                 <TableHead>{tCommon("owner")}</TableHead>
                 <TableHead>{tCommon("tags")}</TableHead>
                 <TableHead>{tCommon("updated")}</TableHead>
+                <TableHead className="w-12 text-right">
+                  <span className="sr-only">{tCommon("actions")}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -195,6 +199,14 @@ export default async function ContactsPage({
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     <LocalTime value={contact.updatedAt} options={{ dateStyle: "medium" }} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RowEditLink
+                      href={`/contacts/${contact.id}/edit`}
+                      label={tCommon("editFor", {
+                        name: `${contact.firstName} ${contact.lastName}`,
+                      })}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

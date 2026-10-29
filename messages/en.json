@@ -5,6 +5,7 @@
     "cancel": "Cancel",
     "create": "Create",
     "edit": "Edit",
+    "editFor": "Edit {name}",
     "delete": "Delete",
     "archive": "Archive",
     "restore": "Restore",

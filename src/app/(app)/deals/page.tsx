@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RowEditLink } from "@/components/ui/row-edit-link";
 import { DealStatusBadge } from "@/components/ui/badges";
 import { DateDisplay } from "@/components/ui/local-time";
 import { KanbanBoard } from "@/components/deals/kanban-board";
@@ -282,6 +283,9 @@ export default async function DealsPage({
                   <TableHead>{t("commission")}</TableHead>
                   <TableHead>{tCommon("owner")}</TableHead>
                   <TableHead>{t("closeDate")}</TableHead>
+                  <TableHead className="w-12 text-right">
+                    <span className="sr-only">{tCommon("actions")}</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -324,6 +328,12 @@ export default async function DealsPage({
                     </TableCell>
                     <TableCell>
                       <DateDisplay value={deal.expectedCloseDate} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <RowEditLink
+                        href={`/deals/${deal.id}/edit`}
+                        label={tCommon("editFor", { name: deal.name })}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

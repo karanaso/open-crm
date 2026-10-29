@@ -35,13 +35,26 @@ test.describe("support desk", () => {
     await page.goto("/tickets");
     await page.fill('input[name="q"]', SUBJECT);
     await page.click('button[type="submit"]');
-    await page.getByRole("link", { name: SUBJECT }).click();
+    await page.getByRole("link", { name: SUBJECT, exact: true }).click();
     await expect(page.getByRole("heading", { name: SUBJECT })).toBeVisible();
 
     await page.getByRole("button", { name: "Resolved", exact: true }).click();
     await expect(page.getByText("Resolved", { exact: true }).first()).toBeVisible();
     await page.getByRole("button", { name: "Open", exact: true }).click();
     await expect(page.getByText("Open", { exact: true }).first()).toBeVisible();
+  });
+
+  test("opens a ticket edit page from the list row", async ({ page }) => {
+    await login(page);
+    await page.goto("/tickets");
+    await page.fill('input[name="q"]', SUBJECT);
+    await page.click('button[type="submit"]');
+
+    const edit = page.getByRole("link", { name: `Edit ${SUBJECT}` });
+    await expect(edit).toHaveAttribute("href", /\/tickets\/[0-9a-f-]+\/edit$/);
+    await edit.click();
+    await expect(page).toHaveURL(/\/tickets\/[0-9a-f-]+\/edit$/);
+    await expect(page.getByRole("heading", { name: "Edit ticket" })).toBeVisible();
   });
 
   test("filters overdue tickets", async ({ page }) => {
@@ -56,7 +69,7 @@ test.describe("support desk", () => {
     await page.goto("/contacts");
     await page.fill('input[name="q"]', CONTACT.email);
     await page.click('button[type="submit"]');
-    await page.getByRole("link", { name: "Sam Support" }).click();
+    await page.getByRole("link", { name: "Sam Support", exact: true }).click();
     await expect(page.getByRole("link", { name: SUBJECT })).toBeVisible();
 
     await page.getByRole("link", { name: COMPANY }).click();

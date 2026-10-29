@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RowEditLink } from "@/components/ui/row-edit-link";
 import { LocalTime } from "@/components/ui/local-time";
 import { getListingsTranslator } from "@/components/listings/get-listings-translator";
 import { ListingStatusBadge, ListingTransactionBadge } from "@/components/listings/listing-badges";
@@ -290,6 +291,9 @@ export default async function ListingsPage({
                 <TableHead>{t("seller")}</TableHead>
                 <TableHead>{t("agent")}</TableHead>
                 <TableHead>{tCommon("updated")}</TableHead>
+                <TableHead className="w-12 text-right">
+                  <span className="sr-only">{tCommon("actions")}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -370,6 +374,12 @@ export default async function ListingsPage({
                         value={listing.updatedAt}
                         options={{ dateStyle: "medium" }}
                         timeZone={timeZone}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <RowEditLink
+                        href={`/listings/${listing.id}/edit`}
+                        label={tCommon("editFor", { name: listing.title })}
                       />
                     </TableCell>
                   </TableRow>

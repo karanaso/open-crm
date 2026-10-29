@@ -15,7 +15,30 @@ test.describe("customer directory", () => {
     await page.goto("/contacts");
     await page.fill('input[name="q"]', CONTACT.email);
     await page.click('button[type="submit"]');
-    await expect(page.getByRole("link", { name: "Dana Directory" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Dana Directory", exact: true })).toBeVisible();
+  });
+
+  test("opens company and contact edit pages from list rows", async ({ page }) => {
+    await login(page);
+    const contactName = `${CONTACT.firstName} ${CONTACT.lastName}`;
+
+    await page.goto("/companies");
+    await page.fill('input[name="q"]', COMPANY);
+    await page.click('button[type="submit"]');
+    const companyEdit = page.getByRole("link", { name: `Edit ${COMPANY}` });
+    await expect(companyEdit).toHaveAttribute("href", /\/companies\/[0-9a-f-]+\/edit$/);
+    await companyEdit.click();
+    await expect(page).toHaveURL(/\/companies\/[0-9a-f-]+\/edit$/);
+    await expect(page.getByRole("heading", { name: `Edit ${COMPANY}` })).toBeVisible();
+
+    await page.goto("/contacts");
+    await page.fill('input[name="q"]', CONTACT.email);
+    await page.click('button[type="submit"]');
+    const contactEdit = page.getByRole("link", { name: `Edit ${contactName}` });
+    await expect(contactEdit).toHaveAttribute("href", /\/contacts\/[0-9a-f-]+\/edit$/);
+    await contactEdit.click();
+    await expect(page).toHaveURL(/\/contacts\/[0-9a-f-]+\/edit$/);
+    await expect(page.getByRole("heading", { name: `Edit ${contactName}` })).toBeVisible();
   });
 
   test("company search and detail relationships work", async ({ page }) => {
@@ -23,9 +46,9 @@ test.describe("customer directory", () => {
     await page.goto("/companies");
     await page.fill('input[name="q"]', "E2E Directory");
     await page.click('button[type="submit"]');
-    await page.getByRole("link", { name: COMPANY }).click();
+    await page.getByRole("link", { name: COMPANY, exact: true }).click();
     await expect(page.getByRole("heading", { name: COMPANY })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Dana Directory" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Dana Directory", exact: true })).toBeVisible();
   });
 
   test("reports invalid rows during CSV import", async ({ page }) => {
@@ -63,6 +86,6 @@ test.describe("customer directory", () => {
     await page.goto("/companies");
     await page.fill('input[name="q"]', "E2E Import Co");
     await page.click('button[type="submit"]');
-    await expect(page.getByRole("link", { name: "E2E Import Co" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "E2E Import Co", exact: true })).toBeVisible();
   });
 });

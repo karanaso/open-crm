@@ -44,7 +44,7 @@ test.describe("sales pipeline", () => {
     await page.goto("/deals?view=list");
     await page.fill('input[name="q"]', DEAL);
     await page.click('button[type="submit"]');
-    await page.getByRole("link", { name: DEAL }).click();
+    await page.getByRole("link", { name: DEAL, exact: true }).click();
     await expect(page.getByRole("heading", { name: DEAL })).toBeVisible();
 
     await page.selectOption("#activity-type", "call");
@@ -59,7 +59,7 @@ test.describe("sales pipeline", () => {
     await page.goto("/deals?view=list");
     await page.fill('input[name="q"]', DEAL);
     await page.click('button[type="submit"]');
-    await page.getByRole("link", { name: DEAL }).click();
+    await page.getByRole("link", { name: DEAL, exact: true }).click();
     await expect(page.getByRole("heading", { name: DEAL })).toBeVisible();
 
     await page.getByText("Add a task").click();
@@ -83,7 +83,25 @@ test.describe("sales pipeline", () => {
     await page.fill('input[name="q"]', DEAL);
     await page.selectOption('select[name="status"]', "open");
     await page.click('button[type="submit"]');
-    await expect(page.getByRole("link", { name: DEAL })).toBeVisible();
+    await expect(page.getByRole("link", { name: DEAL, exact: true })).toBeVisible();
+  });
+
+  test("opens a deal edit page from the list row and leaves the board unchanged", async ({
+    page,
+  }) => {
+    await login(page);
+    await page.goto("/deals?view=list");
+    await page.fill('input[name="q"]', DEAL);
+    await page.click('button[type="submit"]');
+
+    const edit = page.getByRole("link", { name: `Edit ${DEAL}` });
+    await expect(edit).toHaveAttribute("href", /\/deals\/[0-9a-f-]+\/edit$/);
+    await edit.click();
+    await expect(page).toHaveURL(/\/deals\/[0-9a-f-]+\/edit$/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: `Edit ${DEAL}` })).toBeVisible();
+
+    await page.goto("/deals");
+    await expect(page.getByRole("link", { name: `Edit ${DEAL}` })).toHaveCount(0);
   });
 
   test("labels commission and requires a buyer contact", async ({ page }) => {

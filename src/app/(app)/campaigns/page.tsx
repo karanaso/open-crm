@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RowEditLink } from "@/components/ui/row-edit-link";
 import { CampaignStatusBadge } from "@/components/ui/badges";
 import { DateDisplay } from "@/components/ui/local-time";
 import { buildHref, getParam } from "@/lib/search-params";
@@ -139,6 +140,9 @@ export default async function CampaignsPage({
                 <TableHead>{t("audience")}</TableHead>
                 <TableHead>{tCommon("owner")}</TableHead>
                 <TableHead>{t("start")}</TableHead>
+                <TableHead className="w-12 text-right">
+                  <span className="sr-only">{tCommon("actions")}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -163,6 +167,12 @@ export default async function CampaignsPage({
                   </TableCell>
                   <TableCell>
                     <DateDisplay value={campaign.startDate} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RowEditLink
+                      href={`/campaigns/${campaign.id}/edit`}
+                      label={tCommon("editFor", { name: campaign.name })}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

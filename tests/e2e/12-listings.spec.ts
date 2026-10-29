@@ -109,15 +109,28 @@ test.describe("real estate listings", () => {
     await login(page);
     await page.goto("/listings");
 
-    await expect(page.getByRole("link", { name: SALE.title })).toBeVisible();
-    await expect(page.getByRole("link", { name: RENT.title })).toBeVisible();
+    await expect(page.getByRole("link", { name: SALE.title, exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: RENT.title, exact: true })).toBeVisible();
 
     await page.selectOption('select[name="transaction"]', "rent");
     await page.getByRole("button", { name: "Filter" }).click();
 
     await expect(page).toHaveURL(/transaction=rent/);
-    await expect(page.getByRole("link", { name: RENT.title })).toBeVisible();
-    await expect(page.getByRole("link", { name: SALE.title })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: RENT.title, exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: SALE.title, exact: true })).toHaveCount(0);
+  });
+
+  test("opens a listing edit page from its list row", async ({ page }) => {
+    await login(page);
+    await page.goto("/listings");
+
+    const edit = page.getByRole("link", { name: `Edit ${SALE.title}` });
+    await expect(edit).toHaveAttribute("href", /\/listings\/[0-9a-f-]+\/edit$/);
+    await edit.click();
+    await expect(page).toHaveURL(/\/listings\/[0-9a-f-]+\/edit$/);
+    await expect(
+      page.getByRole("heading", { name: `Edit listing ${SALE.reference}` }),
+    ).toBeVisible();
   });
 
   test("deactivates and restores a listing", async ({ page }) => {
@@ -131,10 +144,10 @@ test.describe("real estate listings", () => {
     await expect(page.getByText("Deactivated on", { exact: true })).toBeVisible();
 
     await page.goto("/listings");
-    await expect(page.getByRole("link", { name: SALE.title })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: SALE.title, exact: true })).toHaveCount(0);
 
     await page.goto("/listings?status=inactive");
-    await expect(page.getByRole("link", { name: SALE.title })).toBeVisible();
+    await expect(page.getByRole("link", { name: SALE.title, exact: true })).toBeVisible();
 
     await page.goto(saleUrl);
     page.once("dialog", (dialog) => dialog.accept());
@@ -143,7 +156,7 @@ test.describe("real estate listings", () => {
     await expect(page.getByText("Deactivated on", { exact: true })).toHaveCount(0);
 
     await page.goto("/listings");
-    await expect(page.getByRole("link", { name: SALE.title })).toBeVisible();
+    await expect(page.getByRole("link", { name: SALE.title, exact: true })).toBeVisible();
   });
 
   test("uploads, reorders with the keyboard, and deletes listing photos", async ({ page }) => {

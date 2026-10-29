@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RowEditLink } from "@/components/ui/row-edit-link";
 import { TagList } from "@/components/ui/badges";
 import { Badge } from "@/components/ui/badge";
 import { LocalTime } from "@/components/ui/local-time";
@@ -155,6 +156,9 @@ export default async function CompaniesPage({
                 <TableHead>{tCommon("owner")}</TableHead>
                 <TableHead>{tCommon("tags")}</TableHead>
                 <TableHead>{tCommon("updated")}</TableHead>
+                <TableHead className="w-12 text-right">
+                  <span className="sr-only">{tCommon("actions")}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -185,6 +189,12 @@ export default async function CompaniesPage({
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     <LocalTime value={company.updatedAt} options={{ dateStyle: "medium" }} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RowEditLink
+                      href={`/companies/${company.id}/edit`}
+                      label={tCommon("editFor", { name: company.name })}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

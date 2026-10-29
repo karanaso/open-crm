@@ -36,10 +36,28 @@ test.describe("marketing campaigns", () => {
     await expect(page.getByRole("link", { name: "Mia Market" })).toBeVisible();
   });
 
+  test("opens segment and campaign edit pages from list rows", async ({ page }) => {
+    await login(page);
+
+    await page.goto("/segments");
+    const segmentEdit = page.getByRole("link", { name: `Edit ${SEGMENT}` });
+    await expect(segmentEdit).toHaveAttribute("href", /\/segments\/[0-9a-f-]+\/edit$/);
+    await segmentEdit.click();
+    await expect(page).toHaveURL(/\/segments\/[0-9a-f-]+\/edit$/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: `Edit ${SEGMENT}` })).toBeVisible();
+
+    await page.goto("/campaigns");
+    const campaignEdit = page.getByRole("link", { name: `Edit ${CAMPAIGN}` });
+    await expect(campaignEdit).toHaveAttribute("href", /\/campaigns\/[0-9a-f-]+\/edit$/);
+    await campaignEdit.click();
+    await expect(page).toHaveURL(/\/campaigns\/[0-9a-f-]+\/edit$/, { timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: `Edit ${CAMPAIGN}` })).toBeVisible();
+  });
+
   test("updates recipient engagement and archives the campaign", async ({ page }) => {
     await login(page);
     await page.goto("/campaigns");
-    await page.getByRole("link", { name: CAMPAIGN }).click();
+    await page.getByRole("link", { name: CAMPAIGN, exact: true }).click();
     await expect(page.getByRole("heading", { name: CAMPAIGN })).toBeVisible();
 
     const row = page.locator("tr", { hasText: "Mia Market" });

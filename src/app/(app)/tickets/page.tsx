@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RowEditLink } from "@/components/ui/row-edit-link";
 import { PriorityBadge, TicketStatusBadge } from "@/components/ui/badges";
 import { LocalTime } from "@/components/ui/local-time";
 import { buildHref, getParam } from "@/lib/search-params";
@@ -179,6 +180,9 @@ export default async function TicketsPage({
                 <TableHead>{tCommon("assignee")}</TableHead>
                 <TableHead>{t("sla")}</TableHead>
                 <TableHead>{tCommon("updated")}</TableHead>
+                <TableHead className="w-12 text-right">
+                  <span className="sr-only">{tCommon("actions")}</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -224,6 +228,12 @@ export default async function TicketsPage({
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     <LocalTime value={ticket.updatedAt} options={{ dateStyle: "medium" }} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RowEditLink
+                      href={`/tickets/${ticket.id}/edit`}
+                      label={tCommon("editFor", { name: ticket.subject })}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
